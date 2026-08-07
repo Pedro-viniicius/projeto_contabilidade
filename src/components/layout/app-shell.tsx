@@ -43,9 +43,9 @@ export function AppShell({
   const fecharGaveta = () => setGavetaAberta(false);
 
   return (
-    <div className="lg:flex lg:min-h-dvh">
+    <div className="min-[960px]:flex min-[960px]:min-h-dvh">
       {/* Barra superior — apenas mobile/tablet. */}
-      <header className="sticky top-0 z-40 flex h-12 items-center gap-2 border-b border-border-base bg-background/95 px-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-40 flex h-12 items-center gap-2 border-b border-border-base bg-background/95 px-3 backdrop-blur min-[960px]:hidden">
         <button
           type="button"
           onClick={() => setGavetaAberta((a) => !a)}
@@ -77,11 +77,11 @@ export function AppShell({
         id="navegacao-principal"
         aria-label="Navegação principal"
         className={[
-          "shrink-0 border-border-base bg-surface lg:sticky lg:top-0 lg:flex lg:h-dvh lg:w-56 lg:flex-col lg:border-r",
-          gavetaAberta ? "block border-b" : "hidden lg:flex",
+          "shrink-0 border-border-base bg-surface min-[960px]:sticky min-[960px]:top-0 min-[960px]:flex min-[960px]:h-dvh min-[960px]:w-56 min-[960px]:flex-col min-[960px]:border-r",
+          gavetaAberta ? "block border-b" : "hidden min-[960px]:flex",
         ].join(" ")}
       >
-        <div className="hidden items-center gap-2 px-4 py-3.5 lg:flex">
+        <div className="hidden items-center gap-2 px-4 py-3.5 min-[960px]:flex">
           <Logo className="size-7" />
           <span className="text-[0.9375rem] font-semibold tracking-tight text-ink">
             Clareza
@@ -91,7 +91,7 @@ export function AppShell({
           </span>
         </div>
 
-        <ul className="space-y-0.5 p-2 lg:flex-1 lg:px-2 lg:py-0">
+        <ul className="space-y-0.5 p-2 min-[960px]:flex-1 min-[960px]:px-2 min-[960px]:py-0">
           {SECOES.map((secao) => {
             const ativo = ehAtivo(pathname, secao.href);
             return (
@@ -114,7 +114,7 @@ export function AppShell({
           })}
         </ul>
 
-        <div className="space-y-2 border-t border-border-base p-2 lg:border-t-0 lg:p-3">
+        <div className="space-y-2 border-t border-border-base p-2 min-[960px]:border-t-0 min-[960px]:p-3">
           {statusModelo}
           <BotaoInstalar />
         </div>

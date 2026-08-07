@@ -80,7 +80,7 @@ export function FormularioFeedback() {
   }
 
   return (
-    <div className="grid items-start gap-4 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
+    <div className="grid items-start gap-4 min-[960px]:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)] [&>*]:min-w-0">
       <Painel>
         <PainelCabecalho titulo="Registrar observação" />
         <form onSubmit={enviar} noValidate>

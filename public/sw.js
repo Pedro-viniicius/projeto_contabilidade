@@ -11,7 +11,9 @@
  * Nada de cachear POST, chamadas de API ou dados do usuário.
  */
 
-const VERSAO = "clareza-v1";
+/* Bump obrigatório a cada mudança de casca: sem isso o usuário que já
+   instalou continua vendo a interface antiga vinda do cache. */
+const VERSAO = "clareza-v2";
 const CACHE_SHELL = `${VERSAO}-shell`;
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 
@@ -20,8 +22,8 @@ const SHELL = [
   "/",
   "/offline",
   "/simulacao",
-  "/resultado",
   "/premissas",
+  "/feedback",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",

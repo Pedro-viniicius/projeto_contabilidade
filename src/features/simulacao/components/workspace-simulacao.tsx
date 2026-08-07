@@ -139,8 +139,13 @@ export function WorkspaceSimulacao() {
         Duas colunas a partir de 1024px: entrada e resposta convivem, que
         é a mudança central da V2. Abaixo disso, empilham.
       */}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(20rem,22rem)_minmax(0,1fr)]">
-        <Painel className="lg:sticky lg:top-4">
+      {/*
+        `min-w-0` nos filhos é obrigatório: itens de grid nascem com
+        min-width:auto e, sem isso, as tabelas largas esticam a coluna em
+        vez de rolar dentro do próprio contêiner.
+      */}
+      <div className="grid items-start gap-4 min-[960px]:grid-cols-[minmax(20rem,22rem)_minmax(0,1fr)]">
+        <Painel className="min-w-0 min-[960px]:sticky min-[960px]:top-4">
           <PainelCabecalho titulo="Dados da simulação" />
 
           <form
@@ -242,7 +247,7 @@ export function WorkspaceSimulacao() {
               </Button>
               <kbd
                 aria-hidden="true"
-                className="hidden shrink-0 rounded-sm border border-border-strong px-1.5 py-1 text-[0.6875rem] text-ink-subtle lg:block"
+                className="hidden shrink-0 rounded-sm border border-border-strong px-1.5 py-1 text-[0.6875rem] text-ink-subtle min-[960px]:block"
               >
                 {ehMac ? "⌘" : "Ctrl"}+↵
               </kbd>
@@ -254,7 +259,7 @@ export function WorkspaceSimulacao() {
           </form>
         </Painel>
 
-        <div ref={resultadoRef}>
+        <div ref={resultadoRef} className="min-w-0">
           {/* aria-live: o resultado novo é anunciado sem mover o foco. */}
           <div aria-live="polite" className="sr-only">
             {simulacao && !desatualizado

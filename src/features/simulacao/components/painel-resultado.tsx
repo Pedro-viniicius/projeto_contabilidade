@@ -36,8 +36,14 @@ export function PainelResultado({
   return (
     <div className="space-y-3">
       {/* Resumo: a resposta em uma frase, antes do detalhamento. */}
+      {/*
+        Nada de esmaecer o painel quando os valores mudam: baixaria o
+        contraste do texto. O estado é comunicado pelo selo e pela borda.
+      */}
       <Painel
-        className={desatualizado ? "opacity-60 transition-opacity" : undefined}
+        className={
+          desatualizado ? "border-l-2 border-l-atencao" : undefined
+        }
       >
         <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3.5">
           <div className="min-w-0">

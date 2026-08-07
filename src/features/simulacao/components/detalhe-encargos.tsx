@@ -6,6 +6,7 @@ import {
   type StatusPremissa,
 } from "../domain/calculation-rules";
 import type { ResultadoCenario } from "../types";
+import { AreaRolavel } from "@/components/ui/area-rolavel";
 
 const TOM_STATUS: Record<StatusPremissa, "atencao" | "neutro" | "positivo"> = {
   "hipotese-temporaria": "atencao",
@@ -25,7 +26,7 @@ export function DetalheEncargos({ cenario }: { cenario: ResultadoCenario }) {
   const premissas = listarPremissas();
 
   return (
-    <div className="overflow-x-auto">
+    <AreaRolavel>
       <table className="tabela-dados min-w-[36rem] text-[0.8125rem]">
         <caption className="sr-only">
           Composição dos encargos do cenário {cenario.nome}, com base de
@@ -98,14 +99,14 @@ export function DetalheEncargos({ cenario }: { cenario: ResultadoCenario }) {
           </tr>
         </tbody>
       </table>
-    </div>
+    </AreaRolavel>
   );
 }
 
 /** Passo a passo da conta, para conferência linha a linha. */
 export function PassosCalculo({ cenario }: { cenario: ResultadoCenario }) {
   return (
-    <div className="overflow-x-auto">
+    <AreaRolavel>
       <table className="tabela-dados min-w-[30rem] text-[0.8125rem]">
         <caption className="sr-only">
           Passo a passo do cálculo do cenário {cenario.nome}.
@@ -133,6 +134,6 @@ export function PassosCalculo({ cenario }: { cenario: ResultadoCenario }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </AreaRolavel>
   );
 }

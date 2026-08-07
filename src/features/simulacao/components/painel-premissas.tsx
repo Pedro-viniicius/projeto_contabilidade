@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Painel, PainelCabecalho } from "@/components/ui/painel";
+import { AreaRolavel } from "@/components/ui/area-rolavel";
 import {
   listarPremissas,
   ROTULO_STATUS,
@@ -81,7 +82,7 @@ export function PainelPremissas() {
         ))}
       </div>
 
-      <div className="overflow-x-auto">
+      <AreaRolavel>
         <table className="tabela-dados min-w-[44rem] text-[0.8125rem]">
           <caption className="sr-only">
             Premissas de cálculo com cenário, valor, status de validação e onde
@@ -111,7 +112,7 @@ export function PainelPremissas() {
             ))}
           </tbody>
         </table>
-      </div>
+      </AreaRolavel>
 
       {visiveis.length === 0 && (
         <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">

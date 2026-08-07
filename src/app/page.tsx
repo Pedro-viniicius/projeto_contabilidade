@@ -54,7 +54,7 @@ export default function VisaoGeralPage() {
 
       <HistoricoSimulacoes />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="grid items-start gap-4 min-[960px]:grid-cols-[minmax(0,1fr)_20rem] [&>*]:min-w-0">
         <Painel>
           <div className="grid sm:grid-cols-3">
             {ACESSOS.map((acesso, i) => (

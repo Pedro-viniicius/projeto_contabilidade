@@ -1,5 +1,6 @@
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
 import type { Comparacao, TipoAtuacao } from "../types";
+import { AreaRolavel } from "@/components/ui/area-rolavel";
 
 interface Linha {
   indicador: string;
@@ -87,7 +88,7 @@ export function TabelaComparativa({ comparacao }: { comparacao: Comparacao }) {
 
   return (
     /* Rolagem própria: a tabela nunca empurra a página no mobile. */
-    <div className="overflow-x-auto">
+    <AreaRolavel>
       <table className="tabela-dados min-w-[34rem] text-[0.8125rem]">
         <caption className="sr-only">
           Comparação entre os cenários Pessoa Física e CNPJ, com valores
@@ -150,7 +151,7 @@ export function TabelaComparativa({ comparacao }: { comparacao: Comparacao }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </AreaRolavel>
   );
 }
 

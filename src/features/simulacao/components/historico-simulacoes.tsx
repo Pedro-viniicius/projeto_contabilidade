@@ -6,6 +6,7 @@ import { Painel, PainelCabecalho } from "@/components/ui/painel";
 import { formatarMoeda } from "@/lib/format";
 import { useHidratado, useValorLocal } from "@/lib/armazenamento-reativo";
 import { simular } from "../domain/calcular";
+import { AreaRolavel } from "@/components/ui/area-rolavel";
 import {
   abrirDoHistorico,
   CHAVE_HISTORICO,
@@ -61,7 +62,7 @@ export function HistoricoSimulacoes() {
         descricao={`${historico.length} no armazenamento local deste aparelho.`}
       />
 
-      <div className="overflow-x-auto">
+      <AreaRolavel>
         <table className="tabela-dados min-w-[38rem] text-[0.8125rem]">
           <caption className="sr-only">
             Simulações executadas neste aparelho, com receita informada e
@@ -139,7 +140,7 @@ export function HistoricoSimulacoes() {
             })}
           </tbody>
         </table>
-      </div>
+      </AreaRolavel>
     </Painel>
   );
 }
