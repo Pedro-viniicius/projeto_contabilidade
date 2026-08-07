@@ -1,31 +1,31 @@
 import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ui/button";
+import { Painel } from "@/components/ui/painel";
 
 export const metadata: Metadata = {
-  title: "Você está offline",
-  description: "Esta página do Clareza ainda não está disponível offline.",
+  title: "Sem conexão",
+  description: "Esta tela do Clareza ainda não está disponível offline.",
   robots: { index: false, follow: false },
 };
 
 export default function OfflinePage() {
   return (
-    <div className="mx-auto max-w-xl px-4 py-16 sm:px-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-        Você está offline
-      </h1>
-      <p className="mt-3 leading-relaxed text-ink-muted">
-        Não conseguimos carregar esta página sem conexão. As telas que você já
-        visitou continuam funcionando, e suas simulações estão salvas neste
-        aparelho.
-      </p>
-      <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink href="/" tamanho="lg">
-          Ir para o início
-        </ButtonLink>
-        <ButtonLink href="/resultado" variante="secundaria" tamanho="lg">
-          Ver última simulação
-        </ButtonLink>
-      </div>
+    <div className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6">
+      <Painel className="px-4 py-12 text-center">
+        <h1 className="text-base font-semibold tracking-tight text-ink">
+          Sem conexão
+        </h1>
+        <p className="mx-auto mt-1.5 max-w-md text-[0.8125rem] leading-relaxed text-ink-muted">
+          Esta tela não estava em cache. As telas já visitadas seguem
+          funcionando, e as simulações continuam salvas neste aparelho.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <ButtonLink href="/">Visão geral</ButtonLink>
+          <ButtonLink href="/simulacao" variante="secundaria">
+            Simulação
+          </ButtonLink>
+        </div>
+      </Painel>
     </div>
   );
 }

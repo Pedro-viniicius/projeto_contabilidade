@@ -1,18 +1,21 @@
 import { ButtonLink } from "@/components/ui/button";
+import { Painel } from "@/components/ui/painel";
 
 export default function NaoEncontrado() {
   return (
-    <div className="mx-auto max-w-xl px-4 py-16 sm:px-6">
-      <p className="text-sm font-medium text-accent">Erro 404</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-        Página não encontrada
-      </h1>
-      <p className="mt-3 leading-relaxed text-ink-muted">
-        O endereço que você tentou abrir não existe por aqui.
-      </p>
-      <ButtonLink href="/" tamanho="lg" className="mt-7">
-        Ir para o início
-      </ButtonLink>
+    <div className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6">
+      <Painel className="px-4 py-12 text-center">
+        <p className="rotulo-secao">Erro 404</p>
+        <h1 className="mt-1.5 text-base font-semibold tracking-tight text-ink">
+          Página não encontrada
+        </h1>
+        <p className="mx-auto mt-1.5 max-w-md text-[0.8125rem] text-ink-muted">
+          O endereço acessado não existe nesta aplicação.
+        </p>
+        <ButtonLink href="/" className="mt-5">
+          Visão geral
+        </ButtonLink>
+      </Painel>
     </div>
   );
 }

@@ -1,111 +1,139 @@
 import type { Metadata } from "next";
-import { Card, CardTitulo } from "@/components/ui/card";
+import { Painel, PainelCabecalho, PainelCorpo } from "@/components/ui/painel";
 import { ButtonLink } from "@/components/ui/button";
-import { AvisoContabil } from "@/components/ui/aviso-contabil";
-import { BotaoInstalar } from "@/components/pwa/botao-instalar";
+import { VERSAO_REGRAS } from "@/features/simulacao/domain/calculation-rules";
 
 export const metadata: Metadata = {
-  title: "Como funciona",
+  title: "Escopo do modelo",
   description:
-    "Entenda o que o simulador do Clareza calcula, o que ele não calcula e como interpretar o resultado.",
+    "O que o modelo de cálculo do Clareza cobre, quais simplificações assume e o que está explicitamente fora desta versão.",
   alternates: { canonical: "/como-funciona" },
 };
 
-export default function ComoFuncionaPage() {
+const COBERTO = [
+  "Cenário PF: base do livro-caixa, INSS de contribuinte individual com piso e teto, e IRPF pela tabela progressiva mensal.",
+  "Cenário CNPJ: alíquota efetiva única sobre o faturamento, honorários contábeis, INSS e IRRF sobre o pró-labore.",
+  "Lucro distribuído tratado como isento no cenário CNPJ.",
+  "Comparação entre os dois cenários com a mesma receita e os mesmos custos.",
+  "Projeção anual por multiplicação direta do resultado mensal.",
+];
+
+const FORA = [
+  "Tabelas do Simples Nacional, RBT12, Fator R e escolha de anexo.",
+  "ISS municipal e retenções na fonte pelo tomador.",
+  "MEI, Lucro Presumido e Lucro Real.",
+  "Dependentes, despesas médicas, educação, desconto simplificado e ajuste anual do IRPF.",
+  "Plano simplificado de INSS (11%) e recolhimento em atraso.",
+  "13º, férias, sazonalidade e meses sem faturamento.",
+  "Regras distintas de dedutibilidade entre livro-caixa e despesa da PJ.",
+  "Despesas pessoais do cliente, que saem do resultado líquido.",
+];
+
+export default function EscopoPage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-[1100px] space-y-4 px-4 py-5 sm:px-6">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-          Como funciona
+        <h1 className="text-lg font-semibold tracking-tight text-ink">
+          Escopo do modelo
         </h1>
-        <p className="mt-3 leading-relaxed text-ink-muted">
-          O Clareza pega três números simples — quanto entra, quanto sai e como
-          você atua — e mostra quanto sobra depois dos encargos estimados, nos
-          dois cenários possíveis.
+        <p className="mt-0.5 text-[0.8125rem] text-ink-muted">
+          Limites explícitos do cálculo · versão {VERSAO_REGRAS}
         </p>
       </header>
 
-      <Card>
-        <CardTitulo>O que a simulação calcula</CardTitulo>
-        <ul className="mt-3 space-y-2.5 text-ink-muted">
-          <Item>
-            <strong className="font-medium text-ink">Pessoa Física:</strong>{" "}
-            receita menos custos forma a base do livro-caixa. Sobre ela incidem
-            INSS de contribuinte individual e IRPF pela tabela progressiva
-            mensal.
-          </Item>
-          <Item>
-            <strong className="font-medium text-ink">CNPJ:</strong> uma alíquota
-            efetiva única sobre o faturamento, mais honorários contábeis, mais
-            INSS e IRRF sobre o pró-labore. O lucro distribuído é tratado como
-            isento.
-          </Item>
-          <Item>
-            <strong className="font-medium text-ink">Comparativo:</strong> os
-            dois cenários rodam com a mesma receita e os mesmos custos, e a
-            diferença aparece em reais por mês e por ano.
-          </Item>
-        </ul>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Painel>
+          <PainelCabecalho titulo="O que o modelo calcula" />
+          <PainelCorpo>
+            <ul className="space-y-2">
+              {COBERTO.map((item) => (
+                <Item key={item}>{item}</Item>
+              ))}
+            </ul>
+          </PainelCorpo>
+        </Painel>
 
-      <Card>
-        <CardTitulo>O que ela ainda não calcula</CardTitulo>
-        <p className="mt-3 leading-relaxed text-ink-muted">
-          Ser explícito sobre os limites é parte do produto. Esta versão não
-          considera:
-        </p>
-        <ul className="mt-3 space-y-2.5 text-ink-muted">
-          <Item>tabelas do Simples Nacional, RBT12 e Fator R;</Item>
-          <Item>ISS variável por município e retenções na fonte;</Item>
-          <Item>MEI, Lucro Presumido e Lucro Real;</Item>
-          <Item>
-            dependentes, despesas médicas, educação e ajuste anual do IRPF;
-          </Item>
-          <Item>13º, férias, sazonalidade e meses sem faturamento;</Item>
-          <Item>despesas pessoais, que saem do resultado líquido.</Item>
-        </ul>
-        <ButtonLink href="/premissas" variante="secundaria" className="mt-5">
-          Ver todas as premissas
-        </ButtonLink>
-      </Card>
-
-      <Card>
-        <CardTitulo>Seus dados ficam no seu aparelho</CardTitulo>
-        <p className="mt-3 leading-relaxed text-ink-muted">
-          Não existe cadastro nem login. A simulação e o feedback ficam salvos
-          apenas no armazenamento local do navegador — nada é enviado para um
-          servidor nesta versão. Limpar os dados do site apaga tudo.
-        </p>
-      </Card>
-
-      <Card>
-        <CardTitulo>Funciona como aplicativo</CardTitulo>
-        <p className="mt-3 leading-relaxed text-ink-muted">
-          O Clareza é um PWA: dá para instalar na tela inicial do celular e usar
-          as telas já visitadas mesmo sem internet. No Android e no desktop, o
-          navegador oferece a instalação; no iPhone, use{" "}
-          <em>Compartilhar → Adicionar à Tela de Início</em>.
-        </p>
-        <div className="mt-5">
-          <BotaoInstalar />
-        </div>
-      </Card>
-
-      <div className="pt-2">
-        <ButtonLink href="/simulacao" tamanho="lg">
-          Fazer uma simulação
-        </ButtonLink>
+        <Painel>
+          <PainelCabecalho
+            titulo="O que está fora desta versão"
+            descricao="Declarado por escolha: preferimos limite explícito a precisão aparente."
+          />
+          <PainelCorpo>
+            <ul className="space-y-2">
+              {FORA.map((item) => (
+                <Item key={item} negativo>
+                  {item}
+                </Item>
+              ))}
+            </ul>
+          </PainelCorpo>
+        </Painel>
       </div>
 
-      <AvisoContabil className="px-1 pt-2" />
+      <Painel>
+        <PainelCabecalho titulo="Simplificação mais relevante" />
+        <PainelCorpo>
+          <p className="max-w-3xl text-[0.875rem] leading-relaxed text-ink-muted">
+            O cenário CNPJ usa uma{" "}
+            <strong className="font-medium text-ink">
+              alíquota efetiva única sobre o faturamento
+            </strong>{" "}
+            no lugar das tabelas do Simples Nacional. Não há cálculo de RBT12,
+            Fator R nem partilha entre tributos. A decisão foi deliberada:
+            preferimos um parâmetro visível e fácil de corrigir a uma precisão
+            que o usuário não teria como auditar. É o primeiro item que precisa
+            de revisão profissional.
+          </p>
+          <ButtonLink href="/premissas" variante="secundaria" className="mt-3.5">
+            Abrir painel de premissas
+          </ButtonLink>
+        </PainelCorpo>
+      </Painel>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Painel>
+          <PainelCabecalho titulo="Onde os dados ficam" />
+          <PainelCorpo>
+            <p className="text-[0.875rem] leading-relaxed text-ink-muted">
+              Não há cadastro, login nem servidor. Simulações, referências e
+              feedback ficam no armazenamento local do navegador deste
+              aparelho. Limpar os dados do site apaga tudo, e nada é
+              compartilhado entre dispositivos.
+            </p>
+          </PainelCorpo>
+        </Painel>
+
+        <Painel>
+          <PainelCabecalho titulo="Uso como aplicativo" />
+          <PainelCorpo>
+            <p className="text-[0.875rem] leading-relaxed text-ink-muted">
+              O Clareza é um PWA: pode ser instalado no computador ou no celular
+              e as telas já visitadas continuam disponíveis sem conexão. No
+              Chrome e no Edge a instalação aparece na barra de endereços; no
+              iOS, use <em>Compartilhar → Adicionar à Tela de Início</em>.
+            </p>
+          </PainelCorpo>
+        </Painel>
+      </div>
     </div>
   );
 }
 
-function Item({ children }: { children: React.ReactNode }) {
+function Item({
+  children,
+  negativo,
+}: {
+  children: React.ReactNode;
+  negativo?: boolean;
+}) {
   return (
-    <li className="flex gap-2.5 leading-relaxed">
-      <span aria-hidden="true" className="mt-2 size-1.5 shrink-0 rounded-full bg-accent" />
+    <li className="flex gap-2 text-[0.875rem] leading-relaxed text-ink-muted">
+      <span
+        aria-hidden="true"
+        className={`mt-[0.45rem] size-1.5 shrink-0 rounded-full ${
+          negativo ? "bg-border-strong" : "bg-accent"
+        }`}
+      />
       <span>{children}</span>
     </li>
   );

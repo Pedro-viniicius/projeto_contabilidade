@@ -89,11 +89,19 @@ export interface Simulacao {
   readonly versaoRegras: string;
 }
 
-/** Registro persistido localmente. */
+/**
+ * Registro persistido localmente.
+ *
+ * A referência fica aqui, e não em `EntradaSimulacao`, de propósito:
+ * é rótulo de organização do contador, não insumo de cálculo. O motor
+ * segue recebendo apenas números.
+ */
 export interface SimulacaoSalva {
   readonly id: string;
   /** ISO 8601. */
   readonly criadaEm: string;
   readonly entrada: EntradaSimulacao;
   readonly versaoRegras: string;
+  /** Rótulo livre e opcional, ex.: "Cliente XPTO — cenário 01". */
+  readonly referencia?: string;
 }

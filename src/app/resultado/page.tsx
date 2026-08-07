@@ -1,15 +1,10 @@
-import type { Metadata } from "next";
-import { ResultadoSimulacao } from "@/features/simulacao/components/resultado-simulacao";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Resultado da simulação",
-  description:
-    "Resultado líquido estimado, comparativo entre Pessoa Física e CNPJ e o passo a passo do cálculo.",
-  alternates: { canonical: "/resultado" },
-  /* Página pessoal, dependente de dados locais: não faz sentido indexar. */
-  robots: { index: false, follow: true },
-};
-
+/**
+ * Na V1 o resultado era uma página separada. Na V2 ele vive na área de
+ * trabalho, junto do formulário. A rota permanece para não quebrar
+ * links salvos, o atalho instalado do PWA e a casca em cache.
+ */
 export default function ResultadoPage() {
-  return <ResultadoSimulacao />;
+  redirect("/simulacao");
 }

@@ -10,12 +10,17 @@ interface Props {
   ajuda?: string;
   erro?: string;
   autoFocus?: boolean;
+  /** Sugestão clicável exibida ao lado do rótulo. */
+  sugestao?: { texto: string; onAplicar: () => void };
 }
 
 /**
  * Campo de moeda com máscara pt-BR.
- * Os dígitos digitados são interpretados como centavos (padrão de apps
- * financeiros), o que dispensa o usuário de digitar vírgula.
+ * Os dígitos digitados são interpretados como centavos, o que dispensa
+ * o contador de digitar vírgula ao lançar valores em sequência.
+ *
+ * Layout compacto: rótulo e campo na mesma linha em telas maiores,
+ * para caber toda a simulação em uma coluna sem rolagem.
  */
 export function CampoMoeda({
   rotulo,
@@ -24,6 +29,7 @@ export function CampoMoeda({
   ajuda,
   erro,
   autoFocus,
+  sugestao,
 }: Props) {
   const id = useId();
   const idAjuda = `${id}-ajuda`;
@@ -31,24 +37,34 @@ export function CampoMoeda({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-ink">
-        {rotulo}
-      </label>
+      <div className="flex items-baseline justify-between gap-2">
+        <label htmlFor={id} className="text-[0.8125rem] font-medium text-ink">
+          {rotulo}
+        </label>
+        {sugestao && (
+          <button
+            type="button"
+            onClick={sugestao.onAplicar}
+            className="rounded-sm text-[0.75rem] text-accent hover:underline"
+          >
+            {sugestao.texto}
+          </button>
+        )}
+      </div>
 
       <div
         className={[
-          "mt-2 flex items-center gap-2 rounded-xl border bg-surface px-3.5",
+          "mt-1 flex items-center gap-1.5 rounded-md border bg-surface px-2.5",
           "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent",
-          erro ? "border-negative" : "border-border-strong",
+          erro ? "border-negativo" : "border-border-strong",
         ].join(" ")}
       >
-        <span aria-hidden="true" className="text-ink-subtle">
+        <span aria-hidden="true" className="text-[0.8125rem] text-ink-subtle">
           R$
         </span>
         <input
           id={id}
-          /* inputMode numérico abre o teclado certo no celular. */
-          inputMode="numeric"
+          inputMode="decimal"
           type="text"
           autoComplete="off"
           autoFocus={autoFocus}
@@ -61,12 +77,12 @@ export function CampoMoeda({
               .join(" ") || undefined
           }
           aria-invalid={erro ? true : undefined}
-          className="campo-composto tnum min-h-13 w-full bg-transparent py-3 text-lg font-medium text-ink placeholder:font-normal placeholder:text-ink-subtle"
+          className="campo-composto tnum min-h-9 w-full bg-transparent py-1.5 text-right text-[0.9375rem] font-medium text-ink placeholder:font-normal placeholder:text-ink-subtle"
         />
       </div>
 
       {ajuda && !erro && (
-        <p id={idAjuda} className="mt-1.5 text-sm text-ink-muted">
+        <p id={idAjuda} className="mt-1 text-[0.75rem] leading-snug text-ink-subtle">
           {ajuda}
         </p>
       )}
@@ -75,7 +91,7 @@ export function CampoMoeda({
         <p
           id={idErro}
           role="alert"
-          className="mt-1.5 flex items-start gap-1.5 text-sm text-negative"
+          className="mt-1 flex items-start gap-1 text-[0.75rem] leading-snug text-negativo"
         >
           <span aria-hidden="true">⚠</span>
           <span>{erro}</span>

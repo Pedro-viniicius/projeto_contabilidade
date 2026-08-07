@@ -1,50 +1,64 @@
 @import "tailwindcss";
 
 /*
-  Design tokens do Clareza.
-  Base neutra quente + um único acento (verde-petróleo) para valores e ações.
-  Evita o visual "azul corporativo" tradicional de software contábil.
+  Sistema visual do Clareza V2 — ferramenta profissional para contadores.
+  Direção: neutro, denso, alto contraste, acento contido.
+  O acento sinaliza ação e navegação, nunca julgamento de resultado.
 */
 :root {
-  --background: #fafaf8;
+  --background: #f6f7f8;
   --surface: #ffffff;
-  --surface-muted: #f4f4f1;
-  --ink: #12151a;
-  --ink-muted: #5c636e;
-  --ink-subtle: #868d99;
-  --border: #e5e4df;
-  --border-strong: #d3d2cb;
+  --surface-muted: #eef0f2;
+  --surface-hover: #f3f5f6;
+  --ink: #12161a;
+  --ink-muted: #545c66;
+  --ink-subtle: #7d858f;
+  --border: #e0e4e7;
+  --border-strong: #c8ced3;
   --accent: #0e7c66;
   --accent-hover: #0a6252;
-  --accent-soft: #e6f3ef;
+  --accent-soft: #e6f2ef;
   --accent-ink: #08483c;
-  --positive: #0e7c66;
-  --negative: #b4443a;
-  --negative-soft: #fbeceb;
-  --warning-soft: #fdf6e6;
-  --warning-ink: #7a5a12;
+
+  /* Cores de status: significado, não estética. */
+  --positivo: #0e7c66;
+  --negativo: #b4443a;
+  --negativo-soft: #fbecea;
+  --atencao: #8a6410;
+  --atencao-soft: #fdf4e3;
+  --neutro-soft: #eef0f2;
+
   --focus: #0e7c66;
+
+  /* Raios menores que na V1: software profissional, não app de consumo. */
+  --raio-sm: 4px;
+  --raio-md: 6px;
+  --raio-lg: 8px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0b0c0e;
-    --surface: #141619;
-    --surface-muted: #1b1e22;
-    --ink: #f1f2f4;
-    --ink-muted: #a6acb6;
-    --ink-subtle: #7d838d;
-    --border: #262a2f;
-    --border-strong: #363b42;
+    --background: #0c0e10;
+    --surface: #141719;
+    --surface-muted: #1c2023;
+    --surface-hover: #21262a;
+    --ink: #eef0f2;
+    --ink-muted: #a2aab3;
+    --ink-subtle: #79818a;
+    --border: #262b2f;
+    --border-strong: #3a4147;
     --accent: #3ec9a7;
     --accent-hover: #58d8ba;
     --accent-soft: #10241f;
     --accent-ink: #9ce8d3;
-    --positive: #3ec9a7;
-    --negative: #f08a80;
-    --negative-soft: #2a1614;
-    --warning-soft: #2a2113;
-    --warning-ink: #e8cd8d;
+
+    --positivo: #3ec9a7;
+    --negativo: #f08a80;
+    --negativo-soft: #2a1614;
+    --atencao: #e0c07a;
+    --atencao-soft: #26200f;
+    --neutro-soft: #1c2023;
+
     --focus: #3ec9a7;
   }
 }
@@ -53,6 +67,7 @@
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
+  --color-surface-hover: var(--surface-hover);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-ink-subtle: var(--ink-subtle);
@@ -62,11 +77,16 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
-  --color-positive: var(--positive);
-  --color-negative: var(--negative);
-  --color-negative-soft: var(--negative-soft);
-  --color-warning-soft: var(--warning-soft);
-  --color-warning-ink: var(--warning-ink);
+  --color-positivo: var(--positivo);
+  --color-negativo: var(--negativo);
+  --color-negativo-soft: var(--negativo-soft);
+  --color-atencao: var(--atencao);
+  --color-atencao-soft: var(--atencao-soft);
+  --color-neutro-soft: var(--neutro-soft);
+
+  --radius-sm: var(--raio-sm);
+  --radius-md: var(--raio-md);
+  --radius-lg: var(--raio-lg);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -84,7 +104,6 @@ body {
   background: var(--background);
   color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
-  /* Evita rolagem horizontal acidental no mobile. */
   overflow-x: hidden;
 }
 
@@ -92,21 +111,66 @@ body {
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: var(--raio-sm);
 }
 
 /*
   Em campos compostos (prefixo "R$" + input), o anel de foco pertence ao
-  contêiner. Sem isto, input e contêiner desenham dois anéis sobrepostos.
-  Especificidade maior que a regra global de :focus-visible acima.
+  contêiner. Especificidade maior que a regra global acima.
 */
 .campo-composto:focus-visible {
   outline: none;
 }
 
-/* Números financeiros alinham melhor com tabular-nums. */
+/*
+  Numerais tabulares: obrigatórios em qualquer valor financeiro.
+  Sem isso as colunas de R$ não alinham e a leitura de tabela sofre.
+*/
 .tnum {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Rótulo de seção em caixa alta — hierarquia sem consumir peso visual. */
+.rotulo-secao {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+}
+
+/* Tabelas financeiras: linhas compactas e separadores discretos. */
+.tabela-dados {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela-dados th,
+.tabela-dados td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabela-dados thead th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-subtle);
+  background: var(--surface-muted);
+  white-space: nowrap;
+}
+
+.tabela-dados .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tabela-dados tbody tr:last-child td {
+  border-bottom: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

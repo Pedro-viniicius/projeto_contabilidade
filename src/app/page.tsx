@@ -1,92 +1,111 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
-import { BotaoInstalar } from "@/components/pwa/botao-instalar";
-import { RetomarSimulacao } from "@/features/simulacao/components/retomar-simulacao";
+import { Painel } from "@/components/ui/painel";
+import { HistoricoSimulacoes } from "@/features/simulacao/components/historico-simulacoes";
+import {
+  resumoValidacao,
+  VERSAO_REGRAS,
+} from "@/features/simulacao/domain/calculation-rules";
 
-const PASSOS = [
+export const metadata: Metadata = {
+  title: "Visão geral",
+  description:
+    "Área de trabalho do Clareza: inicie uma simulação, retome as recentes e acompanhe o estágio de validação do modelo de cálculo.",
+  alternates: { canonical: "/" },
+};
+
+const ACESSOS = [
   {
-    titulo: "Responda 4 perguntas",
-    texto:
-      "Quanto entra, quanto sai e como você atua hoje. Sem jargão contábil.",
+    href: "/premissas",
+    titulo: "Premissas de cálculo",
+    descricao: "Auditar alíquotas, bases e status de validação.",
   },
   {
-    titulo: "Veja quanto sobra",
-    texto:
-      "Resultado líquido no mês e no ano, com os encargos estimados separados.",
+    href: "/como-funciona",
+    titulo: "Escopo do modelo",
+    descricao: "O que o cálculo cobre e o que está fora desta versão.",
   },
   {
-    titulo: "Compare os cenários",
-    texto:
-      "Pessoa Física e CNPJ lado a lado, com a diferença em reais por mês.",
+    href: "/feedback",
+    titulo: "Feedback",
+    descricao: "Registrar divergências e exportar para revisão.",
   },
 ];
 
-export default function Home() {
+export default function VisaoGeralPage() {
+  const { pendentes, total } = resumoValidacao();
+
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6">
-      {/* Hero: um único caminho de conversão dominante (Lei de Hick). */}
-      <section className="pb-10 pt-12 sm:pb-14 sm:pt-20">
-        <p className="text-sm font-medium text-accent">
-          Para autônomos e prestadores de serviço
-        </p>
-        <h1 className="mt-3 text-[2rem] font-semibold leading-[1.15] tracking-tight text-ink sm:text-5xl">
-          Entenda melhor seus números antes de tomar uma decisão.
-        </h1>
-        <p className="mt-4 max-w-xl text-[1.05rem] leading-relaxed text-ink-muted sm:text-lg">
-          O Clareza simula quanto realmente sobra do seu faturamento e mostra a
-          diferença entre atuar como Pessoa Física ou com CNPJ — sem você
-          precisar entender de contabilidade.
-        </p>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <ButtonLink href="/simulacao" tamanho="lg" className="sm:px-8">
-            Fazer uma simulação
-          </ButtonLink>
-          <ButtonLink href="/como-funciona" variante="secundaria" tamanho="lg">
-            Como funciona
-          </ButtonLink>
+    <div className="mx-auto max-w-[1500px] space-y-4 px-4 py-5 sm:px-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-ink">
+            Visão geral
+          </h1>
+          <p className="mt-0.5 text-[0.8125rem] text-ink-muted">
+            Compare cenários tributários com base nos dados informados.
+          </p>
         </div>
+        <ButtonLink href="/simulacao" tamanho="lg">
+          Nova simulação
+        </ButtonLink>
+      </header>
 
-        <RetomarSimulacao />
-      </section>
+      <HistoricoSimulacoes />
 
-      <section aria-labelledby="passos" className="border-t border-border-base py-10">
-        <h2 id="passos" className="text-xl font-semibold tracking-tight text-ink">
-          Como funciona, em três passos
-        </h2>
-        <ol className="mt-6 grid gap-5 sm:grid-cols-3">
-          {PASSOS.map((passo, i) => (
-            <li key={passo.titulo}>
-              <span
-                aria-hidden="true"
-                className="flex size-8 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent-ink"
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <Painel>
+          <div className="grid sm:grid-cols-3">
+            {ACESSOS.map((acesso, i) => (
+              <Link
+                key={acesso.href}
+                href={acesso.href}
+                className={[
+                  "px-4 py-3.5 transition-colors hover:bg-surface-hover",
+                  i > 0 ? "border-t border-border-base sm:border-l sm:border-t-0" : "",
+                ].join(" ")}
               >
-                {i + 1}
-              </span>
-              <h3 className="mt-3 font-medium text-ink">{passo.titulo}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-ink-muted">
-                {passo.texto}
-              </p>
-            </li>
-          ))}
-        </ol>
-      </section>
+                <span className="block text-[0.875rem] font-medium text-ink">
+                  {acesso.titulo}
+                </span>
+                <span className="mt-0.5 block text-[0.8125rem] leading-snug text-ink-muted">
+                  {acesso.descricao}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </Painel>
 
-      <section className="border-t border-border-base py-10">
-        <h2 className="text-xl font-semibold tracking-tight text-ink">
-          Cálculo aberto, não caixa-preta
-        </h2>
-        <p className="mt-3 max-w-xl leading-relaxed text-ink-muted">
-          Toda simulação mostra a conta que foi feita, as alíquotas usadas e as
-          premissas assumidas. Esta versão é um MVP em validação: as regras
-          estão documentadas justamente para que um contador possa revisá-las.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <ButtonLink href="/premissas" variante="secundaria">
-            Ver premissas de cálculo
+        <Painel className="px-4 py-3.5">
+          <span className="rotulo-secao">Estágio do modelo</span>
+          <p className="mt-1.5 flex items-center gap-1.5 text-[0.875rem] font-medium text-ink">
+            <span
+              aria-hidden="true"
+              className={`size-2 shrink-0 rounded-full ${
+                pendentes === 0 ? "bg-positivo" : "bg-atencao"
+              }`}
+            />
+            {pendentes === 0 ? "Validado" : "Em validação"}
+          </p>
+          <p className="mt-1 text-[0.8125rem] leading-snug text-ink-muted">
+            {pendentes === 0
+              ? `As ${total} premissas foram revisadas.`
+              : `${pendentes} de ${total} premissas aguardam revisão contábil. Os resultados são estimativas, não apuração fiscal.`}
+          </p>
+          <p className="mt-2 text-[0.75rem] text-ink-subtle">
+            Regras: {VERSAO_REGRAS}
+          </p>
+          <ButtonLink
+            href="/premissas"
+            variante="secundaria"
+            tamanho="sm"
+            className="mt-3"
+          >
+            Abrir painel de premissas
           </ButtonLink>
-          <BotaoInstalar />
-        </div>
-      </section>
+        </Painel>
+      </div>
     </div>
   );
 }

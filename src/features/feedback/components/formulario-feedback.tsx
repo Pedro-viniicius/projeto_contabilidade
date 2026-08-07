@@ -2,9 +2,10 @@
 
 import { useId, useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { Card, CardTitulo } from "@/components/ui/card";
+import { Painel, PainelCabecalho, PainelCorpo } from "@/components/ui/painel";
+import { Badge } from "@/components/ui/badge";
 import { registrarEvento } from "@/lib/analytics";
-import { formatarData } from "@/lib/format";
+import { formatarData, formatarMoeda } from "@/lib/format";
 import { useValorLocal } from "@/lib/armazenamento-reativo";
 import {
   CHAVE_ATUAL,
@@ -37,6 +38,7 @@ export function FormularioFeedback() {
   const [contato, setContato] = useState("");
   const [erros, setErros] = useState<Erros>({});
   const [enviado, setEnviado] = useState(false);
+
   /* A lista se atualiza sozinha a cada gravação — sem efeito de sincronia. */
   const registrados = useValorLocal(CHAVE_FEEDBACK, lerFeedbacks) ?? [];
   const salvaAtual = useValorLocal(CHAVE_ATUAL, lerSimulacaoAtual);
@@ -78,148 +80,168 @@ export function FormularioFeedback() {
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <form onSubmit={enviar} noValidate className="space-y-5">
-          <div>
-            <label
-              htmlFor={idCategoria}
-              className="block text-sm font-medium text-ink"
-            >
-              Sobre o que é o feedback?
-            </label>
-            <select
-              id={idCategoria}
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              className="mt-2 min-h-13 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-ink"
-            >
-              {CATEGORIAS_FEEDBACK.map((c) => (
-                <option key={c.valor} value={c.valor}>
-                  {c.rotulo}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              htmlFor={idMensagem}
-              className="block text-sm font-medium text-ink"
-            >
-              O que você observou?
-            </label>
-            <textarea
-              id={idMensagem}
-              rows={5}
-              value={mensagem}
-              onChange={(e) => {
-                setMensagem(e.target.value);
-                setErros((a) => ({ ...a, mensagem: undefined }));
-                setEnviado(false);
-              }}
-              aria-invalid={erros.mensagem ? true : undefined}
-              aria-describedby={erros.mensagem ? `${idMensagem}-erro` : undefined}
-              placeholder="Ex.: a alíquota usada no cenário CNPJ não corresponde ao anexo que se aplica a essa atividade."
-              className={`mt-2 w-full rounded-xl border bg-surface p-3.5 leading-relaxed text-ink placeholder:text-ink-subtle ${
-                erros.mensagem ? "border-negative" : "border-border-strong"
-              }`}
-            />
-            {erros.mensagem && (
-              <p
-                id={`${idMensagem}-erro`}
-                role="alert"
-                className="mt-1.5 flex items-start gap-1.5 text-sm text-negative"
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(20rem,26rem)_minmax(0,1fr)]">
+      <Painel>
+        <PainelCabecalho titulo="Registrar observação" />
+        <form onSubmit={enviar} noValidate>
+          <PainelCorpo className="space-y-3.5">
+            <div>
+              <label
+                htmlFor={idCategoria}
+                className="block text-[0.8125rem] font-medium text-ink"
               >
-                <span aria-hidden="true">⚠</span>
-                <span>{erros.mensagem}</span>
+                Natureza
+              </label>
+              <select
+                id={idCategoria}
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                className="mt-1 min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 text-[0.875rem] text-ink"
+              >
+                {CATEGORIAS_FEEDBACK.map((c) => (
+                  <option key={c.valor} value={c.valor}>
+                    {c.rotulo}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor={idMensagem}
+                className="block text-[0.8125rem] font-medium text-ink"
+              >
+                Descrição
+              </label>
+              <textarea
+                id={idMensagem}
+                rows={5}
+                value={mensagem}
+                onChange={(e) => {
+                  setMensagem(e.target.value);
+                  setErros((a) => ({ ...a, mensagem: undefined }));
+                  setEnviado(false);
+                }}
+                aria-invalid={erros.mensagem ? true : undefined}
+                aria-describedby={erros.mensagem ? `${idMensagem}-erro` : undefined}
+                placeholder="Ex.: a alíquota efetiva de 11% não corresponde ao anexo aplicável a essa atividade."
+                className={`mt-1 w-full rounded-md border bg-surface p-2.5 text-[0.875rem] leading-relaxed text-ink placeholder:text-ink-subtle ${
+                  erros.mensagem ? "border-negativo" : "border-border-strong"
+                }`}
+              />
+              {erros.mensagem && (
+                <p
+                  id={`${idMensagem}-erro`}
+                  role="alert"
+                  className="mt-1 flex items-start gap-1 text-[0.75rem] text-negativo"
+                >
+                  <span aria-hidden="true">⚠</span>
+                  <span>{erros.mensagem}</span>
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor={idContato}
+                className="block text-[0.8125rem] font-medium text-ink"
+              >
+                Contato{" "}
+                <span className="font-normal text-ink-subtle">(opcional)</span>
+              </label>
+              <input
+                id={idContato}
+                type="text"
+                value={contato}
+                onChange={(e) => setContato(e.target.value)}
+                placeholder="Nome ou e-mail, se quiser retorno"
+                className="mt-1 min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 text-[0.875rem] text-ink placeholder:text-ink-subtle"
+              />
+            </div>
+
+            {salvaAtual && (
+              <p className="rounded-md bg-surface-muted p-2.5 text-[0.75rem] leading-snug text-ink-muted">
+                A simulação em aberto será anexada ao registro:{" "}
+                <span className="tnum font-medium text-ink">
+                  {formatarMoeda(salvaAtual.entrada.receitaMensal)}
+                </span>{" "}
+                de receita
+                {salvaAtual.referencia ? ` · ${salvaAtual.referencia}` : ""}.
               </p>
             )}
-          </div>
 
-          <div>
-            <label
-              htmlFor={idContato}
-              className="block text-sm font-medium text-ink"
-            >
-              Contato{" "}
-              <span className="font-normal text-ink-subtle">(opcional)</span>
-            </label>
-            <input
-              id={idContato}
-              type="text"
-              value={contato}
-              onChange={(e) => setContato(e.target.value)}
-              placeholder="E-mail ou nome, se quiser retorno"
-              className="mt-2 min-h-13 w-full rounded-xl border border-border-strong bg-surface px-3.5 text-ink placeholder:text-ink-subtle"
-            />
-          </div>
-
-          <Button type="submit" tamanho="lg" className="w-full sm:w-auto">
-            Registrar feedback
-          </Button>
-
-          {/* aria-live: confirma o envio para quem usa leitor de tela. */}
-          <p aria-live="polite" className="text-sm">
-            {enviado && (
-              <span className="text-positive">
-                ✓ Feedback registrado neste dispositivo. Obrigado!
-              </span>
-            )}
-          </p>
+            <div className="flex items-center gap-3">
+              <Button type="submit" tamanho="lg">
+                Registrar
+              </Button>
+              {/* aria-live: confirma o envio para quem usa leitor de tela. */}
+              <p aria-live="polite" className="text-[0.8125rem]">
+                {enviado && (
+                  <span className="text-positivo">✓ Registrado.</span>
+                )}
+              </p>
+            </div>
+          </PainelCorpo>
         </form>
-      </Card>
+      </Painel>
 
-      {registrados.length > 0 && (
-        <Card>
-          <CardTitulo>
-            Feedbacks registrados ({registrados.length})
-          </CardTitulo>
-          <p className="mt-1 text-sm text-ink-muted">
-            Ficam salvos só neste aparelho. Exporte o arquivo para levar à
-            conversa com o contador.
-          </p>
+      <Painel>
+        <PainelCabecalho
+          titulo="Registros neste aparelho"
+          descricao="Não há envio para servidor nesta versão. Exporte para levar à revisão."
+          acoes={
+            registrados.length > 0 ? (
+              <>
+                <Button tamanho="sm" variante="secundaria" onClick={baixarJson}>
+                  Exportar JSON
+                </Button>
+                <Button tamanho="sm" variante="sutil" onClick={limparFeedbacks}>
+                  Limpar
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
 
-          <ul className="mt-4 divide-y divide-[var(--border)]">
+        {registrados.length === 0 ? (
+          <div className="px-4 py-10 text-center">
+            <p className="text-[0.875rem] font-medium text-ink">
+              Nenhum registro
+            </p>
+            <p className="mx-auto mt-1 max-w-sm text-[0.8125rem] leading-snug text-ink-muted">
+              As observações registradas aparecem aqui, com a simulação e a
+              versão das regras vigentes no momento.
+            </p>
+            <ButtonLink
+              href="/premissas"
+              variante="secundaria"
+              tamanho="sm"
+              className="mt-4"
+            >
+              Revisar premissas
+            </ButtonLink>
+          </div>
+        ) : (
+          <ul className="divide-y divide-[var(--border)]">
             {registrados.map((f) => (
-              <li key={f.id} className="py-3">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-medium text-ink-muted">
+              <li key={f.id} className="px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Badge>
                     {CATEGORIAS_FEEDBACK.find((c) => c.valor === f.categoria)
                       ?.rotulo ?? f.categoria}
-                  </span>
-                  <span className="text-xs text-ink-subtle">
-                    {formatarData(f.criadoEm)}
+                  </Badge>
+                  <span className="text-[0.75rem] text-ink-subtle">
+                    {formatarData(f.criadoEm)} · regras {f.contexto.versaoRegras}
                   </span>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-ink">
+                <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-ink">
                   {f.mensagem}
                 </p>
               </li>
             ))}
           </ul>
-
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-            <Button variante="secundaria" onClick={baixarJson}>
-              Exportar em JSON
-            </Button>
-            <Button variante="sutil" onClick={limparFeedbacks}>
-              Apagar tudo deste aparelho
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      <Card className="bg-surface-muted">
-        <p className="text-sm leading-relaxed text-ink-muted">
-          Nesta versão o feedback não é enviado para nenhum servidor: fica no
-          armazenamento local do navegador. O formato do registro já é o mesmo
-          que uma API futura vai receber.
-        </p>
-        <ButtonLink href="/premissas" variante="secundaria" className="mt-4">
-          Revisar as premissas de cálculo
-        </ButtonLink>
-      </Card>
+        )}
+      </Painel>
     </div>
   );
 }
