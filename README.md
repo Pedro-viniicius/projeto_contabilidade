@@ -98,7 +98,11 @@ Nenhuma variável de ambiente é obrigatória. As opcionais estão em
 | `npm run test:watch` | Testes em modo watch |
 | `npm run test:coverage` | Cobertura do domínio |
 | `npm run icons` | Regenera os ícones PNG do PWA a partir da marca |
-| `npm run verify` | typecheck + lint + test + build (rode antes de commitar) |
+| `npm run verify` | build + typecheck + lint + test (rode antes de commitar) |
+
+> O `build` vem primeiro de propósito: o Next gera tipos de rota
+> (`LayoutProps` e afins) durante o build. Num clone recém-baixado, rodar
+> `typecheck` antes de um `build` falha com `Cannot find name 'LayoutProps'`.
 
 ---
 

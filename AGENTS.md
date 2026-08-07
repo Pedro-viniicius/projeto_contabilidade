@@ -39,7 +39,7 @@ serviço. MVP em validação contábil. Leia o `README.md` antes de mexer.
 ## Antes de terminar qualquer alteração
 
 ```bash
-npm run verify   # typecheck + lint + test + build
+npm run verify   # build + typecheck + lint + test
 ```
 
 ## Documentos que precisam ser mantidos junto do código
