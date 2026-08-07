@@ -6,7 +6,9 @@ preferencialmente vinda do feedback do contador ou de um usuário real.
 
 ---
 
-## V1 entregue
+## V1 entregue — simulador para usuário final
+
+> Preservada na tag `v1.0.0`. Substituída pela V2.
 
 Funcionalidades que estão no ar e foram testadas.
 
@@ -44,6 +46,28 @@ Funcionalidades que estão no ar e foram testadas.
 
 ---
 
+## V2 entregue — workspace profissional para contadores
+
+Reposicionamento da interface. O motor de cálculo não mudou.
+
+- [x] Shell profissional com navegação lateral persistente
+- [x] Visão geral com nova simulação a uma interação
+- [x] Formulário único agrupado, no lugar do wizard de 4 passos
+- [x] Formulário e resultado na mesma tela a partir de 960px
+- [x] Comparação PF × CNPJ em tabela, com coluna de diferença
+- [x] Composição dos encargos com base × alíquota = resultado
+- [x] Status de validação de cada premissa ao lado do número
+- [x] `/premissas` como painel de auditoria com filtros e contagens
+- [x] Indicador de estágio do modelo derivado das premissas reais
+- [x] Simulações recentes com referência opcional
+- [x] Recálculo sob comando, com aviso de valores alterados
+- [x] Atalho Ctrl/Cmd+Enter e foco automático no primeiro campo inválido
+- [x] Microcopy revisada para linguagem profissional
+- [x] Modo claro e escuro verificados
+- [x] 390, 768, 1024 e 1440px sem rolagem horizontal
+
+---
+
 ## Melhorias após feedback do contador
 
 Itens que **provavelmente** virão da revisão. Priorizar apenas o que ele
@@ -67,17 +91,17 @@ apontar.
 
 ---
 
-## V2 possível
+## V3 possível — evolução do modelo de cálculo
 
-Só depois que a lógica contábil estiver validada.
+Só depois que a lógica contábil estiver validada. Estes itens são de
+domínio, não de interface.
 
 - [ ] Tabelas reais do Simples Nacional com RBT12
 - [ ] Escolha de regime: Simples, Lucro Presumido, MEI
 - [ ] ISS por município
 - [ ] Dependentes e deduções do IRPF
-- [ ] Histórico de simulações com nomes ("cenário atual", "se eu aumentar
-      o preço")
-- [ ] Relatório em PDF para levar ao contador
+- [ ] Relatório em PDF para apresentar ao cliente
+- [ ] Comparar mais de dois cenários lado a lado
 - [ ] Segundo simulador: quanto separar por mês para impostos
 - [ ] Terceiro simulador: precificação de hora / ponto de equilíbrio
 - [ ] Sazonalidade e projeção anual com meses variáveis
@@ -106,17 +130,19 @@ Registradas para não se perderem. **Nenhuma justifica trabalho hoje.**
 
 ---
 
-## Decisões conscientes de "não fazer" no V1
+## Decisões conscientes de "não fazer"
 
 Registradas para não serem revisitadas sem motivo novo.
 
 | Decisão | Motivo |
 | --- | --- |
-| Sem backend | Nada no V1 exige servidor. Adicionar um seria custo sem função. |
+| Sem backend | Nada na aplicação exige servidor. Adicionar um seria custo sem função. |
 | Sem autenticação | Pedir cadastro antes de entregar valor derruba a conversão e não é necessário. |
 | Sem IA | Explicações determinísticas são previsíveis, testáveis e gratuitas. IA sobre lógica não validada só amplificaria o erro. |
-| Sem biblioteca de gráficos | Uma barra empilhada em CSS responde à pergunta do usuário sem 50 kB de JavaScript. |
-| Sem shadcn/ui | Precisávamos de 5 componentes. Escrevê-los custou menos que a configuração e o acoplamento. |
-| Sem react-hook-form | O formulário tem 5 campos em 4 passos. Estado local + Zod resolve com menos peças. |
+| Sem biblioteca de gráficos | A tabela comparativa comunica melhor para quem lê números. |
+| Sem cadastro de clientes | A persona é contador, mas o produto é simulador — não ERP. A referência local resolve a organização da sessão. |
+| Recálculo sob comando | Números estáveis durante a digitação, e o estado desatualizado fica explícito. |
+| Sem shadcn/ui | Poucas primitivas, sob medida para densidade de tabela. Escrevê-las custou menos que configurar e acoplar. |
+| Sem react-hook-form | O formulário tem 6 campos numa tela. Estado local + Zod resolve com menos peças. |
 | Sem IndexedDB | Guardamos poucos objetos pequenos. localStorage é síncrono e suficiente. |
 | Tabelas do Simples não implementadas | Implementá-las mal seria pior que assumir a simplificação abertamente. |

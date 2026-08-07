@@ -1,21 +1,28 @@
 # Clareza
 
-**Entenda melhor seus números antes de tomar uma decisão.**
+**Área de trabalho para análise tributária preliminar.**
 
-Simulador financeiro em formato de PWA para autônomos, profissionais
-liberais e prestadores de serviço no Brasil. O usuário responde quatro
-perguntas simples e descobre quanto realmente sobra do seu faturamento —
-e qual a diferença entre atuar como Pessoa Física ou com CNPJ.
+PWA de apoio à decisão para **contadores brasileiros**. Em uma única
+tela, o profissional informa receita, custos e pró-labore e obtém a
+comparação entre os cenários Pessoa Física e CNPJ, com impacto mensal e
+anual, composição dos encargos e o status de validação de cada premissa.
 
-> ⚠️ **Estágio do projeto:** MVP V1, em validação contábil. As premissas de
-> cálculo ainda **não foram revisadas por um contador**. Veja
-> [`docs/PREMISSAS_DE_CALCULO.md`](docs/PREMISSAS_DE_CALCULO.md).
+Otimizado para uso repetido ao longo do expediente: sem onboarding, sem
+wizard, com edição e recálculo sem trocar de tela.
+
+> ⚠️ **Estágio do projeto:** V2 da interface; o **modelo de cálculo segue
+> em validação**. As premissas ainda **não foram revisadas por um
+> contador** — veja [`docs/PREMISSAS_DE_CALCULO.md`](docs/PREMISSAS_DE_CALCULO.md).
+> Os resultados são estimativas, não apuração fiscal.
+
+> 📖 Histórico e rollback: [`docs/HISTORICO_DE_VERSOES.md`](docs/HISTORICO_DE_VERSOES.md)
+> · Mudanças: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
 ## Índice
 
-- [O que o V1 faz](#o-que-o-v1-faz)
+- [O que a aplicação faz](#o-que-a-aplicação-faz)
 - [Stack](#stack)
 - [Como rodar](#como-rodar)
 - [Scripts](#scripts)
@@ -27,22 +34,26 @@ e qual a diferença entre atuar como Pessoa Física ou com CNPJ.
 - [Limitações atuais](#limitações-atuais)
 - [Processo de validação contábil](#processo-de-validação-contábil)
 - [Decisões de arquitetura](#decisões-de-arquitetura)
+- [Versões e rollback](#versões-e-rollback)
 
 ---
 
-## O que o V1 faz
+## O que a aplicação faz
 
 | Rota | O que é |
 | --- | --- |
-| `/` | Landing com proposta de valor e atalho para a última simulação |
-| `/simulacao` | Wizard de 4 passos: perfil, receita, custos, cenário CNPJ |
-| `/resultado` | Resultado, comparativo PF × CNPJ e transparência do cálculo |
-| `/premissas` | Todas as premissas com valor, justificativa e status de validação |
-| `/como-funciona` | O que a simulação calcula — e o que ela **não** calcula |
-| `/feedback` | Registro e exportação de feedback (categorizado) |
+| `/` | Visão geral: nova simulação, simulações recentes, estágio do modelo |
+| `/simulacao` | Área de trabalho: formulário e resultado lado a lado |
+| `/premissas` | Painel de auditoria das regras, com filtros por status |
+| `/como-funciona` | Escopo do modelo: o que ele cobre e o que está fora |
+| `/feedback` | Registro e exportação de divergências (categorizado) |
+| `/resultado` | Redireciona para `/simulacao` (rota da V1, preservada) |
 | `/offline` | Fallback quando não há conexão nem cache |
 
-**Fluxo principal:** home → simulação → resultado → editar → recalcular.
+**Fluxo principal:** abrir → informar dados → calcular → comparar →
+alterar valor → recalcular, tudo na mesma tela.
+
+**Atalho:** `Ctrl/Cmd + Enter` calcula e recalcula.
 
 ---
 
@@ -55,7 +66,7 @@ e qual a diferença entre atuar como Pessoa Física ou com CNPJ.
 | UI | React 19 + Tailwind CSS 4 | Tokens de tema em CSS puro, sem runtime de estilo |
 | Validação | Zod 4 | Fronteira única entre dado cru e dado confiável |
 | Testes | Vitest | Rápido, sem configuração extra |
-| Componentes | Escritos à mão | Eram 5 — configurar uma biblioteca custaria mais |
+| Componentes | Escritos à mão | Poucas primitivas, sob medida para densidade de tabela |
 
 **Sem backend, sem banco, sem autenticação, sem IA, sem biblioteca de
 gráficos.** Cada ausência foi uma decisão; veja
@@ -124,8 +135,8 @@ src/
 │   └── globals.css             # Tokens de tema (claro/escuro)
 │
 ├── components/
-│   ├── ui/                     # Primitivas: Button, Card, CampoMoeda, Escolha…
-│   ├── layout/                 # Header e footer
+│   ├── ui/                     # Painel, Badge, AreaRolavel, CampoMoeda, Escolha…
+│   ├── layout/                 # AppShell (sidebar) e status do modelo
 │   └── pwa/                    # Registro do SW e botão de instalação
 │
 ├── features/
@@ -137,7 +148,7 @@ src/
 │   │   │   └── *.test.ts
 │   │   ├── schemas/            # Validação Zod + mensagens pt-BR
 │   │   ├── services/           # Persistência local
-│   │   ├── components/         # Wizard, resultado, comparativo…
+│   │   ├── components/         # Workspace, tabela comparativa, auditoria…
 │   │   └── types.ts            # Contratos de dados
 │   └── feedback/               # Mesma estrutura, escopo menor
 │
@@ -292,6 +303,14 @@ npm run test
 Não há testes triviais de renderização — o valor está em blindar a lógica
 que produz números.
 
+### Regressão entre versões
+
+O redesenho da V2 não podia alterar nenhum resultado. Sete cenários
+representativos foram calculados antes e depois — incluindo cada encargo e
+cada linha do passo a passo — e os valores numéricos permanecem idênticos
+aos da `v1.0.0`. Qualquer alteração em `domain/` deve repetir essa
+conferência.
+
 ---
 
 ## Limitações atuais
@@ -346,6 +365,37 @@ que produz números.
 | Explicações por template | LLM | Determinísticas, testáveis, gratuitas — e não amplificam erro de lógica não validada |
 | Alíquota efetiva única no CNPJ | Tabelas do Simples | Implementá-las mal seria pior que assumir a simplificação abertamente |
 | Ícones gerados por script | Assets binários no repositório | `npm run icons` regenera a partir da marca; zero dependência de imagem |
+| Cálculo sob comando | Recalcular a cada tecla | Números estáveis durante a digitação; o estado "valores alterados" fica explícito |
+| Formulário e resultado na mesma tela | Wizard | O contador altera um valor e vê o impacto sem navegar |
+| Tabela no lugar de gráfico | Gráfico de composição | Quem lê números precisa de precisão, não de forma |
+| Referência local por simulação | Cadastro de clientes | Resolve a organização da sessão de trabalho sem inventar um CRM |
+| `AreaRolavel` com `relative` | `overflow-x-auto` solto | Sem ancestral posicionado, texto `sr-only` escapa do recorte e cria rolagem na página |
+
+---
+
+## Versões e rollback
+
+O estado exato de cada versão fica marcado por uma tag anotada. Nada é
+sobrescrito.
+
+| Tag | O que é |
+| --- | --- |
+| `v1.0.0` | Simulador orientado ao usuário final (wizard, mobile-first) |
+| `v2.0.0` | Área de trabalho profissional para contadores (atual) |
+
+```bash
+# inspecionar a V1 sem alterar nada
+git switch --detach v1.0.0
+
+# voltar para a branch do redesign
+git switch feat/accountant-professional-ux
+
+# criar uma branch a partir da V1
+git switch -c restore/v1 v1.0.0
+```
+
+Detalhes, comparativo entre versões e verificação de regressão em
+[`docs/HISTORICO_DE_VERSOES.md`](docs/HISTORICO_DE_VERSOES.md).
 
 ---
 

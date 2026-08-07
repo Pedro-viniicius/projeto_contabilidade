@@ -1,6 +1,6 @@
 {
   "name": "clareza",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -32,5 +32,5 @@
     "typescript": "^5",
     "vitest": "^4.1.10"
   },
-  "description": "Simulador financeiro para autônomos e prestadores de serviço (PWA)."
+  "description": "Área de trabalho de análise tributária para contadores (PWA)."
 }
