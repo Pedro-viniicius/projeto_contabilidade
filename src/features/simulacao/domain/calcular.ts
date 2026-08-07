@@ -62,19 +62,28 @@ export function faixaIrpfDe(
 }
 
 /**
+ * Salário de contribuição do INSS: base limitada ao teto e, havendo
+ * atividade, nunca abaixo do piso.
+ *
+ * Extraído para que o cálculo e a auditoria usem exatamente a mesma
+ * expressão — antes ela estava duplicada na montagem dos passos.
+ */
+export function salarioDeContribuicao(base: number): number {
+  const { inssPiso, inssTeto } = REGRAS.pessoaFisica;
+  const baseValida = naoNegativo(base);
+  if (baseValida === 0) return 0;
+  return Math.min(Math.max(baseValida, inssPiso.valor), inssTeto.valor);
+}
+
+/**
  * INSS do contribuinte individual.
  * O salário de contribuição é limitado ao teto; quando há base positiva
  * abaixo do piso, assume-se contribuição sobre o piso.
  */
 export function calcularInssAutonomo(base: number): number {
-  const { inssAliquota, inssPiso, inssTeto } = REGRAS.pessoaFisica;
-  const baseValida = naoNegativo(base);
-  if (baseValida === 0) return 0;
-  const salarioContribuicao = Math.min(
-    Math.max(baseValida, inssPiso.valor),
-    inssTeto.valor,
+  return arredondar(
+    salarioDeContribuicao(base) * REGRAS.pessoaFisica.inssAliquota.valor,
   );
-  return arredondar(salarioContribuicao * inssAliquota.valor);
 }
 
 /** Base do carnê-leão: receita bruta menos custos dedutíveis do livro-caixa. */
@@ -96,6 +105,7 @@ export function calcularCenarioPessoaFisica(
   const custos = arredondar(naoNegativo(entrada.custosMensais));
 
   const base = calcularBaseLivroCaixa(receita, custos);
+  const salarioContribuicao = salarioDeContribuicao(base);
   const inss = calcularInssAutonomo(base);
   const baseIrpf = arredondar(Math.max(0, base - inss));
   const irpf = calcularIrpfMensal(baseIrpf);
@@ -105,6 +115,9 @@ export function calcularCenarioPessoaFisica(
     {
       rotulo: "INSS (contribuinte individual)",
       valorMensal: inss,
+      base: salarioContribuicao,
+      aliquota: REGRAS.pessoaFisica.inssAliquota.valor,
+      premissa: "INSS — alíquota",
       explicacao: `${pct(
         REGRAS.pessoaFisica.inssAliquota.valor,
       )} sobre o salário de contribuição, respeitando piso de ${brl(
@@ -114,6 +127,10 @@ export function calcularCenarioPessoaFisica(
     {
       rotulo: "IRPF (carnê-leão)",
       valorMensal: irpf,
+      base: baseIrpf,
+      aliquota: faixa.aliquota,
+      parcelaADeduzir: faixa.parcelaADeduzir,
+      premissa: "IRPF — tabela progressiva mensal",
       explicacao: `Tabela progressiva mensal: faixa de ${pct(
         faixa.aliquota,
       )} com parcela a deduzir de ${brl(faixa.parcelaADeduzir)}.`,
@@ -131,12 +148,9 @@ export function calcularCenarioPessoaFisica(
     },
     {
       rotulo: "INSS",
-      formula: `${brl(
-        Math.min(
-          Math.max(base, base > 0 ? REGRAS.pessoaFisica.inssPiso.valor : 0),
-          REGRAS.pessoaFisica.inssTeto.valor,
-        ),
-      )} × ${pct(REGRAS.pessoaFisica.inssAliquota.valor)}`,
+      formula: `${brl(salarioContribuicao)} × ${pct(
+        REGRAS.pessoaFisica.inssAliquota.valor,
+      )}`,
       valor: inss,
       premissa: "INSS — alíquota, piso e teto",
     },
@@ -191,9 +205,12 @@ export function calcularCenarioCnpj(
   const aliquota = REGRAS.cnpj.aliquotaEfetivaFaturamento.valor;
   const impostoFaturamento = arredondar(receita * aliquota);
 
+  const baseInssProLabore = Math.min(
+    proLabore,
+    REGRAS.pessoaFisica.inssTeto.valor,
+  );
   const inssProLabore = arredondar(
-    Math.min(proLabore, REGRAS.pessoaFisica.inssTeto.valor) *
-      REGRAS.cnpj.inssProLaboreAliquota.valor,
+    baseInssProLabore * REGRAS.cnpj.inssProLaboreAliquota.valor,
   );
   const baseIrrf = arredondar(Math.max(0, proLabore - inssProLabore));
   const irrfProLabore = calcularIrpfMensal(baseIrrf);
@@ -203,6 +220,9 @@ export function calcularCenarioCnpj(
     {
       rotulo: "Tributos sobre o faturamento",
       valorMensal: impostoFaturamento,
+      base: receita,
+      aliquota,
+      premissa: "Alíquota efetiva sobre o faturamento",
       explicacao: `Alíquota efetiva única de ${pct(
         aliquota,
       )} sobre o faturamento. Simplificação do MVP no lugar das tabelas do Simples Nacional.`,
@@ -210,12 +230,16 @@ export function calcularCenarioCnpj(
     {
       rotulo: "Honorários contábeis",
       valorMensal: contabilidade,
+      premissa: "Custo contábil mensal",
       explicacao:
         "Custo fixo de manter a empresa regular. Não existe no cenário Pessoa Física.",
     },
     {
       rotulo: "INSS sobre pró-labore",
       valorMensal: inssProLabore,
+      base: baseInssProLabore,
+      aliquota: REGRAS.cnpj.inssProLaboreAliquota.valor,
+      premissa: "INSS sobre pró-labore",
       explicacao: `${pct(
         REGRAS.cnpj.inssProLaboreAliquota.valor,
       )} retidos do sócio sobre o pró-labore de ${brl(proLabore)}.`,
@@ -223,6 +247,10 @@ export function calcularCenarioCnpj(
     {
       rotulo: "IRRF sobre pró-labore",
       valorMensal: irrfProLabore,
+      base: baseIrrf,
+      aliquota: faixa.aliquota,
+      parcelaADeduzir: faixa.parcelaADeduzir,
+      premissa: "IRPF — tabela progressiva mensal",
       explicacao: `Tabela progressiva mensal aplicada ao pró-labore: faixa de ${pct(
         faixa.aliquota,
       )}. O lucro distribuído é tratado como isento.`,

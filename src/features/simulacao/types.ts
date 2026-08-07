@@ -29,11 +29,25 @@ export interface PassoCalculo {
   readonly premissa?: string;
 }
 
-/** Um encargo/tributo estimado dentro de um cenário. */
+/**
+ * Um encargo/tributo estimado dentro de um cenário.
+ *
+ * Os campos opcionais existem para a auditoria: permitem exibir
+ * base × alíquota = resultado sem que a interface recalcule nada.
+ * São descrições do que o motor já computou — nunca entradas de cálculo.
+ */
 export interface Encargo {
   readonly rotulo: string;
   readonly valorMensal: number;
   readonly explicacao: string;
+  /** Base de cálculo sobre a qual a alíquota incidiu. */
+  readonly base?: number;
+  /** Alíquota aplicada, em fração (0.20 = 20%). */
+  readonly aliquota?: number;
+  /** Parcela deduzida, quando a regra usa tabela progressiva. */
+  readonly parcelaADeduzir?: number;
+  /** Chave da premissa correspondente em `listarPremissas()`. */
+  readonly premissa?: string;
 }
 
 /** Resultado calculado de um único cenário. */

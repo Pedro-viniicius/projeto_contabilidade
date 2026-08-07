@@ -256,6 +256,38 @@ export function listarPremissas(): readonly PremissaListada[] {
   ];
 }
 
+export interface ResumoValidacao {
+  readonly total: number;
+  /** Quantas ainda não foram revisadas por um contador. */
+  readonly pendentes: number;
+  readonly validadas: number;
+  readonly porStatus: Readonly<Record<StatusPremissa, number>>;
+}
+
+/**
+ * Situação de validação do modelo, derivada das premissas reais.
+ * A interface nunca deve escrever esses números à mão — eles mudam
+ * sozinhos conforme o contador revisa as regras.
+ */
+export function resumoValidacao(): ResumoValidacao {
+  const premissas = listarPremissas();
+  const porStatus: Record<StatusPremissa, number> = {
+    "hipotese-temporaria": 0,
+    "a-validar": 0,
+    "validada-tecnicamente": 0,
+    "nao-aplicavel": 0,
+  };
+  for (const p of premissas) porStatus[p.status] += 1;
+
+  return {
+    total: premissas.length,
+    pendentes:
+      porStatus["hipotese-temporaria"] + porStatus["a-validar"],
+    validadas: porStatus["validada-tecnicamente"],
+    porStatus,
+  };
+}
+
 function meta<T>(p: Premissa<T>) {
   return {
     descricao: p.descricao,
