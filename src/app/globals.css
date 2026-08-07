@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/*
+  Design tokens do Clareza.
+  Base neutra quente + um único acento (verde-petróleo) para valores e ações.
+  Evita o visual "azul corporativo" tradicional de software contábil.
+*/
+:root {
+  --background: #fafaf8;
+  --surface: #ffffff;
+  --surface-muted: #f4f4f1;
+  --ink: #12151a;
+  --ink-muted: #5c636e;
+  --ink-subtle: #868d99;
+  --border: #e5e4df;
+  --border-strong: #d3d2cb;
+  --accent: #0e7c66;
+  --accent-hover: #0a6252;
+  --accent-soft: #e6f3ef;
+  --accent-ink: #08483c;
+  --positive: #0e7c66;
+  --negative: #b4443a;
+  --negative-soft: #fbeceb;
+  --warning-soft: #fdf6e6;
+  --warning-ink: #7a5a12;
+  --focus: #0e7c66;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0c0e;
+    --surface: #141619;
+    --surface-muted: #1b1e22;
+    --ink: #f1f2f4;
+    --ink-muted: #a6acb6;
+    --ink-subtle: #7d838d;
+    --border: #262a2f;
+    --border-strong: #363b42;
+    --accent: #3ec9a7;
+    --accent-hover: #58d8ba;
+    --accent-soft: #10241f;
+    --accent-ink: #9ce8d3;
+    --positive: #3ec9a7;
+    --negative: #f08a80;
+    --negative-soft: #2a1614;
+    --warning-soft: #2a2113;
+    --warning-ink: #e8cd8d;
+    --focus: #3ec9a7;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-border-base: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-ink: var(--warning-ink);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  /* Evita rolagem horizontal acidental no mobile. */
+  overflow-x: hidden;
+}
+
+/* Foco visível e consistente em todos os elementos interativos. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/*
+  Em campos compostos (prefixo "R$" + input), o anel de foco pertence ao
+  contêiner. Sem isto, input e contêiner desenham dois anéis sobrepostos.
+  Especificidade maior que a regra global de :focus-visible acima.
+*/
+.campo-composto:focus-visible {
+  outline: none;
+}
+
+/* Números financeiros alinham melhor com tabular-nums. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
