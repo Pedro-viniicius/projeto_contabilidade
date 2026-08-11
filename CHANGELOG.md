@@ -5,6 +5,49 @@ Versionamento semântico.
 
 ---
 
+## [2.0.1] — 2026-08-11
+
+Primeira revisão contábil aplicada. Escopo deliberadamente restrito ao que
+o contador informou com números — nada foi inferido.
+
+### Alterado
+
+- **INSS — piso** de R$ 1.518,00 para **R$ 1.621,00** e **teto** de
+  R$ 8.157,41 para **R$ 8.475,55**, conforme a revisão. Efeito: em bases
+  acima do teto, o líquido da PF cai R$ 46,13/mês (R$ 553,56/ano); no
+  cenário CNPJ, cai R$ 25,36/mês quando o pró-labore supera o teto.
+  Abaixo do teto, nada muda.
+- **Status de validação:** as três premissas de INSS passam de
+  hipótese/a-validar para **validada tecnicamente** — as primeiras do
+  projeto. O painel `/premissas` reflete isso sozinho.
+- `VERSAO_REGRAS` de `v1-mvp-2026-08` para **`v1.1-2026-08`**.
+- **Retenção de 11%** pelo tomador PJ deixa de ser lacuna e passa a ser
+  decisão documentada: é antecipação de pagamento e não altera o
+  resultado prático.
+- **Justificativas das premissas** reescritas com o retorno profissional.
+  Duas passam a declarar-se explicitamente erradas na interface:
+  - a **tabela do IRPF**, confirmada como desatualizada e sem a isenção
+    de R$ 5.000;
+  - a **alíquota única de 11%** do CNPJ, que apaga uma diferença de até
+    9,5 p.p. entre os anexos III e V ao ignorar o Fator R.
+
+### Adicionado
+
+- `docs/PENDENCIAS_CONTADOR.md` — as 21 perguntas em aberto, priorizadas,
+  com formulários prontos para as duas tabelas que destravam o produto.
+
+### Não alterado, por decisão
+
+- **Tabela do IRPF.** A revisão confirmou que está desatualizada mas não
+  informou as novas faixas. Não foram preenchidas por inferência: a
+  isenção de R$ 5.000 envolve um redutor de transição, e errar esse
+  desenho distorceria a faixa de renda mais comum. Bloqueio nº 1.
+- **Modelo do cenário CNPJ.** Corrigi-lo exige as tabelas completas dos
+  anexos com RBT12, ainda não recebidas. As alíquotas iniciais informadas
+  valem só para a primeira faixa. Bloqueio nº 2.
+
+---
+
 ## [2.0.0] — 2026-08-07
 
 Reposicionamento do produto: de simulador para usuário final a **área de

@@ -57,7 +57,7 @@ export interface FaixaIrpf {
  * premissas, incremente esta string — ela é gravada junto de cada
  * simulação salva, para sabermos com qual modelo o número foi gerado.
  */
-export const VERSAO_REGRAS = "v1-mvp-2026-08";
+export const VERSAO_REGRAS = "v1.1-2026-08";
 
 export const REGRAS = {
   /** Meses considerados na projeção anual. */
@@ -76,26 +76,26 @@ export const REGRAS = {
       descricao:
         "Alíquota de INSS do contribuinte individual (autônomo) sobre o salário de contribuição.",
       porQueExiste:
-        "Usamos o plano completo (20%). O MVP não modela o plano simplificado (11%), a retenção de 11% quando o serviço é prestado a empresa, nem contribuição em atraso.",
-      status: "a-validar",
+        "Confirmado na revisão contábil de agosto/2026: como autônomo, o recolhimento recai sobre 20%, e essa é a regra geral. A retenção de 11% pelo tomador pessoa jurídica foi avaliada e deliberadamente ignorada — é antecipação de pagamento e não altera o resultado prático. O plano simplificado (11%) segue fora do escopo.",
+      status: "validada-tecnicamente",
       ondeUsada: "Cenário Pessoa Física",
     }),
     inssTeto: premissa({
-      valor: 8157.41,
+      valor: 8475.55,
       descricao:
         "Teto do salário de contribuição do INSS (valor mensal máximo sobre o qual incide a alíquota).",
       porQueExiste:
-        "Valor de referência para o MVP. Muda anualmente e PRECISA ser confirmado antes de qualquer uso real.",
-      status: "hipotese-temporaria",
+        "Valor informado na revisão contábil de agosto/2026, em substituição aos R$ 8.157,41 usados no MVP. Muda anualmente: precisa ser reconferido a cada virada de ano.",
+      status: "validada-tecnicamente",
       ondeUsada: "Cenário Pessoa Física",
     }),
     inssPiso: premissa({
-      valor: 1518,
+      valor: 1621,
       descricao:
         "Piso do salário de contribuição do INSS (equivalente ao salário mínimo).",
       porQueExiste:
-        "Assumimos que o autônomo contribui pelo menos sobre o piso quando há atividade. Valor de referência a confirmar.",
-      status: "hipotese-temporaria",
+        "Valor informado na revisão contábil de agosto/2026, em substituição aos R$ 1.518,00 usados no MVP. Assumimos que o autônomo contribui pelo menos sobre o piso quando há atividade. Muda anualmente.",
+      status: "validada-tecnicamente",
       ondeUsada: "Cenário Pessoa Física",
     }),
     irpfFaixas: premissa<readonly FaixaIrpf[]>({
@@ -109,7 +109,7 @@ export const REGRAS = {
       descricao:
         "Tabela progressiva mensal do IRPF aplicada sobre a base do carnê-leão.",
       porQueExiste:
-        "Valores de referência para o MVP. A tabela é atualizada por lei e o MVP não aplica desconto simplificado, dependentes, despesas médicas, educação nem ajuste anual.",
+        "⚠️ SABIDAMENTE DESATUALIZADA. A revisão contábil de agosto/2026 confirmou que estas faixas precisam ser substituídas e que a nova regra inclui a isenção até R$ 5.000,00 — mas as faixas exatas ainda não foram informadas. Não preenchemos por conta própria: a isenção não é uma faixa a mais, envolve um redutor na transição, e chutar o desenho distorceria justamente a faixa de renda mais comum. Bloqueio nº 1 do modelo. O MVP também não aplica desconto simplificado, dependentes, despesas médicas, educação nem ajuste anual.",
       status: "hipotese-temporaria",
       ondeUsada: "Cenário Pessoa Física e pró-labore do cenário CNPJ",
     }),
@@ -121,7 +121,7 @@ export const REGRAS = {
       descricao:
         "Alíquota efetiva única estimada sobre o faturamento, cobrindo os tributos da empresa prestadora de serviços.",
       porQueExiste:
-        "SIMPLIFICAÇÃO CENTRAL DO MVP: não implementamos as tabelas do Simples Nacional, o cálculo do RBT12, o Fator R nem a partilha entre tributos. Usamos um percentual único e configurável para que o resultado seja compreensível e fácil de corrigir. Este é o primeiro número que o contador deve revisar.",
+        "⚠️ SABIDAMENTE INCORRETA POR CONSTRUÇÃO. A revisão contábil de agosto/2026 apontou que ignorar o Fator R é o que torna o resultado errado, não apenas impreciso: atividade de cunho intelectual transita entre o Anexo V (a partir de 15,5%) e o Anexo III (a partir de 6%) conforme a folha atinja 28% do faturamento. Uma alíquota única de 11% apaga uma diferença de até 9,5 pontos percentuais. Corrigir exige escolha de anexo, Fator R e as tabelas completas do Simples com RBT12 — ainda não recebidas. Bloqueio nº 2 do modelo.",
       status: "hipotese-temporaria",
       ondeUsada: "Cenário CNPJ",
     }),
@@ -148,7 +148,7 @@ export const REGRAS = {
       descricao:
         "Percentual do faturamento sugerido como pró-labore padrão na simulação.",
       porQueExiste:
-        "É apenas um valor inicial de formulário, inspirado no patamar de 28% associado ao Fator R. O MVP NÃO calcula Fator R nem troca de anexo. O usuário pode alterar livremente.",
+        "A revisão contábil de agosto/2026 confirmou que 28% é exatamente o patamar do Fator R: atingido pela folha, a empresa migra do Anexo V para o Anexo III. Isso valida a origem do número, mas não o valida como sugestão de pró-labore — a pergunta sobre qual valor sugerir por padrão segue sem resposta. O simulador continua NÃO calculando Fator R nem troca de anexo.",
       status: "hipotese-temporaria",
       ondeUsada: "Valor padrão do formulário no cenário CNPJ",
     }),
