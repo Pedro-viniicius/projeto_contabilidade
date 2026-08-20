@@ -1,13 +1,10 @@
-import type { Metadata } from "next";
-import { WorkspaceSimulacao } from "@/features/simulacao/components/workspace-simulacao";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Simulação",
-  description:
-    "Área de trabalho da simulação: informe receita, custos e pró-labore e compare os cenários Pessoa Física e CNPJ lado a lado.",
-  alternates: { canonical: "/simulacao" },
-};
-
+/**
+ * Na V2 a simulação tinha rota própria. Na V2.1 ela é a área de
+ * trabalho inteira. A rota permanece como redirecionamento para não
+ * quebrar endereços salvos, atalhos do PWA instalado e a casca em cache.
+ */
 export default function SimulacaoPage() {
-  return <WorkspaceSimulacao />;
+  redirect("/workspace");
 }

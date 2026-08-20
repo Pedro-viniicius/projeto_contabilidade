@@ -80,6 +80,11 @@ export function removerDoHistorico(id: string): void {
   );
 }
 
+/** Fecha a análise em edição sem tocar no histórico. */
+export function descartarSimulacaoAtual(): void {
+  remover(CHAVE_ATUAL);
+}
+
 export function limparSimulacoes(): void {
   remover(CHAVE_ATUAL);
   remover(CHAVE_HISTORICO);

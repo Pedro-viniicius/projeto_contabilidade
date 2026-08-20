@@ -2,33 +2,29 @@
 
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Painel, PainelCabecalho } from "@/components/ui/painel";
 import { AreaRolavel } from "@/components/ui/area-rolavel";
+import { TOM_STATUS } from "./composicao-encargos";
 import {
   listarPremissas,
+  resumoValidacao,
   ROTULO_STATUS,
+  VERSAO_REGRAS,
   type PremissaListada,
   type StatusPremissa,
 } from "../domain/calculation-rules";
 
-const TOM_STATUS: Record<StatusPremissa, "atencao" | "neutro" | "positivo"> = {
-  "hipotese-temporaria": "atencao",
-  "a-validar": "neutro",
-  "validada-tecnicamente": "positivo",
-  "nao-aplicavel": "neutro",
-};
-
 type Filtro = "todas" | StatusPremissa;
 
 /**
- * Painel de auditoria das regras de cálculo.
+ * Auditoria das regras de cálculo, dentro do painel lateral.
  *
- * Os filtros e as contagens saem de `listarPremissas()` — nenhum status
- * ou número é escrito à mão aqui. Quando o contador revisar uma regra no
- * domínio, esta tela reflete a mudança sozinha.
+ * Filtros, contagens e status saem de `listarPremissas()` — nada é
+ * escrito à mão. Quando o contador revisar uma regra no domínio, este
+ * painel reflete a mudança sozinho.
  */
 export function PainelPremissas() {
   const premissas = listarPremissas();
+  const { total, pendentes, porStatus } = resumoValidacao();
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [expandida, setExpandida] = useState<string | null>(null);
 
@@ -54,13 +50,43 @@ export function PainelPremissas() {
       : premissas.filter((p) => p.status === filtro);
 
   return (
-    <Painel>
-      <PainelCabecalho
-        titulo="Regras de cálculo"
-        descricao="Cada linha é um parâmetro usado pelo motor. Abra para ver a justificativa e o que a premissa deixa de fora."
-      />
+    <div className="space-y-3">
+      <dl className="grid grid-cols-2 rounded-md border border-border-base bg-surface sm:grid-cols-4">
+        {[
+          { rotulo: "No modelo", valor: total },
+          { rotulo: "Temporárias", valor: porStatus["hipotese-temporaria"] },
+          { rotulo: "A validar", valor: porStatus["a-validar"] },
+          { rotulo: "Validadas", valor: porStatus["validada-tecnicamente"] },
+        ].map((ind, i) => (
+          <div
+            key={ind.rotulo}
+            className={[
+              "px-3 py-2",
+              i % 2 === 1 ? "border-l border-border-base" : "",
+              i >= 2 ? "border-t border-border-base sm:border-t-0" : "",
+              i === 2 ? "sm:border-l" : "",
+            ].join(" ")}
+          >
+            <dt className="rotulo-secao">{ind.rotulo}</dt>
+            <dd className="tnum mt-0.5 text-base font-semibold text-ink">
+              {ind.valor}
+            </dd>
+          </div>
+        ))}
+      </dl>
 
-      <div className="flex flex-wrap gap-1 border-b border-border-base px-3 py-2">
+      {pendentes > 0 && (
+        <p className="rounded-md border-l-2 border-l-atencao bg-atencao-soft px-3 py-2.5 text-[0.8125rem] leading-relaxed text-ink">
+          <strong className="font-semibold">
+            {pendentes} de {total} premissas ainda não foram revisadas por um
+            contador.
+          </strong>{" "}
+          Os valores são referências escolhidas para tornar o modelo
+          compreensível e fácil de corrigir — não constituem apuração fiscal.
+        </p>
+      )}
+
+      <div className="flex flex-wrap gap-1">
         {filtros.map((f) => (
           <button
             key={f}
@@ -82,44 +108,49 @@ export function PainelPremissas() {
         ))}
       </div>
 
-      <AreaRolavel>
-        <table className="tabela-dados min-w-[44rem] text-[0.8125rem]">
-          <caption className="sr-only">
-            Premissas de cálculo com cenário, valor, status de validação e onde
-            cada uma é utilizada.
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Premissa</th>
-              <th scope="col">Cenário</th>
-              <th scope="col" className="num">
-                Valor
-              </th>
-              <th scope="col">Status</th>
-              <th scope="col">Utilização</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visiveis.map((p) => (
-              <LinhaPremissa
-                key={p.chave}
-                premissa={p}
-                aberta={expandida === p.chave}
-                onAlternar={() =>
-                  setExpandida(expandida === p.chave ? null : p.chave)
-                }
-              />
-            ))}
-          </tbody>
-        </table>
-      </AreaRolavel>
+      <div className="overflow-hidden rounded-md border border-border-base bg-surface">
+        <AreaRolavel>
+          <table className="tabela-dados min-w-[38rem] text-[0.8125rem]">
+            <caption className="sr-only">
+              Premissas de cálculo com cenário, valor, status de validação e
+              onde cada uma é utilizada.
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Premissa</th>
+                <th scope="col">Cenário</th>
+                <th scope="col" className="num">
+                  Valor
+                </th>
+                <th scope="col">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visiveis.map((p) => (
+                <LinhaPremissa
+                  key={p.chave}
+                  premissa={p}
+                  aberta={expandida === p.chave}
+                  onAlternar={() =>
+                    setExpandida(expandida === p.chave ? null : p.chave)
+                  }
+                />
+              ))}
+            </tbody>
+          </table>
+        </AreaRolavel>
 
-      {visiveis.length === 0 && (
-        <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
-          Nenhuma premissa neste status.
-        </p>
-      )}
-    </Painel>
+        {visiveis.length === 0 && (
+          <p className="px-4 py-8 text-center text-[0.8125rem] text-ink-muted">
+            Nenhuma premissa neste status.
+          </p>
+        )}
+      </div>
+
+      <p className="text-[0.75rem] text-ink-subtle">
+        Versão das regras: {VERSAO_REGRAS}
+      </p>
+    </div>
   );
 }
 
@@ -147,7 +178,7 @@ function LinhaPremissa({
           >
             <span
               aria-hidden="true"
-              className={`mt-0.5 shrink-0 text-ink-subtle transition-transform ${
+              className={`mt-px shrink-0 text-ink-subtle transition-transform ${
                 aberta ? "rotate-90" : ""
               }`}
             >
@@ -163,12 +194,11 @@ function LinhaPremissa({
             {ROTULO_STATUS[premissa.status]}
           </Badge>
         </td>
-        <td className="text-ink-muted">{premissa.ondeUsada}</td>
       </tr>
 
       {aberta && (
         <tr id={idDetalhe} className="bg-surface-muted">
-          <td colSpan={5} className="px-4 py-3">
+          <td colSpan={4} className="px-4 py-3">
             <dl className="max-w-3xl space-y-2">
               <div>
                 <dt className="rotulo-secao">O que representa</dt>
@@ -177,9 +207,17 @@ function LinhaPremissa({
                 </dd>
               </div>
               <div>
-                <dt className="rotulo-secao">Por que existe e o que simplifica</dt>
+                <dt className="rotulo-secao">
+                  Por que existe e o que simplifica
+                </dt>
                 <dd className="mt-0.5 text-[0.8125rem] leading-relaxed text-ink-muted">
                   {premissa.porQueExiste}
+                </dd>
+              </div>
+              <div>
+                <dt className="rotulo-secao">Onde é utilizada</dt>
+                <dd className="mt-0.5 text-[0.8125rem] leading-relaxed text-ink-muted">
+                  {premissa.ondeUsada}
                 </dd>
               </div>
             </dl>

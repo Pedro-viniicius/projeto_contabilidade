@@ -10,8 +10,9 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 /**
- * Instalação do PWA, discreta no rodapé da navegação.
- * Só aparece quando o navegador sinaliza que a instalação é possível.
+ * Instalação do PWA, discreta na barra superior.
+ * Só aparece quando o navegador sinaliza que a instalação é possível —
+ * nunca é um botão que não faz nada.
  */
 export function BotaoInstalar() {
   const [evento, setEvento] = useState<BeforeInstallPromptEvent | null>(null);
@@ -42,9 +43,13 @@ export function BotaoInstalar() {
         await evento.userChoice;
         setEvento(null);
       }}
-      className="flex min-h-9 w-full items-center gap-2 rounded-md px-2.5 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+      title="Instalar o Clareza neste aparelho"
+      className="inline-flex size-8 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
     >
-      <span aria-hidden="true">⬇</span> Instalar aplicativo
+      <span aria-hidden="true" className="text-[0.875rem] leading-none">
+        ⬇
+      </span>
+      <span className="sr-only">Instalar aplicativo</span>
     </button>
   );
 }

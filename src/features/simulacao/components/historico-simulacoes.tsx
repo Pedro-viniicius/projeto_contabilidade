@@ -1,14 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Button, ButtonLink } from "@/components/ui/button";
-import { Painel, PainelCabecalho } from "@/components/ui/painel";
+import { Button } from "@/components/ui/button";
 import { formatarMoeda } from "@/lib/format";
 import { useHidratado, useValorLocal } from "@/lib/armazenamento-reativo";
 import { simular } from "../domain/calcular";
-import { AreaRolavel } from "@/components/ui/area-rolavel";
 import {
-  abrirDoHistorico,
   CHAVE_HISTORICO,
   lerHistorico,
   removerDoHistorico,
@@ -22,125 +18,104 @@ const horaCurta = new Intl.DateTimeFormat("pt-BR", {
 });
 
 /**
- * Simulações recentes do aparelho.
+ * Análises recentes do aparelho, dentro da própria área de trabalho.
  *
- * Serve ao uso repetido dentro de uma sessão de trabalho: alternar
- * entre cenários já calculados sem redigitar. Não é cadastro de
- * clientes — é histórico local e descartável.
+ * Abrir um registro não navega: repõe os valores no formulário ao lado
+ * e recalcula na hora. Serve ao uso repetido de uma sessão de trabalho
+ * — alternar entre cenários de clientes sem redigitar. Não é cadastro
+ * de clientes: é histórico local e descartável.
  */
-export function HistoricoSimulacoes() {
-  const router = useRouter();
+export function HistoricoSimulacoes({
+  idAtual,
+  onAbrir,
+}: {
+  /** Registro atualmente em edição, destacado na lista. */
+  idAtual?: string | null;
+  onAbrir: (id: string) => void;
+}) {
   const hidratado = useHidratado();
   const historico = useValorLocal(CHAVE_HISTORICO, lerHistorico) ?? [];
 
-  if (!hidratado) return null;
+  if (!hidratado) {
+    return (
+      <p className="px-3 py-3 text-[0.8125rem] text-ink-muted" role="status">
+        Carregando…
+      </p>
+    );
+  }
 
   if (historico.length === 0) {
     return (
-      <Painel>
-        <PainelCabecalho titulo="Simulações recentes" />
-        <div className="px-4 py-8 text-center">
-          <p className="text-[0.875rem] font-medium text-ink">
-            Nenhuma simulação neste aparelho
-          </p>
-          <p className="mx-auto mt-1 max-w-md text-[0.8125rem] leading-snug text-ink-muted">
-            As simulações executadas ficam listadas aqui para você retomar sem
-            redigitar os valores.
-          </p>
-          <ButtonLink href="/simulacao" className="mt-4">
-            Nova simulação
-          </ButtonLink>
-        </div>
-      </Painel>
+      <p className="px-3 py-3 text-[0.8125rem] leading-snug text-ink-muted">
+        Nenhuma análise neste aparelho ainda. As que você calcular ficam
+        listadas aqui para retomar sem redigitar os valores.
+      </p>
     );
   }
 
   return (
-    <Painel>
-      <PainelCabecalho
-        titulo="Simulações recentes"
-        descricao={`${historico.length} no armazenamento local deste aparelho.`}
-      />
+    <ul className="divide-y divide-[var(--border)]">
+      {historico.map((registro) => {
+        const s = simular(registro.entrada);
+        const atual = registro.id === idAtual;
+        return (
+          <li
+            key={registro.id}
+            className={`px-3 py-2.5 ${atual ? "bg-accent-soft/60" : ""}`}
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-ink">
+                {registro.referencia ?? "Sem referência"}
+              </p>
+              <span className="shrink-0 text-[0.6875rem] text-ink-subtle">
+                {horaCurta.format(new Date(registro.criadaEm))}
+              </span>
+            </div>
 
-      <AreaRolavel>
-        <table className="tabela-dados min-w-[38rem] text-[0.8125rem]">
-          <caption className="sr-only">
-            Simulações executadas neste aparelho, com receita informada e
-            resultado líquido estimado em cada cenário.
-          </caption>
-          <thead>
-            <tr>
-              <th scope="col">Referência</th>
-              <th scope="col" className="num">
-                Receita
-              </th>
-              <th scope="col" className="num">
-                Líquido PF
-              </th>
-              <th scope="col" className="num">
-                Líquido CNPJ
-              </th>
-              <th scope="col">
-                <span className="sr-only">Ações</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {historico.map((registro) => {
-              const s = simular(registro.entrada);
-              return (
-                <tr key={registro.id} className="hover:bg-surface-hover">
-                  <th scope="row" className="font-normal">
-                    <span className="block text-ink">
-                      {registro.referencia ?? "Sem referência"}
-                    </span>
-                    <span className="block text-[0.75rem] text-ink-subtle">
-                      {horaCurta.format(new Date(registro.criadaEm))} ·{" "}
-                      {registro.entrada.tipoAtuacao === "cnpj"
-                        ? "CNPJ"
-                        : "Pessoa Física"}
-                    </span>
-                  </th>
-                  <td className="num text-ink">
-                    {formatarMoeda(registro.entrada.receitaMensal)}
-                  </td>
-                  <td className="num text-ink-muted">
-                    {formatarMoeda(s.comparacao.pessoaFisica.liquidoMensal)}
-                  </td>
-                  <td className="num text-ink-muted">
-                    {formatarMoeda(s.comparacao.cnpj.liquidoMensal)}
-                  </td>
-                  <td>
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        tamanho="sm"
-                        variante="secundaria"
-                        onClick={() => {
-                          abrirDoHistorico(registro.id);
-                          router.push("/simulacao");
-                        }}
-                      >
-                        Abrir
-                      </Button>
-                      <Button
-                        tamanho="sm"
-                        variante="sutil"
-                        onClick={() => removerDoHistorico(registro.id)}
-                      >
-                        <span aria-hidden="true">✕</span>
-                        <span className="sr-only">
-                          Remover simulação{" "}
-                          {registro.referencia ?? "sem referência"}
-                        </span>
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </AreaRolavel>
-    </Painel>
+            <p className="tnum mt-0.5 text-[0.75rem] text-ink-muted">
+              {formatarMoeda(registro.entrada.receitaMensal)} ·{" "}
+              {registro.entrada.tipoAtuacao === "cnpj"
+                ? "CNPJ"
+                : "Pessoa Física"}
+            </p>
+
+            <dl className="mt-1.5 grid grid-cols-2 gap-x-3 text-[0.75rem]">
+              <div className="flex items-baseline justify-between gap-1.5">
+                <dt className="text-ink-subtle">PF</dt>
+                <dd className="tnum text-ink">
+                  {formatarMoeda(s.comparacao.pessoaFisica.liquidoMensal)}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-1.5">
+                <dt className="text-ink-subtle">CNPJ</dt>
+                <dd className="tnum text-ink">
+                  {formatarMoeda(s.comparacao.cnpj.liquidoMensal)}
+                </dd>
+              </div>
+            </dl>
+
+            <div className="mt-1.5 flex items-center gap-1">
+              <Button
+                tamanho="sm"
+                variante="secundaria"
+                onClick={() => onAbrir(registro.id)}
+              >
+                {atual ? "Em edição" : "Abrir"}
+              </Button>
+              <Button
+                tamanho="sm"
+                variante="sutil"
+                onClick={() => removerDoHistorico(registro.id)}
+              >
+                <span aria-hidden="true">✕</span>
+                <span className="sr-only">
+                  Remover análise {registro.referencia ?? "sem referência"}
+                </span>
+              </Button>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/layout/app-shell";
-import { StatusModelo } from "@/components/layout/status-modelo";
 import { RegistrarServiceWorker } from "@/components/pwa/registrar-service-worker";
+import { SCRIPT_TEMA } from "@/components/tema/preferencia-tema";
 import { URL_BASE } from "@/lib/site";
 
 const geistSans = Geist({
@@ -15,11 +14,11 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   metadataBase: new URL(URL_BASE),
   title: {
-    default: "Clareza — simulador tributário para contadores",
+    default: "Clareza — área de trabalho tributária para contadores",
     template: "%s · Clareza",
   },
   description:
-    "Ferramenta de apoio à decisão para contadores: compare cenários Pessoa Física e CNPJ, veja o impacto mensal e anual e audite as premissas de cálculo.",
+    "Área de trabalho para contadores: compare cenários Pessoa Física e CNPJ, audite a composição dos encargos e acompanhe o estágio de validação das premissas em uma única tela.",
   applicationName: "Clareza",
   keywords: [
     "simulador tributário",
@@ -34,14 +33,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: "Clareza",
-    title: "Clareza — simulador tributário para contadores",
+    title: "Clareza — área de trabalho tributária para contadores",
     description:
-      "Compare cenários Pessoa Física e CNPJ, veja o impacto mensal e anual e audite as premissas de cálculo.",
+      "Compare cenários Pessoa Física e CNPJ, audite a composição dos encargos e as premissas de cálculo.",
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Clareza — simulador tributário para contadores",
+    title: "Clareza — área de trabalho tributária para contadores",
     description:
       "Compare cenários Pessoa Física e CNPJ e audite as premissas de cálculo.",
   },
@@ -73,15 +72,30 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} h-full antialiased`}>
+    /*
+      `suppressHydrationWarning`: o script de tema grava `data-tema` no
+      <html> antes da hidratação, de propósito. Sem isso o React acusa
+      divergência com o HTML do servidor — que não tem como conhecer a
+      preferência do aparelho. Vale só para este elemento.
+    */
+    <html
+      lang="pt-BR"
+      className={`${geistSans.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full">
+        {/*
+          Aplica o tema escolhido antes da primeira pintura. Sem isso a
+          tela pisca clara antes da hidratação para quem escolheu escuro.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
         <a
           href="#conteudo"
-          className="sr-only rounded-md bg-accent px-3 py-2 text-sm text-white focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50"
+          className="sr-only rounded-md bg-accent px-3 py-2 text-sm text-sobre-acento focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50"
         >
           Pular para o conteúdo
         </a>
-        <AppShell statusModelo={<StatusModelo />}>{children}</AppShell>
+        {children}
         <RegistrarServiceWorker />
       </body>
     </html>
