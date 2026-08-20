@@ -1,66 +1,151 @@
 @import "tailwindcss";
 
 /*
-  Sistema visual do Clareza V2 — ferramenta profissional para contadores.
+  Sistema visual do Clareza V2.1 — superfície de trabalho profissional.
   Direção: neutro, denso, alto contraste, acento contido.
   O acento sinaliza ação e navegação, nunca julgamento de resultado.
+
+  As duas paletas são declaradas por extenso e depois *atribuídas* aos
+  tokens ativos. Isso permite três estados de tema — sistema (padrão),
+  claro forçado e escuro forçado — sem repetir valores de cor.
 */
 :root {
-  --background: #f6f7f8;
-  --surface: #ffffff;
-  --surface-muted: #eef0f2;
-  --surface-hover: #f3f5f6;
-  --ink: #12161a;
-  --ink-muted: #545c66;
-  --ink-subtle: #7d858f;
-  --border: #e0e4e7;
-  --border-strong: #c8ced3;
-  --accent: #0e7c66;
-  --accent-hover: #0a6252;
-  --accent-soft: #e6f2ef;
-  --accent-ink: #08483c;
+  /* ---- Paleta clara ---- */
+  --c-background: #f6f7f8;
+  --c-surface: #ffffff;
+  --c-surface-muted: #eef0f2;
+  --c-surface-hover: #f3f5f6;
+  --c-ink: #12161a;
+  --c-ink-muted: #545c66;
+  --c-ink-subtle: #7d858f;
+  --c-border: #e0e4e7;
+  --c-border-strong: #c8ced3;
+  --c-accent: #0e7c66;
+  --c-accent-hover: #0a6252;
+  --c-accent-soft: #e6f2ef;
+  --c-accent-ink: #08483c;
+  --c-positivo: #0e7c66;
+  --c-negativo: #b4443a;
+  --c-negativo-soft: #fbecea;
+  --c-atencao: #8a6410;
+  --c-atencao-soft: #fdf4e3;
+  --c-neutro-soft: #eef0f2;
+  --c-veu: rgba(18, 22, 26, 0.32);
+  /* Texto/ícone sobre superfície de acento. */
+  --c-sobre-acento: #ffffff;
 
-  /* Cores de status: significado, não estética. */
-  --positivo: #0e7c66;
-  --negativo: #b4443a;
-  --negativo-soft: #fbecea;
-  --atencao: #8a6410;
-  --atencao-soft: #fdf4e3;
-  --neutro-soft: #eef0f2;
+  /* ---- Paleta escura ---- */
+  --e-background: #0c0e10;
+  --e-surface: #141719;
+  --e-surface-muted: #1c2023;
+  --e-surface-hover: #21262a;
+  --e-ink: #eef0f2;
+  --e-ink-muted: #a2aab3;
+  --e-ink-subtle: #79818a;
+  --e-border: #262b2f;
+  --e-border-strong: #3a4147;
+  --e-accent: #3ec9a7;
+  --e-accent-hover: #58d8ba;
+  --e-accent-soft: #10241f;
+  --e-accent-ink: #9ce8d3;
+  --e-positivo: #3ec9a7;
+  --e-negativo: #f08a80;
+  --e-negativo-soft: #2a1614;
+  --e-atencao: #e0c07a;
+  --e-atencao-soft: #26200f;
+  --e-neutro-soft: #1c2023;
+  --e-veu: rgba(0, 0, 0, 0.58);
+  --e-sobre-acento: #06120f;
 
-  --focus: #0e7c66;
+  /* ---- Tokens ativos: claro por padrão ---- */
+  --background: var(--c-background);
+  --surface: var(--c-surface);
+  --surface-muted: var(--c-surface-muted);
+  --surface-hover: var(--c-surface-hover);
+  --ink: var(--c-ink);
+  --ink-muted: var(--c-ink-muted);
+  --ink-subtle: var(--c-ink-subtle);
+  --border: var(--c-border);
+  --border-strong: var(--c-border-strong);
+  --accent: var(--c-accent);
+  --accent-hover: var(--c-accent-hover);
+  --accent-soft: var(--c-accent-soft);
+  --accent-ink: var(--c-accent-ink);
+  --positivo: var(--c-positivo);
+  --negativo: var(--c-negativo);
+  --negativo-soft: var(--c-negativo-soft);
+  --atencao: var(--c-atencao);
+  --atencao-soft: var(--c-atencao-soft);
+  --neutro-soft: var(--c-neutro-soft);
+  --veu: var(--c-veu);
+  --sobre-acento: var(--c-sobre-acento);
+  --focus: var(--c-accent);
 
-  /* Raios menores que na V1: software profissional, não app de consumo. */
+  /* Raios contidos: software profissional, não app de consumo. */
   --raio-sm: 4px;
   --raio-md: 6px;
   --raio-lg: 8px;
+
+  color-scheme: light;
 }
 
+/*
+  Escuro por preferência do sistema — a menos que o contador tenha
+  escolhido explicitamente o tema claro na barra superior.
+*/
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0c0e10;
-    --surface: #141719;
-    --surface-muted: #1c2023;
-    --surface-hover: #21262a;
-    --ink: #eef0f2;
-    --ink-muted: #a2aab3;
-    --ink-subtle: #79818a;
-    --border: #262b2f;
-    --border-strong: #3a4147;
-    --accent: #3ec9a7;
-    --accent-hover: #58d8ba;
-    --accent-soft: #10241f;
-    --accent-ink: #9ce8d3;
-
-    --positivo: #3ec9a7;
-    --negativo: #f08a80;
-    --negativo-soft: #2a1614;
-    --atencao: #e0c07a;
-    --atencao-soft: #26200f;
-    --neutro-soft: #1c2023;
-
-    --focus: #3ec9a7;
+  :root:not([data-tema="claro"]) {
+    --background: var(--e-background);
+    --surface: var(--e-surface);
+    --surface-muted: var(--e-surface-muted);
+    --surface-hover: var(--e-surface-hover);
+    --ink: var(--e-ink);
+    --ink-muted: var(--e-ink-muted);
+    --ink-subtle: var(--e-ink-subtle);
+    --border: var(--e-border);
+    --border-strong: var(--e-border-strong);
+    --accent: var(--e-accent);
+    --accent-hover: var(--e-accent-hover);
+    --accent-soft: var(--e-accent-soft);
+    --accent-ink: var(--e-accent-ink);
+    --positivo: var(--e-positivo);
+    --negativo: var(--e-negativo);
+    --negativo-soft: var(--e-negativo-soft);
+    --atencao: var(--e-atencao);
+    --atencao-soft: var(--e-atencao-soft);
+    --neutro-soft: var(--e-neutro-soft);
+    --veu: var(--e-veu);
+    --sobre-acento: var(--e-sobre-acento);
+    --focus: var(--e-accent);
+    color-scheme: dark;
   }
+}
+
+/* Escolha explícita do escuro vence a preferência do sistema. */
+:root[data-tema="escuro"] {
+  --background: var(--e-background);
+  --surface: var(--e-surface);
+  --surface-muted: var(--e-surface-muted);
+  --surface-hover: var(--e-surface-hover);
+  --ink: var(--e-ink);
+  --ink-muted: var(--e-ink-muted);
+  --ink-subtle: var(--e-ink-subtle);
+  --border: var(--e-border);
+  --border-strong: var(--e-border-strong);
+  --accent: var(--e-accent);
+  --accent-hover: var(--e-accent-hover);
+  --accent-soft: var(--e-accent-soft);
+  --accent-ink: var(--e-accent-ink);
+  --positivo: var(--e-positivo);
+  --negativo: var(--e-negativo);
+  --negativo-soft: var(--e-negativo-soft);
+  --atencao: var(--e-atencao);
+  --atencao-soft: var(--e-atencao-soft);
+  --neutro-soft: var(--e-neutro-soft);
+  --veu: var(--e-veu);
+  --sobre-acento: var(--e-sobre-acento);
+  --focus: var(--e-accent);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -83,13 +168,14 @@
   --color-atencao: var(--atencao);
   --color-atencao-soft: var(--atencao-soft);
   --color-neutro-soft: var(--neutro-soft);
+  --color-veu: var(--veu);
+  --color-sobre-acento: var(--sobre-acento);
 
   --radius-sm: var(--raio-sm);
   --radius-md: var(--raio-md);
   --radius-lg: var(--raio-lg);
 
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 * {
@@ -149,7 +235,7 @@ body {
 
 .tabela-dados th,
 .tabela-dados td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.4375rem 0.75rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -171,6 +257,19 @@ body {
 
 .tabela-dados tbody tr:last-child td {
   border-bottom: none;
+}
+
+/*
+  Colunas do workspace: cada uma rola por conta própria a partir do
+  ponto em que o layout vira multizona. Abaixo disso a página rola
+  inteira, que é o comportamento esperado no celular.
+*/
+@media (min-width: 960px) {
+  .coluna-rolavel {
+    max-height: calc(100dvh - 3rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

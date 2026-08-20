@@ -6,7 +6,7 @@ const TONS: Record<TomBadge, string> = {
   neutro: "bg-neutro-soft text-ink-muted",
   atencao: "bg-atencao-soft text-atencao",
   positivo: "bg-accent-soft text-accent-ink",
-  acento: "bg-accent text-white dark:text-[#06120f]",
+  acento: "bg-accent text-sobre-acento",
 };
 
 /**

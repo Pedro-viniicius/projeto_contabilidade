@@ -10,7 +10,7 @@ const BASE =
   "select-none text-center whitespace-nowrap";
 
 const VARIANTES: Record<Variante, string> = {
-  primaria: "bg-accent text-white hover:bg-accent-hover dark:text-[#06120f]",
+  primaria: "bg-accent text-sobre-acento hover:bg-accent-hover",
   secundaria:
     "bg-surface text-ink border border-border-strong hover:bg-surface-hover",
   sutil: "text-ink-muted hover:text-ink hover:bg-surface-muted",
