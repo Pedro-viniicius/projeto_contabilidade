@@ -98,9 +98,23 @@ export interface Simulacao {
  */
 export interface SimulacaoSalva {
   readonly id: string;
-  /** ISO 8601. */
+  /** ISO 8601. Definida na criação e nunca reescrita. */
   readonly criadaEm: string;
+  /**
+   * ISO 8601 do último recálculo. Ausente enquanto a análise nunca foi
+   * atualizada — e ausente também nos registros gravados antes da
+   * v2.1.1, que não tinham o campo.
+   */
+  readonly atualizadaEm?: string;
   readonly entrada: EntradaSimulacao;
+  /**
+   * Versão das regras vigente quando a análise foi CRIADA.
+   *
+   * Não é reescrita no recálculo, de propósito: é ela que permite
+   * dizer "criada com regras X, recalculada com as atuais Y". O
+   * resultado continua sendo sempre recalculado com as regras
+   * vigentes — nunca guardamos número.
+   */
   readonly versaoRegras: string;
   /** Rótulo livre e opcional, ex.: "Cliente XPTO — cenário 01". */
   readonly referencia?: string;
