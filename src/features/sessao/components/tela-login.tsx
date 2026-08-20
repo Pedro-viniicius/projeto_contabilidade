@@ -15,7 +15,7 @@ import {
   lerSessaoDemo,
 } from "../services/sessao-demo";
 
-type Erros = { email?: string; senha?: string };
+type Erros = { email?: string; senha?: string; geral?: string };
 
 /**
  * Tela de acesso.
@@ -76,7 +76,24 @@ export function TelaLogin() {
     }
 
     /* A senha morre aqui: não é gravada, derivada nem transmitida. */
-    iniciarSessaoDemo(resultado.data.email, lembrar);
+    const abertura = iniciarSessaoDemo(resultado.data.email, lembrar);
+
+    /*
+     * A sessão demonstrativa é uma marca no aparelho. Se ela não pôde
+     * ser gravada, não há sessão — navegar mandaria o contador para a
+     * área de trabalho, que o devolveria para cá, num laço sem
+     * explicação. Melhor dizer o que aconteceu.
+     */
+    if (!abertura.sucesso) {
+      setErros({
+        geral:
+          abertura.motivo === "sem-espaco"
+            ? "O armazenamento deste navegador está cheio e o acesso não pôde ser aberto. Libere espaço e tente de novo."
+            : "Este navegador está bloqueando o armazenamento local, necessário para abrir a área de trabalho. Verifique se a navegação anônima ou o bloqueio de dados de site está ativo.",
+      });
+      return;
+    }
+
     setSenha("");
     router.replace("/workspace");
   }
@@ -161,7 +178,7 @@ export function TelaLogin() {
                 value={email}
                 onChange={(e) => {
                   setEmailRascunho(e.target.value);
-                  setErros((a) => ({ ...a, email: undefined }));
+                  setErros((a) => ({ ...a, email: undefined, geral: undefined }));
                 }}
                 aria-invalid={erros.email ? true : undefined}
                 aria-describedby={erros.email ? `${idEmail}-erro` : undefined}
@@ -193,7 +210,7 @@ export function TelaLogin() {
                   value={senha}
                   onChange={(e) => {
                     setSenha(e.target.value);
-                    setErros((a) => ({ ...a, senha: undefined }));
+                    setErros((a) => ({ ...a, senha: undefined, geral: undefined }));
                   }}
                   aria-invalid={erros.senha ? true : undefined}
                   aria-describedby={erros.senha ? `${idSenha}-erro` : undefined}
@@ -211,6 +228,8 @@ export function TelaLogin() {
               </div>
               {erros.senha && <Erro id={`${idSenha}-erro`}>{erros.senha}</Erro>}
             </div>
+
+            {erros.geral && <Erro id={`${idEmail}-geral`}>{erros.geral}</Erro>}
 
             <div className="flex items-center gap-2 pt-0.5">
               <input

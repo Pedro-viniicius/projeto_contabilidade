@@ -37,3 +37,29 @@ export const feedbackSchema = z.object({
 });
 
 export type EntradaFeedback = z.infer<typeof feedbackSchema>;
+
+/**
+ * Registro persistido completo.
+ *
+ * Mesma regra do histórico de simulações: o que vem do aparelho é
+ * `unknown` até passar por schema. Antes da v2.1.1 só os campos de
+ * formulário eram revalidados, e a interface lia `contexto.versaoRegras`
+ * de um objeto que podia não existir.
+ */
+export const feedbackRegistradoSchema = z.object({
+  id: z.string().min(1).max(120),
+  criadoEm: z
+    .string()
+    .min(1)
+    .refine((v) => Number.isFinite(new Date(v).getTime()), {
+      message: "Data do registro é inválida.",
+    }),
+  categoria: categoriaFeedbackSchema,
+  mensagem: z.string().min(1).max(2000),
+  contato: z.string().max(120).optional(),
+  contexto: z.object({
+    versaoRegras: z.string().min(1).max(60),
+    rota: z.string().max(200),
+    entradaSimulacao: z.unknown().nullable(),
+  }),
+});

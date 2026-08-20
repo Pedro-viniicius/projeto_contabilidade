@@ -42,11 +42,14 @@ export function FormularioFeedback() {
   const [mensagem, setMensagem] = useState("");
   const [contato, setContato] = useState("");
   const [erros, setErros] = useState<Erros>({});
-  const [enviado, setEnviado] = useState(false);
+  const [envio, setEnvio] = useState<"nenhum" | "ok" | "falhou">(
+    "nenhum",
+  );
 
   /* A lista se atualiza sozinha a cada gravação — sem efeito de sincronia. */
   const registrados = useValorLocal(CHAVE_FEEDBACK, lerFeedbacks) ?? [];
-  const salvaAtual = useValorLocal(CHAVE_ATUAL, lerSimulacaoAtual);
+  const leituraAtual = useValorLocal(CHAVE_ATUAL, lerSimulacaoAtual);
+  const salvaAtual = leituraAtual?.registro ?? null;
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -62,16 +65,24 @@ export function FormularioFeedback() {
       return;
     }
 
-    salvarFeedback(resultado.data, {
+    const gravacao = salvarFeedback(resultado.data, {
       rota: window.location.pathname,
       entradaSimulacao: salvaAtual?.entrada ?? null,
     });
+
+    /* Sem gravação não há registro: não confirmamos o que não aconteceu,
+       e o texto digitado continua no formulário para não se perder. */
+    if (!gravacao.sucesso) {
+      setEnvio("falhou");
+      return;
+    }
+
     registrarEvento("feedback_submitted", { categoria: resultado.data.categoria });
 
     setErros({});
     setMensagem("");
     setContato("");
-    setEnviado(true);
+    setEnvio("ok");
   }
 
   return (
@@ -112,7 +123,7 @@ export function FormularioFeedback() {
             onChange={(e) => {
               setMensagem(e.target.value);
               setErros((a) => ({ ...a, mensagem: undefined }));
-              setEnviado(false);
+              setEnvio("nenhum");
             }}
             aria-invalid={erros.mensagem ? true : undefined}
             aria-describedby={erros.mensagem ? `${idMensagem}-erro` : undefined}
@@ -165,8 +176,16 @@ export function FormularioFeedback() {
         <div className="flex items-center gap-3">
           <Button type="submit">Registrar</Button>
           {/* aria-live: confirma o envio para quem usa leitor de tela. */}
-          <p aria-live="polite" className="text-[0.8125rem]">
-            {enviado && <span className="text-positivo">✓ Registrado.</span>}
+          <p aria-live="polite" className="text-[0.8125rem] leading-snug">
+            {envio === "ok" && (
+              <span className="text-positivo">✓ Registrado.</span>
+            )}
+            {envio === "falhou" && (
+              <span className="text-atencao">
+                ⚠ Não foi possível registrar neste navegador. O texto continua
+                aqui.
+              </span>
+            )}
           </p>
         </div>
       </form>

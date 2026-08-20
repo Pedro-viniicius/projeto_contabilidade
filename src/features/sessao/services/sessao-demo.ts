@@ -27,16 +27,37 @@ export function nomeExibido(email: string): string {
     .join(" ");
 }
 
-export function iniciarSessaoDemo(email: string, lembrar = false): SessaoDemo {
+/** Resultado de abrir a sessão demonstrativa neste aparelho. */
+export type AberturaSessao =
+  | { readonly sucesso: true; readonly sessao: SessaoDemo }
+  | { readonly sucesso: false; readonly motivo: "sem-espaco" | "indisponivel" };
+
+/**
+ * Abre a sessão demonstrativa.
+ *
+ * A marca de sessão vive no aparelho: se a gravação falhar, não há
+ * sessão nenhuma. Antes da v2.1.1 o retorno era ignorado, a tela
+ * navegava para a área de trabalho e a área de trabalho devolvia o
+ * contador para o acesso — um laço sem explicação.
+ */
+export function iniciarSessaoDemo(
+  email: string,
+  lembrar = false,
+): AberturaSessao {
   const sessao: SessaoDemo = {
     email: email.trim(),
     iniciadaEm: new Date().toISOString(),
   };
-  gravarJson(CHAVE_SESSAO, sessao);
-  /* Só o e-mail, e só quando pedido. Senha nunca é gravada. */
+
+  const gravacao = gravarJson(CHAVE_SESSAO, sessao);
+  if (!gravacao.sucesso) return { sucesso: false, motivo: gravacao.motivo };
+
+  /* Só o e-mail, e só quando pedido. Senha nunca é gravada.
+     Falhar aqui não impede o acesso: é conveniência, não sessão. */
   if (lembrar) gravarJson(CHAVE_EMAIL_LEMBRADO, sessao.email);
   else remover(CHAVE_EMAIL_LEMBRADO);
-  return sessao;
+
+  return { sucesso: true, sessao };
 }
 
 /** Lê e revalida — dado de localStorage nunca é confiável. */

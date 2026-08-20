@@ -8,7 +8,10 @@
 
 import { gerarId, gravarJson, lerJson, remover } from "@/lib/storage";
 import { VERSAO_REGRAS } from "@/features/simulacao/domain/calculation-rules";
-import { feedbackSchema, type EntradaFeedback } from "../schemas/feedback-schema";
+import {
+  feedbackRegistradoSchema,
+  type EntradaFeedback,
+} from "../schemas/feedback-schema";
 import type { EntradaSimulacao } from "@/features/simulacao/types";
 
 export const CHAVE_FEEDBACK = "clareza:feedback";
@@ -30,10 +33,22 @@ export interface FeedbackRegistrado {
   };
 }
 
+/** Resultado de registrar uma observação neste aparelho. */
+export type GravacaoFeedback =
+  | { readonly sucesso: true; readonly registro: FeedbackRegistrado }
+  | { readonly sucesso: false; readonly motivo: "sem-espaco" | "indisponivel" };
+
+/**
+ * Registra a observação.
+ *
+ * Devolve falha quando o aparelho recusa a escrita — não faz sentido
+ * dizer "observação registrada" para um material que existe só para
+ * ser levado à revisão contábil depois.
+ */
 export function salvarFeedback(
   entrada: EntradaFeedback,
   contexto: { rota: string; entradaSimulacao: EntradaSimulacao | null },
-): FeedbackRegistrado {
+): GravacaoFeedback {
   const registro: FeedbackRegistrado = {
     id: gerarId(),
     criadoEm: new Date().toISOString(),
@@ -44,21 +59,24 @@ export function salvarFeedback(
   };
 
   const anteriores = lerFeedbacks();
-  gravarJson(CHAVE, [registro, ...anteriores].slice(0, LIMITE));
-  return registro;
+  const gravacao = gravarJson(CHAVE, [registro, ...anteriores].slice(0, LIMITE));
+  if (!gravacao.sucesso) return { sucesso: false, motivo: gravacao.motivo };
+  return { sucesso: true, registro };
 }
 
+/** Lê e revalida o registro inteiro — não só os campos de formulário. */
 export function lerFeedbacks(): FeedbackRegistrado[] {
-  const bruto = lerJson<FeedbackRegistrado[]>(CHAVE);
+  const bruto = lerJson<unknown>(CHAVE);
   if (!Array.isArray(bruto)) return [];
-  return bruto.filter(
-    (f) =>
-      feedbackSchema.safeParse({
-        categoria: f?.categoria,
-        mensagem: f?.mensagem,
-        contato: f?.contato ?? "",
-      }).success,
-  );
+
+  const validos: FeedbackRegistrado[] = [];
+  for (const item of bruto) {
+    const resultado = feedbackRegistradoSchema.safeParse(item);
+    if (resultado.success) {
+      validos.push(resultado.data as FeedbackRegistrado);
+    }
+  }
+  return validos;
 }
 
 export function limparFeedbacks(): void {
