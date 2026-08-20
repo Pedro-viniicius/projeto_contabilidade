@@ -4,10 +4,11 @@ Este documento é o roteiro da conversa. Ele foi escrito **durante** a
 implementação: cada pergunta nasceu de uma decisão que precisou ser tomada
 sem respaldo profissional.
 
-Sugestão de uso: peça para ele fazer uma simulação em
-`/simulacao` primeiro, depois abrir `/premissas`, e só então percorrer as
-perguntas abaixo. O produto foi construído para ser auditável sem ler
-código.
+Sugestão de uso: peça para ele fazer uma análise na área de trabalho
+primeiro, depois abrir o painel **Premissas do modelo** — ou clicar em
+qualquer linha da composição dos encargos, que mostra a premissa por trás
+do número ali mesmo — e só então percorrer as perguntas abaixo. O produto
+foi construído para ser auditável sem ler código e sem trocar de tela.
 
 ---
 
@@ -149,8 +150,10 @@ Se o tempo for curto, faça só estas cinco.
 
 ## Como registrar o feedback dele
 
-O app tem uma tela de feedback em `/feedback`, com categorias já pensadas
-para esta conversa (cálculo incorreto, premissa contábil errada, termo
-confuso, campo faltando, etc.). O feedback fica salvo no aparelho e pode
-ser **exportado em JSON** pelo botão na própria tela — assim nada se perde
-entre a conversa e a próxima iteração.
+O app tem um painel **Registrar observação**, aberto pela coluna de
+contexto sem sair da análise, com categorias já pensadas para esta
+conversa (cálculo incorreto, premissa contábil errada, termo confuso,
+campo faltando, etc.). Cada registro guarda junto a análise que estava
+aberta e a versão das regras vigente. O feedback fica salvo no aparelho e
+pode ser **exportado em JSON** pelo botão do próprio painel — assim nada
+se perde entre a conversa e a próxima iteração.

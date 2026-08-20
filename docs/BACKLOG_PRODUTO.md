@@ -68,6 +68,24 @@ Reposicionamento da interface. O motor de cálculo não mudou.
 
 ---
 
+## V2.1 — entregue (tela única e acesso demonstrativo)
+
+Arquitetura de informação. O motor de cálculo não mudou.
+
+- [x] Tela de acesso `/login` — protótipo de interface, sem servidor
+- [x] Sessão demonstrativa local, com logout na barra superior
+- [x] Área de trabalho única em `/workspace`, em três zonas
+- [x] Barra lateral substituída por barra superior compacta
+- [x] Premissas, escopo, feedback e contexto em painel lateral
+- [x] Linha de encargo expansível: conta + premissa + status no lugar
+- [x] Resumo executivo com diferença mensal e impacto anual
+- [x] Histórico reabre a análise sem trocar de rota
+- [x] Rotas antigas preservadas por redirecionamento, com `?painel=`
+- [x] Alternância de tema claro/escuro persistida
+- [x] Zero trocas de rota no fluxo profissional depois do acesso
+
+---
+
 ## Melhorias após feedback do contador
 
 Itens que **provavelmente** virão da revisão. Priorizar apenas o que ele

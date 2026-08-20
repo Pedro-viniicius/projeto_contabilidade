@@ -40,20 +40,35 @@ wizard, com edição e recálculo sem trocar de tela.
 
 ## O que a aplicação faz
 
+Desde a V2.1 o produto tem **duas telas**: o acesso e a área de trabalho.
+Todo o resto acontece dentro da área de trabalho, em painéis.
+
 | Rota | O que é |
 | --- | --- |
-| `/` | Visão geral: nova simulação, simulações recentes, estágio do modelo |
-| `/simulacao` | Área de trabalho: formulário e resultado lado a lado |
-| `/premissas` | Painel de auditoria das regras, com filtros por status |
-| `/como-funciona` | Escopo do modelo: o que ele cobre e o que está fora |
-| `/feedback` | Registro e exportação de divergências (categorizado) |
-| `/resultado` | Redireciona para `/simulacao` (rota da V1, preservada) |
+| `/login` | Acesso **demonstrativo** — protótipo de interface, sem servidor |
+| `/workspace` | Área de trabalho: dados, resultado, comparativo, auditoria, histórico, premissas, escopo e feedback |
 | `/offline` | Fallback quando não há conexão nem cache |
 
-**Fluxo principal:** abrir → informar dados → calcular → comparar →
-alterar valor → recalcular, tudo na mesma tela.
+Rotas antigas continuam funcionando por redirecionamento, para não
+quebrar links salvos, atalhos do PWA instalado nem casca em cache:
+
+| De | Para |
+| --- | --- |
+| `/`, `/simulacao`, `/resultado` | `/workspace` |
+| `/premissas` | `/workspace?painel=premissas` |
+| `/feedback` | `/workspace?painel=feedback` |
+| `/como-funciona` | `/workspace?painel=escopo` |
+
+**Fluxo principal:** entrar → informar dados → calcular → comparar →
+auditar um encargo → alterar valor → recalcular → retomar outra análise,
+**tudo sem trocar de rota**.
 
 **Atalho:** `Ctrl/Cmd + Enter` calcula e recalcula.
+
+> **O acesso não é autenticação.** Não há servidor, banco, token nem
+> verificação de credencial: o formulário valida o formato do e-mail,
+> exige senha não vazia, descarta a senha e grava uma marca local. Ver
+> [`docs/UX_WORKSPACE_CONTADOR.md`](docs/UX_WORKSPACE_CONTADOR.md).
 
 ---
 
@@ -122,21 +137,21 @@ Nenhuma variável de ambiente é obrigatória. As opcionais estão em
 ```
 src/
 ├── app/                        # Rotas (App Router)
-│   ├── layout.tsx              # Shell, metadata, SEO, registro do SW
-│   ├── page.tsx                # Landing
-│   ├── simulacao/              # Wizard
-│   ├── resultado/              # Resultado
-│   ├── premissas/              # Auditoria pública das premissas
-│   ├── como-funciona/
-│   ├── feedback/
+│   ├── layout.tsx              # Metadata, SEO, script de tema, registro do SW
+│   ├── login/                  # Acesso demonstrativo (sem servidor)
+│   ├── workspace/              # ⭐ A tela única do contador
+│   ├── page.tsx                # → redireciona para /workspace
+│   ├── simulacao/ · resultado/ # → redirecionam (rotas legadas)
+│   ├── premissas/ · feedback/ · como-funciona/   # → redirecionam com ?painel=
 │   ├── offline/                # Fallback do service worker
 │   ├── manifest.ts             # Web App Manifest
 │   ├── robots.ts · sitemap.ts
-│   └── globals.css             # Tokens de tema (claro/escuro)
+│   └── globals.css             # Duas paletas + três estados de tema
 │
 ├── components/
-│   ├── ui/                     # Painel, Badge, AreaRolavel, CampoMoeda, Escolha…
-│   ├── layout/                 # AppShell (sidebar) e status do modelo
+│   ├── ui/                     # Painel, PainelLateral, Metrica, Badge, CampoMoeda…
+│   ├── layout/                 # BarraSuperior
+│   ├── tema/                   # Preferência de tema e alternância
 │   └── pwa/                    # Registro do SW e botão de instalação
 │
 ├── features/
@@ -148,8 +163,11 @@ src/
 │   │   │   └── *.test.ts
 │   │   ├── schemas/            # Validação Zod + mensagens pt-BR
 │   │   ├── services/           # Persistência local
-│   │   ├── components/         # Workspace, tabela comparativa, auditoria…
+│   │   ├── components/         # AreaDeTrabalho (orquestra), formulário,
+│   │   │                       # resultado, composição, histórico, contexto
 │   │   └── types.ts            # Contratos de dados
+│   ├── sessao/                 # Acesso demonstrativo — única fronteira a
+│   │                           # trocar quando houver autenticação real
 │   └── feedback/               # Mesma estrutura, escopo menor
 │
 └── lib/                        # Utilidades transversais
@@ -164,7 +182,7 @@ public/
 └── icons/                      # Ícones do PWA (gerados por script)
 
 scripts/gerar-icones.mjs        # Gera os PNGs sem dependência de imagem
-docs/                           # Premissas, perguntas ao contador, backlog
+docs/                           # Premissas, UX, perguntas ao contador, backlog
 ```
 
 ---
@@ -210,7 +228,8 @@ dependência de React, do DOM ou de relógio.
 
 Cada premissa em `calculation-rules.ts` não é só um número — é um objeto
 com `valor`, `descricao`, `porQueExiste`, `status` e `ondeUsada`. A função
-`listarPremissas()` achata isso, e a interface exibe em `/premissas` e na
+`listarPremissas()` achata isso, e a interface exibe no painel de
+premissas e na
 seção "Como chegamos a esse resultado?". **A documentação da regra mora ao
 lado do valor da regra**, então elas não podem divergir.
 
@@ -331,19 +350,21 @@ conferência.
   entre aparelhos.
 - Analytics é apenas um contrato de eventos; nada é enviado a lugar nenhum.
 - Sem testes end-to-end automatizados (o fluxo foi validado manualmente no
-  navegador, em viewport mobile e desktop).
+  navegador, de 390px a 1440px).
+- O acesso é demonstrativo: não autentica ninguém e não protege nada.
 
 ---
 
 ## Processo de validação contábil
 
-1. O contador faz uma simulação em `/simulacao` como um usuário comum.
-2. Abre `/premissas` e revisa cada regra — todas trazem valor,
-   justificativa e status.
+1. O contador faz uma análise na área de trabalho como um usuário comum.
+2. Abre o painel **Premissas do modelo** e revisa cada regra — todas
+   trazem valor, justificativa e status.
 3. Percorre [`docs/PERGUNTAS_PARA_CONTADOR.md`](docs/PERGUNTAS_PARA_CONTADOR.md),
    um roteiro de 30 perguntas organizadas por bloco (as 5 primeiras são as
    que mais importam).
-4. Registra os apontamentos em `/feedback` e **exporta em JSON**.
+4. Registra os apontamentos no painel **Registrar observação** — que
+   anexa a análise em aberto — e **exporta em JSON**.
 5. As correções entram em `calculation-rules.ts`; `VERSAO_REGRAS` é
    incrementada; os status das premissas passam a
    `validada-tecnicamente`.

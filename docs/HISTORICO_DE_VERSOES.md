@@ -33,7 +33,7 @@ uma simulação pontual pelo celular.
 
 ## V2.0.0 — Workspace profissional para contadores
 
-**Status:** versão atual.
+**Status:** preservada no Git, superada pela V2.1.
 
 **Tag:** `v2.0.0`
 **Branch:** `feat/accountant-professional-ux`
@@ -77,6 +77,75 @@ permanecem idênticos aos da `v1.0.0`.
 
 ---
 
+## V2.1.0 — Tela única e acesso demonstrativo
+
+**Status:** versão atual.
+
+**Tag:** `v2.1.0`
+**Branch:** `feat/single-screen-accountant-workspace`
+**Data:** agosto de 2026
+
+Evolução de interface, não de modelo contábil. A V2 já era profissional,
+mas ainda era um site com seções: premissas, feedback e escopo eram rotas
+próprias, e consultar qualquer uma delas tirava a simulação da tela.
+
+### Principais mudanças
+
+| Área | V2.0 | V2.1 |
+| --- | --- | --- |
+| Telas do fluxo | 5 rotas | 1 rota (`/workspace`) |
+| Navegação | Barra lateral de 224px | Barra superior de 48px |
+| Acesso | Inexistente | `/login` demonstrativo (sem servidor) |
+| Premissas | Rota `/premissas` | Painel lateral sobre a análise |
+| Escopo | Rota `/como-funciona` | Painel lateral |
+| Feedback | Rota `/feedback` | Painel lateral, com a análise anexada |
+| Histórico | Tabela na visão geral | Coluna de contexto, abre sem navegar |
+| Auditoria | Tabela fixa de encargos | Linha expansível: conta + premissa + status |
+| Passo a passo | Sempre aberto | Recolhido, sob demanda |
+| Tema | Só preferência do sistema | Sistema + escolha explícita, persistida |
+| Conta | Inexistente | Menu com modo demonstração e sair |
+
+### O que foi preservado integralmente
+
+- motor de cálculo, alíquotas, premissas e fórmulas — **nenhum arquivo de
+  `domain/` foi tocado**;
+- 67 testes existentes, todos passando;
+- comparação PF × CNPJ e a transparência do cálculo;
+- persistência local, histórico e recuperação da última análise;
+- exportação de feedback em JSON;
+- PWA, casca offline e instalação;
+- modo claro e escuro;
+- avisos sobre o estágio de validação.
+
+### Rotas antigas
+
+Nenhuma foi removida. Todas redirecionam, preservando links salvos,
+atalhos do PWA instalado e casca em cache:
+
+| De | Para |
+| --- | --- |
+| `/` | `/workspace` |
+| `/simulacao` | `/workspace` |
+| `/resultado` | `/workspace` |
+| `/premissas` | `/workspace?painel=premissas` |
+| `/feedback` | `/workspace?painel=feedback` |
+| `/como-funciona` | `/workspace?painel=escopo` |
+
+### Limitação declarada
+
+A tela de acesso **não é autenticação**: não há servidor, banco, token
+nem verificação de credencial, e a senha digitada é descartada no submit.
+Detalhes em [`UX_WORKSPACE_CONTADOR.md`](UX_WORKSPACE_CONTADOR.md).
+
+### Regressão verificada
+
+Cinco cenários representativos foram calculados antes e depois do
+redesign, com saída serializada em JSON e comparada campo a campo —
+encargos, base, alíquota, líquido mensal, projeção anual, margem,
+diferença e vencedor. **Diferença: nenhuma.**
+
+---
+
 ## Como voltar para a versão anterior
 
 ### Inspecionar a V1 sem alterar nada
@@ -86,23 +155,32 @@ git switch --detach v1.0.0
 npm install && npm run build && npm run start
 ```
 
-### Voltar para o trabalho da V2
+### Inspecionar a V2.0
 
 ```bash
-git switch feat/accountant-professional-ux
+git switch --detach v2.0.0
+npm install && npm run build && npm run start
 ```
 
-### Criar uma branch a partir da V1
+### Voltar para o trabalho da V2.1
+
+```bash
+git switch feat/single-screen-accountant-workspace
+```
+
+### Criar uma branch a partir de uma versão antiga
 
 ```bash
 git switch -c restore/v1 v1.0.0
+git switch -c restore/v2.0 v2.0.0
 ```
 
 ### Ver o que mudou entre as versões
 
 ```bash
 git diff v1.0.0..v2.0.0 --stat
-git log --oneline v1.0.0..v2.0.0
+git diff v2.0.0..v2.1.0 --stat
+git log --oneline v2.0.0..v2.1.0
 ```
 
 > Não use `git reset --hard` para voltar de versão. As tags tornam
@@ -116,7 +194,9 @@ Versionamento semântico, com a tag anotada como fonte de verdade:
 
 - **major** — mudança de persona, de fluxo principal ou de modelo de
   interação (foi o caso da V2);
-- **minor** — nova funcionalidade sem quebrar o fluxo existente;
+- **minor** — nova funcionalidade sem quebrar o fluxo existente (foi o
+  caso da V2.1: a persona e o modelo de cálculo seguem os mesmos, o que
+  mudou foi a arquitetura de informação);
 - **patch** — correção ou ajuste pontual.
 
 Mudanças em `calculation-rules.ts` seguem uma trilha própria: a constante

@@ -25,8 +25,8 @@ teto ou faixa. Para mudar o comportamento do simulador, altera-se aquele
 arquivo — e só ele.
 
 Cada premissa carrega, junto do valor, três metadados que aparecem na
-interface do produto (tela `/premissas` e seção "Como chegamos a esse
-resultado?"):
+interface do produto (painel **Premissas do modelo** e a linha expansível
+de cada encargo, na composição do cálculo):
 
 - **descrição** — o que a premissa representa;
 - **por que existe** — o que ela simplifica e o que ela deixa de fora;

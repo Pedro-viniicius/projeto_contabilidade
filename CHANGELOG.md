@@ -5,6 +5,95 @@ Versionamento semântico.
 
 ---
 
+## [2.1.0] — 2026-08-20
+
+Consolidação da área de trabalho em **uma tela só** e tela de acesso
+demonstrativa. Iteração de interface e arquitetura de informação: o
+modelo de cálculo não foi tocado.
+
+### Adicionado
+
+- **Tela de acesso (`/login`).** Protótipo de interface, sem servidor:
+  valida formato de e-mail e senha não vazia, grava uma marca local de
+  sessão e abre a área de trabalho. A senha é descartada no submit —
+  não é gravada, comparada, derivada nem transmitida. Inclui alternância
+  de visibilidade da senha e "lembrar meu e-mail neste aparelho" (só o
+  e-mail, e só quando pedido).
+- **Área de trabalho unificada (`/workspace`).** Três zonas — dados,
+  resultado e contexto — com rolagem independente a partir de 960px.
+- **Painéis laterais** para premissas, escopo, feedback e contexto:
+  diálogos modais com foco preso, `Escape` para fechar, rolagem do
+  documento travada e foco devolvido ao elemento de origem.
+- **Auditoria no lugar.** Cada linha da composição dos encargos abre
+  mostrando base × alíquota = resultado ao lado da premissa que a
+  originou, com descrição, justificativa e estágio de validação.
+- **Resumo executivo** acima do comparativo: maior resultado estimado,
+  diferença mensal e impacto anual.
+- **Controle de conta** na barra superior, com modo demonstração
+  declarado e ação de sair.
+- **Alternância de tema** claro/escuro persistida no aparelho, com script
+  aplicado antes da primeira pintura. "Sistema" continua sendo o padrão
+  de quem nunca escolheu.
+- **Deep link `?painel=`** para abrir um painel já na chegada — é o que
+  mantém úteis os atalhos do PWA e os endereços antigos.
+- `docs/UX_WORKSPACE_CONTADOR.md` — decisões de layout, fluxo, princípios
+  e a limitação explícita do acesso demonstrativo.
+
+### Alterado
+
+- **Arquitetura de informação.** Cinco rotas viraram uma. Depois do
+  acesso, o fluxo profissional completo — lançar, calcular, comparar,
+  auditar, alterar, recalcular, retomar análise e registrar observação —
+  acontece **sem nenhuma troca de rota**.
+- **Barra lateral de 224px substituída por barra superior de 48px.** Com
+  tudo em uma tela, o menu apontaria para lugar nenhum e consumia espaço
+  horizontal que agora pertence ao comparativo.
+- **Histórico** deixou de ser tabela na visão geral e virou lista compacta
+  na coluna de contexto. Abrir um registro repõe os campos e recalcula no
+  lugar, sem navegar.
+- **Feedback** passou a coluna única, para caber no painel lateral.
+- **Passo a passo** agora vem recolhido: é conferência, não leitura
+  primária.
+- **Aviso de valores alterados** passou a aparecer também junto do botão
+  que resolve o problema, e não só no topo do resultado.
+- **Service worker** para `clareza-v2-1`, com casca reduzida a `/login`,
+  `/workspace` e `/offline` — as demais telas deixaram de ser rotas.
+- **Manifesto:** `start_url` para `/workspace`; atalhos apontam para
+  `/workspace` e `/workspace?painel=premissas`.
+- **Tokens de cor** reorganizados em duas paletas nomeadas, permitindo os
+  três estados de tema sem repetir valores. As variantes `dark:` do
+  Tailwind, que seguem só o sistema operacional, foram trocadas pelo
+  token `--sobre-acento`.
+
+### Rotas preservadas por redirecionamento
+
+`/` e `/simulacao` e `/resultado` → `/workspace`; `/premissas` →
+`/workspace?painel=premissas`; `/feedback` → `/workspace?painel=feedback`;
+`/como-funciona` → `/workspace?painel=escopo`. Nenhum link salvo, atalho
+instalado ou entrada em cache foi quebrado.
+
+### Preservado
+
+- **Motor de cálculo:** nenhum arquivo de `domain/` foi alterado.
+  Alíquotas, INSS, IRPF, premissas do CNPJ, fórmulas e `VERSAO_REGRAS`
+  (`v1.1-2026-08`) seguem intactos. Cinco cenários representativos foram
+  serializados antes e depois e comparados campo a campo: sem diferença.
+- 67 testes existentes, todos passando; typecheck, lint e build limpos.
+- Comparação PF × CNPJ, transparência do cálculo e avisos de validação.
+- Persistência local, histórico e exportação de feedback em JSON.
+- PWA: manifesto, ícones, service worker, instalação e casca offline.
+- Modo claro e escuro.
+
+### Limitação declarada
+
+O acesso **não é autenticação**. Não há servidor, banco, sessão de
+servidor, token nem verificação de credencial; qualquer e-mail bem
+formado com qualquer senha entra, e a marca de sessão pode ser gravada
+pelo console. É protótipo de experiência — está dito na tela de acesso e
+no menu da conta, e detalhado em `docs/UX_WORKSPACE_CONTADOR.md`.
+
+---
+
 ## [2.0.1] — 2026-08-11
 
 Primeira revisão contábil aplicada. Escopo deliberadamente restrito ao que
