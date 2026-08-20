@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { inscreverNoArmazenamento } from "./storage";
+import { inscreverNoArmazenamento, obterArmazenamento } from "./storage";
 
 /**
  * Leitura reativa do localStorage via `useSyncExternalStore`.
@@ -42,7 +42,7 @@ export function useValorLocal<T>(chave: string, ler: () => T): T | null {
   const snapshot = useCallback(() => {
     let bruto: string | null = null;
     try {
-      bruto = window.localStorage.getItem(chave);
+      bruto = obterArmazenamento()?.getItem(chave) ?? null;
     } catch {
       bruto = null;
     }
