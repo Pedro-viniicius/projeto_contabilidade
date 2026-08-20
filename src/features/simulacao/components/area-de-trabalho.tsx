@@ -23,6 +23,7 @@ import {
 } from "@/features/sessao/services/sessao-demo";
 import { simular } from "../domain/calcular";
 import {
+  mesmaEntrada,
   proLaboreSugerido,
   simulacaoSchema,
   valoresPadrao,
@@ -43,6 +44,7 @@ import { PainelResultado } from "./painel-resultado";
 import { PainelPremissas } from "./painel-premissas";
 import { PainelEscopo } from "./painel-escopo";
 import { ZonaContexto } from "./zona-contexto";
+import { atalhoDeveCalcular } from "./atalho-recalculo";
 import type { EntradaSimulacao } from "../types";
 
 /** Referência estável: evita recriar o objeto a cada render. */
@@ -85,7 +87,8 @@ export function AreaDeTrabalho() {
   const router = useRouter();
   const hidratado = useHidratado();
   const sessao = useValorLocal(CHAVE_SESSAO, lerSessaoDemo);
-  const salva = useValorLocal(CHAVE_ATUAL, lerSimulacaoAtual);
+  const leituraAtual = useValorLocal(CHAVE_ATUAL, lerSimulacaoAtual);
+  const salva = leituraAtual?.registro ?? null;
 
   /*
    * `rascunho` é o que está nos campos. Enquanto o contador não digita
@@ -98,6 +101,9 @@ export function AreaDeTrabalho() {
     null,
   );
   const [erros, setErros] = useState<ErrosSimulacao>({});
+
+  /* Falha de gravação: o cálculo continua na tela mesmo sem persistir. */
+  const [avisoPersistencia, setAviso] = useState<string | null>(null);
 
   /*
    * Entrada que produziu o resultado exibido. Separá-la do rascunho é o
@@ -128,8 +134,21 @@ export function AreaDeTrabalho() {
   );
 
   const desatualizado =
-    entradaExibida !== null &&
-    JSON.stringify(entrada) !== JSON.stringify(entradaExibida);
+    entradaExibida !== null && !mesmaEntrada(entrada, entradaExibida);
+
+  /*
+   * Aviso derivado, não semeado por efeito.
+   *
+   * Registro ilegível é apenas ignorado na leitura — a chave fica onde
+   * está e é sobrescrita no próximo cálculo, ou removida em "Nova
+   * análise". Não apagamos nada durante o render, e a tela volta ao
+   * estado inicial em vez de quebrar.
+   */
+  const aviso =
+    avisoPersistencia ??
+    (leituraAtual?.descartado
+      ? "A análise que estava aberta neste aparelho está ilegível e foi ignorada. O histórico não foi afetado."
+      : null);
 
   /* Sem sessão local não há área de trabalho: volta para o acesso. */
   useEffect(() => {
@@ -153,24 +172,46 @@ export function AreaDeTrabalho() {
     }
 
     setErros({});
-    salvarSimulacao(resultado.data, referencia);
+    /* `salva?.id` mantém a identidade: recalcular atualiza a mesma
+       análise em vez de inserir uma nova a cada clique. */
+    const gravacao = salvarSimulacao(resultado.data, referencia, salva?.id);
+    setAviso(
+      gravacao.persistido
+        ? null
+        : gravacao.motivo === "sem-espaco"
+          ? "Não foi possível salvar esta análise: o armazenamento deste navegador está cheio. O resultado continua disponível nesta tela."
+          : "Não foi possível salvar esta análise neste navegador. O resultado continua disponível nesta tela.",
+    );
     setCalculada(resultado.data);
     registrarEvento(calculada ? "simulation_edited" : "simulation_completed", {
       tipo_atuacao: resultado.data.tipoAtuacao,
     });
-  }, [entrada, referencia, calculada]);
+  }, [entrada, referencia, calculada, salva?.id]);
 
-  /* Ctrl/Cmd + Enter calcula de qualquer lugar da área de trabalho. */
+  /*
+   * Ctrl/Cmd + Enter calcula de qualquer lugar da ÁREA DE TRABALHO —
+   * nunca de dentro de um painel sobreposto.
+   */
   useEffect(() => {
     const aoTeclar = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        calcular();
+      const alvo = e.target instanceof Element ? e.target : null;
+      if (
+        !atalhoDeveCalcular({
+          ctrlKey: e.ctrlKey,
+          metaKey: e.metaKey,
+          key: e.key,
+          dentroDeDialogo: alvo?.closest('[role="dialog"]') != null,
+          gavetaAberta: gaveta !== null,
+        })
+      ) {
+        return;
       }
+      e.preventDefault();
+      calcular();
     };
     window.addEventListener("keydown", aoTeclar);
     return () => window.removeEventListener("keydown", aoTeclar);
-  }, [calcular]);
+  }, [calcular, gaveta]);
 
   function atualizar<K extends keyof EntradaSimulacaoValidada>(
     campo: K,
@@ -194,6 +235,7 @@ export function AreaDeTrabalho() {
     setReferenciaRascunho(registro.referencia ?? "");
     setCalculada(registro.entrada);
     setErros({});
+    setAviso(null);
     setGaveta(null);
   }
 
@@ -204,6 +246,7 @@ export function AreaDeTrabalho() {
     setReferenciaRascunho("");
     setCalculada(null);
     setErros({});
+    setAviso(null);
     setGaveta(null);
     registrarEvento("simulation_started");
     formRef.current?.querySelector<HTMLInputElement>("input")?.focus();
@@ -266,6 +309,7 @@ export function AreaDeTrabalho() {
               erros={erros}
               jaCalculou={simulacao !== null}
               desatualizado={desatualizado}
+              aviso={aviso}
               formRef={formRef}
               onCampo={atualizar}
               onProLabore={(v) => {

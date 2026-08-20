@@ -34,6 +34,7 @@ export function FormularioSimulacao({
   erros,
   jaCalculou,
   desatualizado,
+  aviso,
   formRef,
   onCampo,
   onProLabore,
@@ -45,6 +46,8 @@ export function FormularioSimulacao({
   erros: ErrosSimulacao;
   jaCalculou: boolean;
   desatualizado: boolean;
+  /** Falha de persistência ou registro descartado. O cálculo segue válido. */
+  aviso?: string | null;
   formRef: RefObject<HTMLFormElement | null>;
   onCampo: <K extends keyof EntradaSimulacaoValidada>(
     campo: K,
@@ -169,6 +172,17 @@ export function FormularioSimulacao({
           <p className="mt-2 flex items-start gap-1.5 text-[0.75rem] leading-snug text-atencao">
             <span aria-hidden="true">●</span>
             <span>Valores alterados — recalcule para atualizar o resultado.</span>
+          </p>
+        )}
+        {aviso && (
+          /* Persistência falhou ou registro corrompido: o contador
+             precisa saber que o número na tela não ficou guardado. */
+          <p
+            role="status"
+            className="mt-2 flex items-start gap-1.5 text-[0.75rem] leading-snug text-atencao"
+          >
+            <span aria-hidden="true">⚠</span>
+            <span>{aviso}</span>
           </p>
         )}
         <p className="sr-only">
