@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Relatório do `test:coverage`: artefato local, já ignorado pelo Git.
+    "coverage/**",
   ]),
 ]);
 
