@@ -13,17 +13,26 @@
 
 /* Bump obrigatório a cada mudança de casca: sem isso o usuário que já
    instalou continua vendo a interface antiga vinda do cache. */
-const VERSAO = "clareza-v2";
+const VERSAO = "clareza-v2-1";
 const CACHE_SHELL = `${VERSAO}-shell`;
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 
-/** Casca mínima que garante o app utilizável offline. */
+/**
+ * Casca mínima que garante o app utilizável offline.
+ *
+ * Com a consolidação em tela única sobrou pouca coisa: acesso, área de
+ * trabalho e o aviso de indisponibilidade. Premissas, histórico,
+ * auditoria e feedback deixaram de ser rotas — vivem dentro da área de
+ * trabalho e são cobertos pelo mesmo documento em cache.
+ *
+ * Uma sessão demonstrativa existente continua valendo offline: ela vive
+ * no localStorage e o cálculo é local. Nenhuma senha é gravada nem
+ * cacheada — não há requisição de autenticação para interceptar.
+ */
 const SHELL = [
-  "/",
+  "/login",
+  "/workspace",
   "/offline",
-  "/simulacao",
-  "/premissas",
-  "/feedback",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",

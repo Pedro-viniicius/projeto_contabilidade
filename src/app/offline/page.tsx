@@ -10,22 +10,23 @@ export const metadata: Metadata = {
 
 export default function OfflinePage() {
   return (
-    <div className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6">
+    <main id="conteudo" className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6">
       <Painel className="px-4 py-12 text-center">
         <h1 className="text-base font-semibold tracking-tight text-ink">
           Sem conexão
         </h1>
         <p className="mx-auto mt-1.5 max-w-md text-[0.8125rem] leading-relaxed text-ink-muted">
-          Esta tela não estava em cache. As telas já visitadas seguem
-          funcionando, e as simulações continuam salvas neste aparelho.
+          Esta tela não estava em cache. A área de trabalho já visitada segue
+          funcionando sem conexão, com as análises salvas neste aparelho — o
+          cálculo é local e não depende de servidor.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <ButtonLink href="/">Visão geral</ButtonLink>
-          <ButtonLink href="/simulacao" variante="secundaria">
-            Simulação
+          <ButtonLink href="/workspace">Área de trabalho</ButtonLink>
+          <ButtonLink href="/login" variante="secundaria">
+            Acesso
           </ButtonLink>
         </div>
       </Painel>
-    </div>
+    </main>
   );
 }

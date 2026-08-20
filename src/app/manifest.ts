@@ -3,13 +3,13 @@ import type { MetadataRoute } from "next";
 /** Gerado pelo Next em /manifest.webmanifest. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Clareza — simulador tributário para contadores",
+    name: "Clareza — área de trabalho tributária para contadores",
     short_name: "Clareza",
     description:
-      "Compare cenários Pessoa Física e CNPJ, veja o impacto mensal e anual e audite as premissas de cálculo.",
+      "Compare cenários Pessoa Física e CNPJ, audite a composição dos encargos e as premissas de cálculo em uma única tela.",
     lang: "pt-BR",
     dir: "ltr",
-    start_url: "/",
+    start_url: "/workspace",
     scope: "/",
     display: "standalone",
     /* Sem travar orientação: a área de trabalho é desktop-first. */
@@ -38,14 +38,14 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: "Nova simulação",
-        short_name: "Simular",
-        url: "/simulacao",
+        name: "Nova análise",
+        short_name: "Analisar",
+        url: "/workspace",
       },
       {
         name: "Premissas de cálculo",
         short_name: "Premissas",
-        url: "/premissas",
+        url: "/workspace?painel=premissas",
       },
     ],
   };

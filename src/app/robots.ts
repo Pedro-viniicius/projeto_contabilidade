@@ -12,8 +12,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      /* Páginas dependentes de dados locais não têm valor em busca. */
-      disallow: ["/resultado", "/offline"],
+      /* Telas dependentes de dados locais não têm valor em busca. */
+      disallow: ["/workspace", "/resultado", "/offline"],
     },
     sitemap: `${URL_BASE}/sitemap.xml`,
   };
