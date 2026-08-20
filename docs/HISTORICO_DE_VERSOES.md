@@ -77,9 +77,49 @@ permanecem idênticos aos da `v1.0.0`.
 
 ---
 
-## V2.1.0 — Tela única e acesso demonstrativo
+## V2.1.1 — Estabilização operacional
 
 **Status:** versão atual.
+
+**Tag:** `v2.1.1`
+**Branch:** `fix/v2.1.1-operational-stability`
+**Data:** agosto de 2026
+
+Release de correção, sem funcionalidade nova e sem redesenho. Fecha os
+defeitos operacionais apontados na auditoria técnica da `v2.1.0`, cada um
+com teste de regressão em volta.
+
+### O que foi corrigido
+
+| Defeito | Antes | Depois |
+| --- | --- | --- |
+| Identidade da análise | Cada recálculo inseria um registro; 12 cliques apagavam as análises de outros clientes | Recalcular atualiza o mesmo registro; só "Nova análise" gera `id` novo |
+| Registro corrompido | Data ilegível derrubava a aplicação inteira, sem recuperação | Registro inválido é ignorado, os válidos sobrevivem, o contador é avisado |
+| Exceção no render | Nenhuma fronteira de erro | `error.tsx` e `global-error.tsx`, com limpeza opcional só das chaves `clareza:` |
+| Falha de gravação | Retorno ignorado; a interface dizia "salvo" | Resultado tipado propagado até a tela, distinguindo cota de indisponibilidade |
+| Atalho Ctrl/Cmd+Enter | Calculava com painel de feedback aberto | Restrito à área de trabalho |
+| Estado desatualizado | `JSON.stringify`, sensível à ordem das chaves | Comparação campo a campo |
+| Versão das regras | Gravada e nunca lida | Exibida no histórico quando diverge da vigente |
+
+### Verificação de regressão contábil
+
+Dez cenários representativos — incluindo teto do INSS, faixa isenta do
+IRPF, margem apertada, custos iguais à receita e o limite de R$ 10
+milhões — foram capturados na `v2.1.0` antes de qualquer alteração e
+recapturados depois. A saída completa (encargos, bases, alíquotas,
+passos, líquidos, margens, comparação e projeção anual) é **idêntica byte
+a byte**. `VERSAO_REGRAS` permanece em `v1.1-2026-08`.
+
+### Cobertura
+
+67 → 127 testes. A medição passou a incluir `services/` e `schemas/`,
+onde estavam todos os defeitos acima: de 124 para 314 statements.
+
+---
+
+## V2.1.0 — Tela única e acesso demonstrativo
+
+**Status:** base da V2.1.1.
 
 **Tag:** `v2.1.0`
 **Branch:** `feat/single-screen-accountant-workspace`

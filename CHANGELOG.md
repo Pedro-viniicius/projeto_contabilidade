@@ -5,6 +5,78 @@ Versionamento semântico.
 
 ---
 
+## [2.1.1] — 2026-08-20
+
+Release de estabilização. Correção de defeitos operacionais encontrados
+em auditoria técnica, com teste de regressão em volta de cada um. **O
+motor de cálculo não foi tocado:** os resultados de dez cenários
+representativos são idênticos, byte a byte, aos da `v2.1.0`. Nenhuma
+premissa contábil, alíquota, fórmula ou regra de arredondamento mudou, e
+a interface segue a mesma — só ganhou as mensagens que faltavam.
+
+### Corrigido
+
+- **Recalcular deixou de duplicar a análise.** Uma análise agora tem
+  identidade estável: recalcular atualiza o mesmo registro, e só "Nova
+  análise" gera `id` novo. Antes cada clique em Recalcular inseria um
+  registro, e doze cliques consumiam o histórico inteiro — apagando em
+  silêncio as análises de outros clientes. O limite de 12 posições passa
+  a contar análises distintas, não eventos de cálculo.
+- **Registros corrompidos não derrubam mais a aplicação.** O registro
+  persistido inteiro passa por schema — `id`, `criadaEm`,
+  `atualizadaEm`, `versaoRegras` e `referencia`, e não só `entrada`. Uma
+  data ilegível levantava `RangeError` durante o render e deixava a área
+  de trabalho permanentemente inacessível, sem saída pela interface. Os
+  registros válidos sobrevivem, o inválido é ignorado e o contador é
+  avisado.
+- **Fronteiras de erro.** `app/error.tsx` e `app/global-error.tsx` com
+  recuperação em dois passos: "Tentar novamente" e, só mediante
+  confirmação explícita, limpeza dos dados locais — que apaga
+  exclusivamente as chaves com prefixo `clareza:`.
+- **Falha de gravação deixou de ser silenciosa.** `gravarJson` devolve
+  resultado tipado e distingue cota estourada de armazenamento
+  indisponível. A área de trabalho avisa quando não conseguiu salvar e
+  mantém o resultado na tela; o acesso demonstrativo não navega para uma
+  sessão que não existe; o registro de observação não confirma o que não
+  foi gravado.
+- **Atalho de recálculo restrito ao contexto certo.** Ctrl/Cmd + Enter
+  não dispara mais o cálculo com o foco dentro de um diálogo ou com
+  painel lateral aberto.
+- **Comparação de estado desatualizado determinística.** A detecção de
+  "Valores alterados" passou de `JSON.stringify` para comparação campo a
+  campo, sem depender da ordem das chaves nem de chave extra vinda do
+  armazenamento.
+
+### Adicionado
+
+- **Rastreabilidade de regras no histórico.** Quando a análise foi criada
+  sob outra versão das premissas, a linha diz "Criada com regras X ·
+  recalculada com as atuais Y". A `versaoRegras` do registro passou a ser
+  preservada no recálculo, em vez de reescrita. Continuamos guardando
+  entrada e recalculando sempre — nenhum resultado é congelado.
+- **`atualizadaEm`** no registro persistido, opcional e ausente nos
+  registros gravados antes desta versão.
+
+### Testes
+
+- 60 testes novos (67 → 127), cobrindo persistência, identidade da
+  análise, dados corrompidos, falha de gravação, sessão demonstrativa,
+  registro de observações, atalho de teclado e comparação de entrada.
+- `vitest` passou a encontrar arquivos `.test.tsx`, que antes eram
+  ignorados em silêncio, e a cobertura passou a incluir `services/`,
+  `schemas/` e `lib/storage.ts` — de 124 para 314 statements medidos.
+- `localStorage` falso em `src/lib/armazenamento-falso.ts`, que permite
+  simular cota estourada e armazenamento bloqueado sem dependência nova.
+
+### Preservado
+
+- Motor de cálculo, premissas, `VERSAO_REGRAS` (`v1.1-2026-08`),
+  arredondamento, tabela do IRPF, INSS, Fator R e alíquota efetiva do
+  CNPJ — todos intactos e com os mesmos resultados.
+- Layout, cores, tipografia, navegação e estratégia do PWA.
+
+---
+
 ## [2.1.0] — 2026-08-20
 
 Consolidação da área de trabalho em **uma tela só** e tela de acesso

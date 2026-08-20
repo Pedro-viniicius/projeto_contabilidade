@@ -402,14 +402,16 @@ sobrescrito.
 | Tag | O que é |
 | --- | --- |
 | `v1.0.0` | Simulador orientado ao usuário final (wizard, mobile-first) |
-| `v2.0.0` | Área de trabalho profissional para contadores (atual) |
+| `v2.0.0` | Área de trabalho profissional para contadores |
+| `v2.1.0` | Tela única e acesso demonstrativo |
+| `v2.1.1` | Estabilização operacional: persistência, recuperação de erro e testes (atual) |
 
 ```bash
 # inspecionar a V1 sem alterar nada
 git switch --detach v1.0.0
 
-# voltar para a branch do redesign
-git switch feat/accountant-professional-ux
+# voltar para a branch de trabalho
+git switch fix/v2.1.1-operational-stability
 
 # criar uma branch a partir da V1
 git switch -c restore/v1 v1.0.0
