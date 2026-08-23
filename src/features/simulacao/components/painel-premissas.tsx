@@ -94,7 +94,7 @@ export function PainelPremissas() {
             aria-pressed={filtro === f}
             onClick={() => setFiltro(f)}
             className={[
-              "min-h-8 rounded-md px-2.5 text-[0.8125rem] transition-colors",
+              "alvo-toque min-h-8 rounded-md px-2.5 text-[0.8125rem] transition-colors",
               filtro === f
                 ? "bg-accent-soft font-medium text-accent-ink"
                 : "text-ink-muted hover:bg-surface-muted hover:text-ink",
@@ -174,7 +174,7 @@ function LinhaPremissa({
             onClick={onAlternar}
             aria-expanded={aberta}
             aria-controls={idDetalhe}
-            className="flex items-start gap-1.5 rounded-sm text-left text-ink"
+            className="alvo-toque flex items-start gap-1.5 rounded-sm text-left text-ink"
           >
             <span
               aria-hidden="true"

@@ -41,13 +41,20 @@ export function CampoMoeda({
         <label htmlFor={id} className="text-[0.8125rem] font-medium text-ink">
           {rotulo}
         </label>
+        {/*
+          A sugestão preenche o campo — é ação, não link. Ganhou
+          contorno para parecer clicável, alvo de toque de 44px e um
+          nome acessível que diz em qual campo o valor entra: fora de
+          contexto, "Aplicar R$ 8.400,00" não identifica o destino.
+        */}
         {sugestao && (
           <button
             type="button"
             onClick={sugestao.onAplicar}
-            className="rounded-sm text-[0.75rem] text-accent hover:underline"
+            className="alvo-toque shrink-0 rounded-sm border border-border-base px-1.5 py-0.5 text-[0.75rem] text-accent transition-colors hover:border-border-strong hover:bg-surface-muted"
           >
             {sugestao.texto}
+            <span className="sr-only"> em {rotulo}</span>
           </button>
         )}
       </div>

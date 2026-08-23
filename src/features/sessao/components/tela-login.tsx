@@ -220,7 +220,7 @@ export function TelaLogin() {
                   type="button"
                   onClick={() => setMostrarSenha((v) => !v)}
                   aria-pressed={mostrarSenha}
-                  className="shrink-0 rounded-sm px-2 py-1 text-[0.75rem] font-medium text-ink-muted hover:text-ink"
+                  className="alvo-toque shrink-0 rounded-sm px-2 py-1 text-[0.75rem] font-medium text-ink-muted hover:text-ink"
                 >
                   {mostrarSenha ? "Ocultar" : "Mostrar"}
                   <span className="sr-only"> senha</span>
@@ -248,7 +248,7 @@ export function TelaLogin() {
             </div>
 
             <Button type="submit" tamanho="lg" className="w-full">
-              Entrar
+              Entrar na área de trabalho
             </Button>
           </form>
 

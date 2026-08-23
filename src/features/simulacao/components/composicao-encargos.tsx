@@ -111,7 +111,7 @@ function LinhaEncargo({
             onClick={onAlternar}
             aria-expanded={aberta}
             aria-controls={id}
-            className="flex w-full items-start gap-1.5 rounded-sm text-left text-ink"
+            className="alvo-toque flex w-full items-start gap-1.5 rounded-sm text-left text-ink"
           >
             <span
               aria-hidden="true"

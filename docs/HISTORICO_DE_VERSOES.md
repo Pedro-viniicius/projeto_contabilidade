@@ -5,6 +5,39 @@ versão é sobrescrita: a anterior continua recuperável a qualquer momento.
 
 ---
 
+## V2.2.0 — Ações auto-explicativas
+
+**Status:** em uso.
+
+**Tag:** `v2.2.0`
+**Branch:** `main`
+**Data:** agosto de 2026
+
+### O que mudou
+
+Auditoria de todos os controles de ação — rótulo, hierarquia,
+semântica, teclado, nome acessível e alvo de toque. A tela é a mesma da
+V2.1; o que mudou é o que os botões comunicam antes do clique.
+
+- "Nova" virou "+ Nova análise", em componente único, com a distinção
+  explícita em relação a "Recalcular análise";
+- hierarquia de ação declarada no tipo, com variante `destrutiva`;
+- confirmação apenas onde existe perda real de dado;
+- padrão ARIA completo nas abas de cenário;
+- alvo de toque de 44px em ponteiro grosso, sem perder densidade.
+
+**O motor de cálculo não foi tocado.** `VERSAO_REGRAS` inalterada.
+
+Auditoria: [`AUDITORIA_ACOES_UX.md`](AUDITORIA_ACOES_UX.md).
+
+### Rollback
+
+```bash
+git checkout v2.1.1
+```
+
+---
+
 ## V1.0.0 — Simulador orientado ao usuário final
 
 **Status:** preservada no Git, fora de uso.

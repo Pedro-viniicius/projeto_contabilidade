@@ -201,6 +201,34 @@ body {
 }
 
 /*
+  ALVO DE TOQUE.
+
+  A densidade profissional mantém os controles em 32–40px de altura
+  visível — trocar isso por 44px espalharia o formulário por duas telas
+  de rolagem. O alvo real, porém, precisa ser maior que o desenho: este
+  utilitário estende a área clicável até 44x44px com um pseudo-elemento
+  centrado, sem mover um pixel do layout.
+
+  Só em ponteiro grosso (dedo): no mouse o alvo visível já basta, e
+  áreas invisíveis sobrepostas atrapalhariam controles vizinhos.
+*/
+@media (pointer: coarse) {
+  .alvo-toque {
+    position: relative;
+  }
+
+  .alvo-toque::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+}
+
+/*
   Em campos compostos (prefixo "R$" + input), o anel de foco pertence ao
   contêiner. Especificidade maior que a regra global acima.
 */

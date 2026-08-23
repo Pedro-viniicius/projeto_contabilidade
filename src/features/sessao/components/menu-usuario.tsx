@@ -55,7 +55,7 @@ export function MenuUsuario({ sessao }: { sessao: SessaoDemo }) {
         onClick={() => setAberto((a) => !a)}
         aria-expanded={aberto}
         aria-haspopup="menu"
-        className="flex min-h-8 items-center gap-2 rounded-md px-1.5 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
+        className="alvo-toque flex min-h-8 items-center gap-2 rounded-md px-1.5 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
       >
         <span
           aria-hidden="true"
@@ -100,9 +100,9 @@ export function MenuUsuario({ sessao }: { sessao: SessaoDemo }) {
                 encerrarSessaoDemo();
                 router.replace("/login");
               }}
-              className="flex min-h-9 w-full items-center px-3 text-left text-[0.8125rem] text-ink transition-colors hover:bg-surface-hover"
+              className="alvo-toque flex min-h-9 w-full items-center px-3 text-left text-[0.8125rem] text-ink transition-colors hover:bg-surface-hover"
             >
-              Sair
+              Encerrar sessão
             </button>
           </div>
         </div>

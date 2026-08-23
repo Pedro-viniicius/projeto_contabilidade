@@ -45,6 +45,8 @@ export function FormularioFeedback() {
   const [envio, setEnvio] = useState<"nenhum" | "ok" | "falhou">(
     "nenhum",
   );
+  /* Exclusão dos registros em dois passos: apaga tudo e não volta. */
+  const [confirmandoLimpeza, setConfirmandoLimpeza] = useState(false);
 
   /* A lista se atualiza sozinha a cada gravação — sem efeito de sincronia. */
   const registrados = useValorLocal(CHAVE_FEEDBACK, lerFeedbacks) ?? [];
@@ -174,7 +176,7 @@ export function FormularioFeedback() {
         )}
 
         <div className="flex items-center gap-3">
-          <Button type="submit">Registrar</Button>
+          <Button type="submit">Registrar observação</Button>
           {/* aria-live: confirma o envio para quem usa leitor de tela. */}
           <p aria-live="polite" className="text-[0.8125rem] leading-snug">
             {envio === "ok" && (
@@ -202,14 +204,55 @@ export function FormularioFeedback() {
                 variante="secundaria"
                 onClick={() => baixarJson()}
               >
-                Exportar JSON
+                Exportar registros
               </Button>
-              <Button tamanho="sm" variante="sutil" onClick={limparFeedbacks}>
-                Limpar
+              {/* "Limpar" não dizia o quê. Apaga todas as observações
+                  gravadas neste navegador, sem cópia em servidor. */}
+              <Button
+                tamanho="sm"
+                variante="destrutiva"
+                aria-expanded={confirmandoLimpeza}
+                onClick={() => setConfirmandoLimpeza((a) => !a)}
+              >
+                Excluir registros
               </Button>
             </div>
           )}
         </div>
+
+        {confirmandoLimpeza && (
+          <div
+            role="alertdialog"
+            aria-label="Confirmar exclusão dos registros"
+            className="mt-2 rounded-md border border-negativo/40 bg-negativo-soft p-2.5"
+          >
+            <p className="text-[0.8125rem] leading-snug text-ink">
+              Excluir as {registrados.length} observações gravadas neste
+              navegador? Não há cópia em servidor — o que for apagado não
+              volta. Exporte antes, se ainda precisar levá-las à revisão.
+            </p>
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              <Button
+                autoFocus
+                tamanho="sm"
+                variante="destrutiva"
+                onClick={() => {
+                  limparFeedbacks();
+                  setConfirmandoLimpeza(false);
+                }}
+              >
+                Excluir registros
+              </Button>
+              <Button
+                tamanho="sm"
+                variante="sutil"
+                onClick={() => setConfirmandoLimpeza(false)}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
 
         <p className="mt-1 text-[0.75rem] leading-snug text-ink-subtle">
           Não há envio para servidor nesta versão. Exporte para levar o

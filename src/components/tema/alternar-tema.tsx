@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { BotaoIcone } from "@/components/ui/button";
 import {
   aplicarTema,
   inscreverTema,
@@ -24,20 +25,18 @@ export function AlternarTema() {
   const proximo = efetivo === "escuro" ? "claro" : "escuro";
 
   return (
-    <button
-      type="button"
+    <BotaoIcone
+      rotulo={
+        proximo === "escuro"
+          ? "Alternar para o tema escuro"
+          : "Alternar para o tema claro"
+      }
       onClick={() => aplicarTema(proximo)}
       title={proximo === "escuro" ? "Usar tema escuro" : "Usar tema claro"}
-      className="inline-flex size-8 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
     >
       <span aria-hidden="true" className="text-[0.875rem] leading-none">
         {efetivo === "escuro" ? "☀" : "☾"}
       </span>
-      <span className="sr-only">
-        {proximo === "escuro"
-          ? "Alternar para o tema escuro"
-          : "Alternar para o tema claro"}
-      </span>
-    </button>
+    </BotaoIcone>
   );
 }

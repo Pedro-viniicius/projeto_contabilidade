@@ -21,9 +21,9 @@ export default function OfflinePage() {
           cálculo é local e não depende de servidor.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <ButtonLink href="/workspace">Área de trabalho</ButtonLink>
+          <ButtonLink href="/workspace">Abrir área de trabalho</ButtonLink>
           <ButtonLink href="/login" variante="secundaria">
-            Acesso
+            Ir para o acesso
           </ButtonLink>
         </div>
       </Painel>

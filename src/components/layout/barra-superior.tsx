@@ -1,6 +1,7 @@
 "use client";
 
 import { Logo } from "@/components/ui/logo";
+import { IconePainel } from "@/components/ui/icone";
 import { AlternarTema } from "@/components/tema/alternar-tema";
 import { BotaoInstalar } from "@/components/pwa/botao-instalar";
 import { MenuUsuario } from "@/features/sessao/components/menu-usuario";
@@ -14,22 +15,30 @@ import type { SessaoDemo } from "@/features/sessao/schemas/sessao-schema";
  * uma tela só, uma coluna de 224px de menu era espaço horizontal gasto
  * com links para lugar nenhum. Aqui ficam apenas identidade, contexto
  * da análise atual e controles de sessão.
+ *
+ * Os dois controles à direita abrem painéis, e dizem isso: têm contorno
+ * (não são texto de status), `aria-haspopup="dialog"` e `aria-expanded`.
  */
 export function BarraSuperior({
   sessao,
   referencia,
+  contextoAberto,
+  premissasAbertas,
   onAbrirPremissas,
   onAbrirContexto,
 }: {
   sessao: SessaoDemo;
   /** Rótulo da análise em edição, quando houver. */
   referencia: string;
+  contextoAberto: boolean;
+  premissasAbertas: boolean;
   onAbrirPremissas: () => void;
   /** Abre a coluna de contexto como painel — usado abaixo de 1280px. */
   onAbrirContexto: () => void;
 }) {
   const { pendentes, total } = resumoValidacao();
   const tudoValidado = pendentes === 0;
+  const estadoModelo = tudoValidado ? "Modelo validado" : "Modelo em validação";
 
   return (
     <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center gap-2 border-b border-border-base bg-background/95 px-3 backdrop-blur sm:px-4">
@@ -45,16 +54,31 @@ export function BarraSuperior({
         className="hidden h-4 w-px shrink-0 bg-border-base sm:block"
       />
 
+      {/*
+        Vocabulário único: a análise se chama "análise" em toda a
+        interface. "Nova simulação" aqui contradizia "Nova análise" nos
+        botões e no histórico.
+      */}
       <p className="hidden min-w-0 flex-1 truncate text-[0.8125rem] text-ink-muted sm:block">
-        {referencia || "Nova simulação"}
+        {referencia || "Nova análise"}
       </p>
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        {/* Status do modelo: informação real, e atalho para auditá-la. */}
+        {/*
+          Status do modelo: informação real, e atalho para auditá-la.
+          Sem preenchimento nem contorno, era indistinguível de um
+          indicador passivo. Ganhou o mesmo tratamento dos demais
+          controles secundários — superfície elevada + borda —, porque
+          na paleta do projeto a linha sozinha tem contraste baixo
+          demais para carregar a affordance. O nome acessível começa
+          pelo rótulo visível e diz o que o clique faz.
+        */}
         <button
           type="button"
           onClick={onAbrirPremissas}
-          className="hidden min-h-8 items-center gap-1.5 rounded-md px-2 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink min-[640px]:inline-flex"
+          aria-haspopup="dialog"
+          aria-expanded={premissasAbertas}
+          className="alvo-toque hidden min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface px-2 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink min-[640px]:inline-flex"
         >
           <span
             aria-hidden="true"
@@ -62,21 +86,29 @@ export function BarraSuperior({
               tudoValidado ? "bg-positivo" : "bg-atencao"
             }`}
           />
-          {tudoValidado ? "Modelo validado" : "Modelo em validação"}
+          {estadoModelo}
           {!tudoValidado && (
             <span className="tnum text-ink-subtle">
               {pendentes}/{total}
             </span>
           )}
+          <span className="sr-only"> — abrir premissas do modelo</span>
         </button>
 
         {/* Abaixo de 1280px a coluna de contexto vira painel sob demanda. */}
         <button
           type="button"
           onClick={onAbrirContexto}
-          className="inline-flex min-h-8 items-center rounded-md px-2 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink min-[1280px]:hidden"
+          aria-haspopup="dialog"
+          aria-expanded={contextoAberto}
+          className="alvo-toque inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface px-2 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink min-[1280px]:hidden"
         >
+          <IconePainel />
           Contexto
+          <span className="sr-only">
+            {" "}
+            — abrir painel com histórico e auditoria
+          </span>
         </button>
 
         <BotaoInstalar />

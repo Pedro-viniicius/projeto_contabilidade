@@ -5,6 +5,81 @@ Versionamento semântico.
 
 ---
 
+## [2.2.0] — 2026-08-23
+
+Release de interação. Auditoria de **todos os controles de ação** da
+aplicação — rótulo, hierarquia, semântica, teclado, nome acessível e
+alvo de toque. **O motor de cálculo não foi tocado:** nenhuma premissa,
+alíquota, fórmula ou regra de arredondamento mudou, e `VERSAO_REGRAS`
+segue a mesma. O que mudou é o que os botões dizem, não o que a
+aplicação calcula.
+
+Auditoria completa em [`docs/AUDITORIA_ACOES_UX.md`](docs/AUDITORIA_ACOES_UX.md).
+
+### Corrigido
+
+- **"Nova" virou "+ Nova análise".** O rótulo mais ambíguo da interface
+  aparecia em dois lugares, com aparência de link, alvo de ~16px e sem
+  dizer *nova o quê* — nem que fechava a análise em andamento. Agora é
+  um único componente usado nos dois pontos, com ícone, corpo de botão
+  e a distinção explícita em relação a "Recalcular análise": uma cria
+  outra análise, a outra atualiza a que está aberta.
+- **Estado deixou de ser rótulo de ação.** O registro em edição tinha um
+  botão escrito "Em edição" — dizia o que a análise *era*, não o que o
+  clique faria. Virou etiqueta de status, ao lado de um botão "Abrir".
+- **Ações destrutivas passaram a se parecer com o que são.** Excluir do
+  histórico e limpar as observações apagavam dados locais irreversíveis
+  com a aparência da ação mais discreta da tela. Ganharam tom próprio e
+  confirmação que nomeia o alvo e avisa que não volta.
+- **Confirmação só onde há perda real.** "Nova análise" confirma quando
+  existe trabalho fora do histórico — valores digitados e nunca
+  calculados, ou edição por cima de um cálculo salvo — e não confirma
+  quando não há o que perder. A regra está isolada e testada em
+  `acoes-analise.ts`.
+- **Botões que pareciam texto.** "Modelo em validação" era
+  indistinguível de um indicador passivo; "Premissas do modelo" era um
+  falso link para uma ação que não navega. Ambos ganharam tratamento de
+  controle e nome acessível que declara o destino.
+- **Abas de cenário com o padrão ARIA completo.** Havia `role="tab"` sem
+  painel associado e sem navegação por setas — o leitor de tela
+  prometia um comportamento que não existia. Agora há tabulação
+  *roving*, setas com retorno circular, `Home`/`End`, `aria-controls` e
+  `role="tabpanel"`.
+- **Botão desabilitado deixou de ser um beco sem saída.** No estado
+  vazio, "Calcular análise" usa `aria-disabled` em vez de `disabled`:
+  continua na ordem de tabulação e aponta, por `aria-describedby`, a
+  lista do que falta preencher.
+- **Vocabulário único.** A barra superior dizia "Nova simulação"
+  enquanto o resto da interface dizia "análise".
+- **Rótulos sem objeto.** "Calcular", "Abrir", "Limpar", "Registrar",
+  "Sair", "Entrar", "Acesso" e "Área de trabalho" passaram a nomear
+  aquilo sobre o que agem.
+
+### Adicionado
+
+- **Variante `destrutiva` em `Button`.** A hierarquia de ação passou a
+  ser declarada no tipo — primária, secundária, sutil, destrutiva —, e
+  a destrutiva é a única com o tom negativo.
+- **`BotaoIcone`** para controle só de ícone, com `rotulo` obrigatório
+  no tipo: não há como criar um botão anônimo por esquecimento.
+- **`components/ui/icone.tsx`** — os glifos que a interface já usava,
+  reunidos para que um ícone signifique sempre a mesma coisa. Nenhuma
+  biblioteca de ícones foi adicionada.
+- **`.alvo-toque`** — estende a área clicável a 44x44px por
+  pseudo-elemento, só em `pointer: coarse`. A densidade visual
+  profissional de 32–40px não muda um pixel.
+- **Confirmação de análise salva.** "✓ Análise salva no histórico deste
+  aparelho", derivada do estado e sem toast, respondendo à pergunta
+  "deu certo?".
+
+### Testes
+
+- `acoes-analise.test.ts`: 10 casos cobrindo os rótulos de cálculo, a
+  regra de quando confirmar "Nova análise" e os nomes acessíveis do
+  histórico. Total do projeto: 137 testes.
+
+---
+
 ## [2.1.1] — 2026-08-20
 
 Release de estabilização. Correção de defeitos operacionais encontrados

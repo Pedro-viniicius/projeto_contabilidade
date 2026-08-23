@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BotaoIcone } from "@/components/ui/button";
 import { registrarEvento } from "@/lib/analytics";
 
 /** Evento não padronizado, suportado por navegadores Chromium. */
@@ -35,8 +36,8 @@ export function BotaoInstalar() {
   if (!evento) return null;
 
   return (
-    <button
-      type="button"
+    <BotaoIcone
+      rotulo="Instalar o Clareza neste aparelho"
       onClick={async () => {
         registrarEvento("pwa_install_clicked");
         await evento.prompt();
@@ -44,12 +45,10 @@ export function BotaoInstalar() {
         setEvento(null);
       }}
       title="Instalar o Clareza neste aparelho"
-      className="inline-flex size-8 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
     >
       <span aria-hidden="true" className="text-[0.875rem] leading-none">
         ⬇
       </span>
-      <span className="sr-only">Instalar aplicativo</span>
-    </button>
+    </BotaoIcone>
   );
 }

@@ -2,12 +2,14 @@
 
 import type { RefObject } from "react";
 import { Button } from "@/components/ui/button";
+import { IconeRecalcular } from "@/components/ui/icone";
 import { CampoMoeda } from "@/components/ui/campo-moeda";
 import { CampoTexto } from "@/components/ui/campo-texto";
 import { Escolha } from "@/components/ui/escolha";
 import { GrupoCampos } from "@/components/ui/painel";
 import { formatarMoeda } from "@/lib/format";
 import { REGRAS } from "../domain/calculation-rules";
+import { rotuloCalculo } from "./acoes-analise";
 import {
   proLaboreSugerido,
   type EntradaSimulacaoValidada,
@@ -34,6 +36,7 @@ export function FormularioSimulacao({
   erros,
   jaCalculou,
   desatualizado,
+  salvo,
   aviso,
   formRef,
   onCampo,
@@ -46,6 +49,8 @@ export function FormularioSimulacao({
   erros: ErrosSimulacao;
   jaCalculou: boolean;
   desatualizado: boolean;
+  /** O último cálculo foi gravado no histórico deste aparelho. */
+  salvo: boolean;
   /** Falha de persistência ou registro descartado. O cálculo segue válido. */
   aviso?: string | null;
   formRef: RefObject<HTMLFormElement | null>;
@@ -157,9 +162,23 @@ export function FormularioSimulacao({
         alcance obrigaria a rolar para cada iteração.
       */}
       <div className="sticky bottom-0 mt-auto border-t border-border-base bg-background px-4 py-3">
+        {/*
+          A consequência vem ANTES da ação, não depois: o contador lê
+          por que precisa recalcular e só então alcança o botão.
+        */}
+        {desatualizado && (
+          <p className="mb-2 flex items-start gap-1.5 text-[0.75rem] leading-snug text-atencao">
+            <span aria-hidden="true">●</span>
+            <span>
+              Valores alterados — recalcule para atualizar o resultado.
+            </span>
+          </p>
+        )}
+
         <div className="flex items-center gap-2">
           <Button type="submit" tamanho="lg" className="flex-1">
-            {jaCalculou ? "Recalcular" : "Calcular"}
+            {jaCalculou && <IconeRecalcular />}
+            {rotuloCalculo(jaCalculou)}
           </Button>
           <kbd
             aria-hidden="true"
@@ -168,10 +187,17 @@ export function FormularioSimulacao({
             {ehMac ? "⌘" : "Ctrl"}+↵
           </kbd>
         </div>
-        {desatualizado && (
-          <p className="mt-2 flex items-start gap-1.5 text-[0.75rem] leading-snug text-atencao">
-            <span aria-hidden="true">●</span>
-            <span>Valores alterados — recalcule para atualizar o resultado.</span>
+
+        {/*
+          "Deu certo?" respondido sem toast: confirmação derivada do
+          estado, que some sozinha quando os valores mudam de novo.
+        */}
+        {salvo && !desatualizado && !aviso && (
+          <p className="mt-2 flex items-start gap-1.5 text-[0.75rem] leading-snug text-ink-muted">
+            <span aria-hidden="true" className="text-positivo">
+              ✓
+            </span>
+            <span>Análise salva no histórico deste aparelho.</span>
           </p>
         )}
         {aviso && (

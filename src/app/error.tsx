@@ -42,7 +42,7 @@ export default function ErroDaAplicacao({
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           <Button onClick={reset}>Tentar novamente</Button>
           {!confirmando && (
-            <Button variante="secundaria" onClick={() => setConfirmando(true)}>
+            <Button variante="destrutiva" onClick={() => setConfirmando(true)}>
               Limpar dados locais
             </Button>
           )}
@@ -58,6 +58,7 @@ export default function ErroDaAplicacao({
             </p>
             <div className="mt-3 flex flex-wrap justify-center gap-2">
               <Button
+                variante="destrutiva"
                 onClick={() => {
                   limparDadosDoClareza();
                   /* Recarga completa de propósito: a árvore React desta

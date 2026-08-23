@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { IconeExcluir } from "@/components/ui/icone";
 import { formatarMoeda } from "@/lib/format";
 import { useHidratado, useValorLocal } from "@/lib/armazenamento-reativo";
 import { simular } from "../domain/calcular";
@@ -10,6 +13,11 @@ import {
   lerHistorico,
   removerDoHistorico,
 } from "../services/simulacao-storage";
+import {
+  nomeAcessivelAbrir,
+  nomeAcessivelExcluir,
+  perguntaExclusao,
+} from "./acoes-analise";
 
 const horaCurta = new Intl.DateTimeFormat("pt-BR", {
   day: "2-digit",
@@ -48,6 +56,9 @@ export function HistoricoSimulacoes({
   onAbrir: (id: string) => void;
 }) {
   const hidratado = useHidratado();
+  /* Exclusão em dois passos, uma linha por vez — mesmo gesto da
+     fronteira de erro: mostrar a consequência antes de executá-la. */
+  const [excluindo, setExcluindo] = useState<string | null>(null);
   const leitura = useValorLocal(CHAVE_HISTORICO, lerHistorico);
   const historico = leitura?.registros ?? [];
   const descartados = leitura?.descartados ?? 0;
@@ -94,6 +105,17 @@ export function HistoricoSimulacoes({
                 </span>
               </div>
 
+              {/* "Em edição" é estado, não ação: virou etiqueta. Antes
+                  era o rótulo de um botão, que dizia o que a análise
+                  *é* em vez do que o clique faria. */}
+              {atual && (
+                <p className="mt-1">
+                  <Badge tom="positivo" ponto>
+                    Em edição
+                  </Badge>
+                </p>
+              )}
+
               <p className="tnum mt-0.5 text-[0.75rem] text-ink-muted">
                 {formatarMoeda(registro.entrada.receitaMensal)} ·{" "}
                 {registro.entrada.tipoAtuacao === "cnpj"
@@ -129,25 +151,64 @@ export function HistoricoSimulacoes({
                 </p>
               )}
 
-              <div className="mt-1.5 flex items-center gap-1">
-                <Button
-                  tamanho="sm"
-                  variante="secundaria"
-                  onClick={() => onAbrir(registro.id)}
+              {excluindo === registro.id ? (
+                /* Confirmação da exclusão: nomeia o alvo e diz que não
+                   volta, antes de apagar. */
+                <div
+                  role="alertdialog"
+                  aria-label={nomeAcessivelExcluir(registro.referencia)}
+                  className="mt-1.5 rounded-md border border-negativo/40 bg-negativo-soft p-2"
                 >
-                  {atual ? "Em edição" : "Abrir"}
-                </Button>
-                <Button
-                  tamanho="sm"
-                  variante="sutil"
-                  onClick={() => removerDoHistorico(registro.id)}
-                >
-                  <span aria-hidden="true">✕</span>
-                  <span className="sr-only">
-                    Remover análise {registro.referencia ?? "sem referência"}
-                  </span>
-                </Button>
-              </div>
+                  <p className="text-[0.75rem] leading-snug text-ink">
+                    {perguntaExclusao(registro.referencia)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Button
+                      autoFocus
+                      tamanho="sm"
+                      variante="destrutiva"
+                      onClick={() => {
+                        setExcluindo(null);
+                        removerDoHistorico(registro.id);
+                      }}
+                    >
+                      Excluir análise
+                    </Button>
+                    <Button
+                      tamanho="sm"
+                      variante="sutil"
+                      onClick={() => setExcluindo(null)}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-1.5 flex items-center gap-1">
+                  <Button
+                    tamanho="sm"
+                    variante="secundaria"
+                    onClick={() => onAbrir(registro.id)}
+                  >
+                    <span aria-hidden="true">Abrir</span>
+                    {/* Uma coluna de botões "Abrir" idênticos não diz a
+                        um leitor de tela qual análise abre. */}
+                    <span className="sr-only">
+                      {nomeAcessivelAbrir(registro.referencia)}
+                    </span>
+                  </Button>
+                  <Button
+                    tamanho="sm"
+                    variante="destrutiva"
+                    onClick={() => setExcluindo(registro.id)}
+                  >
+                    <IconeExcluir />
+                    <span className="sr-only">
+                      {nomeAcessivelExcluir(registro.referencia)}
+                    </span>
+                  </Button>
+                </div>
+              )}
             </li>
           );
         })}

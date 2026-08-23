@@ -1,6 +1,7 @@
 "use client";
 
 import { HistoricoSimulacoes } from "./historico-simulacoes";
+import { BotaoNovaAnalise } from "./botao-nova-analise";
 import {
   resumoValidacao,
   VERSAO_REGRAS,
@@ -13,9 +14,16 @@ import {
  * validação do modelo, análises recentes e os painéis de auditoria.
  * A partir de 1280px fica fixa à direita; abaixo disso, o mesmo
  * conteúdo abre como painel lateral pela barra superior.
+ *
+ * As ações estão agrupadas por propósito — começar uma análise,
+ * retomar uma anterior, auditar o modelo — em vez de enfileiradas numa
+ * régua única de botões equivalentes.
  */
 export function ZonaContexto({
   idAtual,
+  jaCalculou,
+  desatualizado,
+  temValoresPreenchidos,
   onAbrirRegistro,
   onNovaAnalise,
   onAbrirPremissas,
@@ -23,6 +31,9 @@ export function ZonaContexto({
   onAbrirFeedback,
 }: {
   idAtual?: string | null;
+  jaCalculou: boolean;
+  desatualizado: boolean;
+  temValoresPreenchidos: boolean;
   onAbrirRegistro: (id: string) => void;
   onNovaAnalise: () => void;
   onAbrirPremissas: () => void;
@@ -34,6 +45,25 @@ export function ZonaContexto({
 
   return (
     <div className="divide-y divide-[var(--border)]">
+      {/*
+        Ação de análise, sozinha e no topo: é a que o contador procura
+        ao trocar de cliente, e não deve disputar espaço com a leitura
+        do status do modelo.
+      */}
+      <div className="px-3 py-3">
+        <BotaoNovaAnalise
+          jaCalculou={jaCalculou}
+          desatualizado={desatualizado}
+          temValoresPreenchidos={temValoresPreenchidos}
+          onNovaAnalise={onNovaAnalise}
+          tamanho="md"
+          className="w-full"
+        />
+        <p className="mt-1.5 text-[0.6875rem] leading-snug text-ink-subtle">
+          Começa uma análise separada. A atual continua no histórico.
+        </p>
+      </div>
+
       <section className="px-3 py-3">
         <h2 className="rotulo-secao">Modelo de cálculo</h2>
         <p className="mt-1.5 flex items-center gap-1.5 text-[0.8125rem] font-medium text-ink">
@@ -56,16 +86,7 @@ export function ZonaContexto({
       </section>
 
       <section>
-        <div className="flex items-center justify-between gap-2 px-3 py-2">
-          <h2 className="rotulo-secao">Análises recentes</h2>
-          <button
-            type="button"
-            onClick={onNovaAnalise}
-            className="rounded-sm text-[0.75rem] text-accent hover:underline"
-          >
-            Nova
-          </button>
-        </div>
+        <h2 className="rotulo-secao px-3 py-2">Análises recentes</h2>
         <HistoricoSimulacoes idAtual={idAtual} onAbrir={onAbrirRegistro} />
       </section>
 
@@ -73,12 +94,12 @@ export function ZonaContexto({
         <h2 className="rotulo-secao px-3 py-1.5">Auditoria e revisão</h2>
         <AcaoContexto
           onClick={onAbrirPremissas}
-          titulo="Premissas do modelo"
+          titulo="Ver premissas do modelo"
           descricao="Alíquotas, bases e status de validação."
         />
         <AcaoContexto
           onClick={onAbrirEscopo}
-          titulo="Escopo do modelo"
+          titulo="Ver escopo do modelo"
           descricao="O que o cálculo cobre e o que ficou fora."
         />
         <AcaoContexto
@@ -91,6 +112,13 @@ export function ZonaContexto({
   );
 }
 
+/**
+ * Ação de auditoria: abre um painel sobreposto.
+ *
+ * `aria-haspopup="dialog"` e a seta à direita dizem, antes do clique,
+ * que ali abre um painel — sem isso a linha se parecia com um item de
+ * lista informativo.
+ */
 function AcaoContexto({
   titulo,
   descricao,
@@ -104,13 +132,19 @@ function AcaoContexto({
     <button
       type="button"
       onClick={onClick}
-      className="block w-full px-3 py-2 text-left transition-colors hover:bg-surface-hover"
+      aria-haspopup="dialog"
+      className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-surface-hover"
     >
-      <span className="block text-[0.8125rem] font-medium text-ink">
-        {titulo}
+      <span className="min-w-0 flex-1">
+        <span className="block text-[0.8125rem] font-medium text-ink">
+          {titulo}
+        </span>
+        <span className="mt-0.5 block text-[0.75rem] leading-snug text-ink-muted">
+          {descricao}
+        </span>
       </span>
-      <span className="mt-0.5 block text-[0.75rem] leading-snug text-ink-muted">
-        {descricao}
+      <span aria-hidden="true" className="shrink-0 text-ink-subtle">
+        ›
       </span>
     </button>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, type ReactNode } from "react";
+import { BotaoIcone } from "./button";
+import { IconeFechar } from "./icone";
 
 const FOCAVEIS =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -127,16 +129,11 @@ export function PainelLateral({
               </p>
             )}
           </div>
-          <button
-            type="button"
-            onClick={fechar}
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-muted hover:text-ink"
-          >
-            <span aria-hidden="true" className="text-base leading-none">
-              ✕
-            </span>
-            <span className="sr-only">Fechar painel</span>
-          </button>
+          {/* Ícone sozinho só onde o gesto é universal e de baixo
+              risco. O nome acessível é obrigatório no tipo. */}
+          <BotaoIcone rotulo="Fechar painel" onClick={fechar}>
+            <IconeFechar />
+          </BotaoIcone>
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3.5">

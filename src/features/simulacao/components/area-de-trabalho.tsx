@@ -44,6 +44,7 @@ import { PainelResultado } from "./painel-resultado";
 import { PainelPremissas } from "./painel-premissas";
 import { PainelEscopo } from "./painel-escopo";
 import { ZonaContexto } from "./zona-contexto";
+import { BotaoNovaAnalise } from "./botao-nova-analise";
 import { atalhoDeveCalcular } from "./atalho-recalculo";
 import type { EntradaSimulacao } from "../types";
 
@@ -135,6 +136,14 @@ export function AreaDeTrabalho() {
 
   const desatualizado =
     entradaExibida !== null && !mesmaEntrada(entrada, entradaExibida);
+
+  /*
+   * Há algo digitado que valha a pena preservar? É o que decide se
+   * "Nova análise" precisa confirmar. Comparar com os padrões é exato:
+   * dispensa adivinhar campo a campo o que conta como "preenchido".
+   */
+  const temValoresPreenchidos =
+    !mesmaEntrada(entrada, PADRAO) || referencia.trim() !== "";
 
   /*
    * Aviso derivado, não semeado por efeito.
@@ -255,6 +264,9 @@ export function AreaDeTrabalho() {
   const contexto = (
     <ZonaContexto
       idAtual={salva?.id ?? null}
+      jaCalculou={simulacao !== null}
+      desatualizado={desatualizado}
+      temValoresPreenchidos={temValoresPreenchidos}
       onAbrirRegistro={abrirRegistro}
       onNovaAnalise={novaAnalise}
       onAbrirPremissas={() => setGaveta("premissas")}
@@ -279,6 +291,8 @@ export function AreaDeTrabalho() {
       <BarraSuperior
         sessao={sessao}
         referencia={referencia}
+        contextoAberto={gaveta === "contexto"}
+        premissasAbertas={gaveta === "premissas"}
         onAbrirPremissas={() => setGaveta("premissas")}
         onAbrirContexto={() => setGaveta("contexto")}
       />
@@ -294,13 +308,12 @@ export function AreaDeTrabalho() {
               <h2 className="text-[0.8125rem] font-semibold text-ink">
                 Dados da análise
               </h2>
-              <button
-                type="button"
-                onClick={novaAnalise}
-                className="rounded-sm text-[0.75rem] text-accent hover:underline"
-              >
-                Nova
-              </button>
+              <BotaoNovaAnalise
+                jaCalculou={simulacao !== null}
+                desatualizado={desatualizado}
+                temValoresPreenchidos={temValoresPreenchidos}
+                onNovaAnalise={novaAnalise}
+              />
             </div>
 
             <FormularioSimulacao
@@ -309,6 +322,7 @@ export function AreaDeTrabalho() {
               erros={erros}
               jaCalculou={simulacao !== null}
               desatualizado={desatualizado}
+              salvo={salva !== null && avisoPersistencia === null}
               aviso={aviso}
               formRef={formRef}
               onCampo={atualizar}
@@ -350,7 +364,10 @@ export function AreaDeTrabalho() {
                   Preencha os dados da análise e calcule para visualizar o
                   comparativo entre Pessoa Física e CNPJ.
                 </p>
-                <dl className="mt-4 max-w-md space-y-1.5 border-t border-border-base pt-3">
+                <dl
+                  id="minimo-necessario"
+                  className="mt-4 max-w-md space-y-1.5 border-t border-border-base pt-3"
+                >
                   <p className="rotulo-secao">Mínimo necessário</p>
                   <Requisito
                     rotulo="Receita bruta mensal"
@@ -361,12 +378,22 @@ export function AreaDeTrabalho() {
                     ok={entrada.custosMensais >= 0}
                   />
                 </dl>
+                {/*
+                  Botão desabilitado não some da leitura: `aria-disabled`
+                  em vez de `disabled` mantém o controle alcançável pelo
+                  Tab, e `aria-describedby` liga o motivo — a lista logo
+                  acima — ao próprio botão. O clique é barrado na mão.
+                */}
                 <Button
                   className="mt-4"
-                  onClick={calcular}
-                  disabled={entrada.receitaMensal <= 0}
+                  aria-disabled={entrada.receitaMensal <= 0}
+                  aria-describedby="minimo-necessario"
+                  onClick={() => {
+                    if (entrada.receitaMensal <= 0) return;
+                    calcular();
+                  }}
                 >
-                  Calcular
+                  Calcular análise
                 </Button>
               </Painel>
             )}
