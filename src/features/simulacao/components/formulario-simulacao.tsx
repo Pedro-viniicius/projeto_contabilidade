@@ -1,6 +1,6 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { ReactNode, RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { IconeRecalcular } from "@/components/ui/icone";
 import { CampoMoeda } from "@/components/ui/campo-moeda";
@@ -8,8 +8,12 @@ import { CampoTexto } from "@/components/ui/campo-texto";
 import { Escolha } from "@/components/ui/escolha";
 import { GrupoCampos } from "@/components/ui/painel";
 import { formatarMoeda } from "@/lib/format";
-import { REGRAS } from "../domain/calculation-rules";
+import { REGRAS, type Anexo } from "../domain/calculation-rules";
+import { atividadePorId } from "../domain/catalogo-atividades";
+import type { Classificacao } from "../domain/classificacao";
 import { rotuloCalculo } from "./acoes-analise";
+import { SeletorAtividade } from "./seletor-atividade";
+import { CartaoClassificacao } from "./cartao-classificacao";
 import {
   proLaboreSugerido,
   type EntradaSimulacaoValidada,
@@ -26,12 +30,22 @@ const ehMac =
 /**
  * Zona de dados da área de trabalho.
  *
+ * A ordem reproduz a triagem do contador:
+ *
+ *   1. ATIVIDADE      — o que estamos analisando
+ *   2. ENQUADRAMENTO  — que anexo isso permite, e se há Fator R
+ *   3. DADOS          — PF e PJ lado a lado, preenchidos juntos
+ *
+ * Os campos do Fator R só aparecem quando a atividade está sujeita a
+ * ele: pedir RBT12 e folha para um salão de beleza seria ruído.
+ *
  * Puramente controlada: não guarda estado nem chama o motor. Quem
  * orquestra é a área de trabalho, para que os mesmos valores alimentem
  * o resultado ao lado sem duplicar fonte de verdade.
  */
 export function FormularioSimulacao({
   entrada,
+  classificacao,
   referencia,
   erros,
   jaCalculou,
@@ -45,6 +59,7 @@ export function FormularioSimulacao({
   onCalcular,
 }: {
   entrada: EntradaSimulacaoValidada;
+  classificacao: Classificacao;
   referencia: string;
   erros: ErrosSimulacao;
   jaCalculou: boolean;
@@ -63,6 +78,9 @@ export function FormularioSimulacao({
   onReferencia: (valor: string) => void;
   onCalcular: () => void;
 }) {
+  const atividade = atividadePorId(entrada.atividadeId);
+  const precisaFatorR = classificacao.sujeitaFatorR;
+
   return (
     <form
       ref={formRef}
@@ -74,7 +92,30 @@ export function FormularioSimulacao({
       className="flex min-h-full flex-col"
     >
       <div className="space-y-3.5 px-4 py-3.5">
-        <GrupoCampos titulo="Identificação">
+        {/* ---------- 1. ATIVIDADE ---------- */}
+        <GrupoCampos titulo="1. Atividade">
+          <SeletorAtividade
+            atividade={atividade}
+            onSelecionar={(id) => onCampo("atividadeId", id)}
+            onLimpar={() => onCampo("atividadeId", null)}
+          />
+        </GrupoCampos>
+
+        {/* ---------- 2. ENQUADRAMENTO ---------- */}
+        <GrupoCampos titulo="2. Enquadramento">
+          <CartaoClassificacao
+            classificacao={classificacao}
+            onAnexoManual={(anexo) =>
+              onCampo("anexoManual", anexo as Anexo | null)
+            }
+            onMotivoManual={(motivo) =>
+              onCampo("motivoAnexoManual", motivo || undefined)
+            }
+          />
+        </GrupoCampos>
+
+        {/* ---------- 3. DADOS ---------- */}
+        <GrupoCampos titulo="3. Dados da análise">
           <CampoTexto
             rotulo="Referência da análise"
             opcional
@@ -84,9 +125,23 @@ export function FormularioSimulacao({
             placeholder="Ex.: Cliente XPTO — cenário 01"
             ajuda="Rótulo local para reencontrar esta análise no histórico."
           />
-        </GrupoCampos>
 
-        <GrupoCampos titulo="Cenário">
+          <CampoMoeda
+            rotulo="Receita bruta mensal"
+            valor={entrada.receitaMensal}
+            onChange={(v) => onCampo("receitaMensal", v)}
+            erro={erros.receitaMensal}
+            ajuda="Vale para os dois cenários — é o que torna a comparação justa."
+          />
+
+          <CampoMoeda
+            rotulo="Custos do negócio"
+            valor={entrada.custosMensais}
+            onChange={(v) => onCampo("custosMensais", v)}
+            erro={erros.custosMensais}
+            ajuda="Custos operacionais dedutíveis. Não inclui despesas pessoais."
+          />
+
           <Escolha
             legenda="Enquadramento atual do cliente"
             valor={entrada.tipoAtuacao}
@@ -95,65 +150,143 @@ export function FormularioSimulacao({
               {
                 valor: "pessoa-fisica",
                 rotulo: "Pessoa Física",
-                descricao: "Autônomo, com INSS e carnê-leão.",
+                descricao: "Hoje atua como autônomo. Os dois cenários são calculados mesmo assim.",
               },
               {
                 valor: "cnpj",
                 rotulo: "CNPJ",
-                descricao: "Prestador com empresa e pró-labore.",
+                descricao: "Hoje atua com empresa. Os dois cenários são calculados mesmo assim.",
               },
             ]}
           />
         </GrupoCampos>
 
-        <GrupoCampos titulo="Receita">
-          <CampoMoeda
-            rotulo="Receita bruta mensal"
-            valor={entrada.receitaMensal}
-            onChange={(v) => onCampo("receitaMensal", v)}
-            erro={erros.receitaMensal}
-          />
-        </GrupoCampos>
+        {/*
+          PF e PJ LADO A LADO, a partir de 1280px.
+          Pedido direto do contador: comparar exige ver os dois de uma
+          vez, não alternar entre fluxos desconectados. Abaixo dessa
+          largura, empilham — campo de moeda espremido em meia coluna
+          seria pior que rolar.
+        */}
+        <div className="grid gap-3.5 min-[1280px]:grid-cols-2 min-[1280px]:gap-3">
+          <Cenario
+            titulo="Pessoa Física / Autônomo"
+            apoio="INSS de contribuinte individual e carnê-leão."
+          >
+            <CampoMoeda
+              rotulo="Honorários contábeis — Autônomo/PF"
+              valor={entrada.honorariosContabeisPf}
+              onChange={(v) => onCampo("honorariosContabeisPf", v)}
+              erro={erros.honorariosContabeisPf}
+              ajuda="Custo contábil do autônomo. Independente do da empresa — parte de zero até você informar."
+            />
+            <NotaCenario>
+              INSS de{" "}
+              {(REGRAS.pessoaFisica.inssAliquota.valor * 100).toLocaleString(
+                "pt-BR",
+              )}
+              % sobre o salário de contribuição, com piso e teto, mais IRPF
+              pela tabela progressiva mensal.
+            </NotaCenario>
+          </Cenario>
 
-        <GrupoCampos titulo="Estrutura de custos">
-          <CampoMoeda
-            rotulo="Custos do negócio"
-            valor={entrada.custosMensais}
-            onChange={(v) => onCampo("custosMensais", v)}
-            erro={erros.custosMensais}
-            ajuda="Custos operacionais dedutíveis. Não inclui despesas pessoais."
-          />
-          <CampoMoeda
-            rotulo="Honorários contábeis"
-            valor={entrada.custoContabilidade}
-            onChange={(v) => onCampo("custoContabilidade", v)}
-            erro={erros.custoContabilidade}
-            ajuda="Aplicado apenas ao cenário CNPJ."
-          />
-        </GrupoCampos>
-
-        <GrupoCampos titulo="Pró-labore">
-          <CampoMoeda
-            rotulo="Pró-labore mensal"
-            valor={entrada.proLabore}
-            onChange={onProLabore}
-            erro={erros.proLabore}
-            sugestao={
-              entrada.receitaMensal > 0
-                ? {
-                    texto: `Aplicar ${formatarMoeda(
-                      proLaboreSugerido(entrada.receitaMensal),
-                    )}`,
-                    onAplicar: () =>
-                      onProLabore(proLaboreSugerido(entrada.receitaMensal)),
-                  }
-                : undefined
+          <Cenario
+            titulo="CNPJ / Simples Nacional"
+            apoio={
+              classificacao.anexo
+                ? `DAS pelo Anexo ${classificacao.anexo}, pró-labore e honorários.`
+                : "Sem enquadramento definido: alíquota de recurso."
             }
-            ajuda={`Sugestão de ${(
-              REGRAS.cnpj.proLaborePercentualSugerido.valor * 100
-            ).toLocaleString("pt-BR")}% da receita. O modelo não calcula Fator R.`}
-          />
-        </GrupoCampos>
+          >
+            <CampoMoeda
+              rotulo="Pró-labore mensal"
+              valor={entrada.proLabore}
+              onChange={onProLabore}
+              erro={erros.proLabore}
+              sugestao={
+                entrada.receitaMensal > 0
+                  ? {
+                      texto: `Aplicar ${formatarMoeda(
+                        proLaboreSugerido(entrada.receitaMensal),
+                      )}`,
+                      onAplicar: () =>
+                        onProLabore(proLaboreSugerido(entrada.receitaMensal)),
+                    }
+                  : undefined
+              }
+              ajuda={`Sugestão de ${(
+                REGRAS.cnpj.proLaborePercentualSugerido.valor * 100
+              ).toLocaleString("pt-BR")}% da receita — que é o patamar do Fator R.`}
+            />
+
+            <CampoMoeda
+              rotulo="Honorários contábeis — Empresa/PJ"
+              valor={entrada.honorariosContabeisPj}
+              onChange={(v) => onCampo("honorariosContabeisPj", v)}
+              erro={erros.honorariosContabeisPj}
+              ajuda="Custo contábil da empresa, editado em separado do honorário do autônomo."
+            />
+
+            <CampoMoeda
+              rotulo="RBT12 — receita de 12 meses"
+              valor={entrada.rbt12}
+              onChange={(v) => onCampo("rbt12", v)}
+              erro={erros.rbt12}
+              sugestao={
+                entrada.receitaMensal > 0
+                  ? {
+                      texto: `Aplicar ${formatarMoeda(
+                        entrada.receitaMensal * REGRAS.mesesNoAno.valor,
+                      )}`,
+                      onAplicar: () =>
+                        onCampo(
+                          "rbt12",
+                          entrada.receitaMensal * REGRAS.mesesNoAno.valor,
+                        ),
+                    }
+                  : undefined
+              }
+              ajuda="Define a faixa da tabela do Simples. Em branco, projetamos a receita mensal por 12 e avisamos."
+            />
+
+            {/*
+              Fator R só aparece quando a atividade está sujeita a ele.
+              Mostrar sempre encheria a tela de campo irrelevante para
+              metade do catálogo.
+            */}
+            {precisaFatorR && (
+              <CampoMoeda
+                rotulo="Folha de 12 meses"
+                valor={entrada.folha12m}
+                onChange={(v) => onCampo("folha12m", v)}
+                erro={erros.folha12m}
+                sugestao={
+                  entrada.proLabore > 0
+                    ? {
+                        texto: `Aplicar ${formatarMoeda(
+                          entrada.proLabore * REGRAS.mesesNoAno.valor,
+                        )}`,
+                        onAplicar: () =>
+                          onCampo(
+                            "folha12m",
+                            entrada.proLabore * REGRAS.mesesNoAno.valor,
+                          ),
+                      }
+                    : undefined
+                }
+                ajuda="Salários, contribuição patronal, FGTS e pró-labore somados, conforme a LC 123/2006. É a folha que decide entre o Anexo III e o V."
+              />
+            )}
+
+            {!precisaFatorR && (
+              <NotaCenario>
+                {classificacao.atividade
+                  ? "Esta atividade não está sujeita ao Fator R: a folha não altera o anexo."
+                  : "Identifique a atividade para saber se o Fator R se aplica."}
+              </NotaCenario>
+            )}
+          </Cenario>
+        </div>
       </div>
 
       {/*
@@ -216,5 +349,43 @@ export function FormularioSimulacao({
         </p>
       </div>
     </form>
+  );
+}
+
+/**
+ * Coluna de um cenário.
+ *
+ * `<fieldset>` de verdade: o leitor de tela anuncia "Pessoa Física /
+ * Autônomo" ao entrar no grupo, e é isso que impede dois campos
+ * chamados "Honorários contábeis" de virarem indistinguíveis fora do
+ * contexto visual.
+ */
+function Cenario({
+  titulo,
+  apoio,
+  children,
+}: {
+  titulo: string;
+  apoio: string;
+  children: ReactNode;
+}) {
+  return (
+    <fieldset className="min-w-0 rounded-md border border-border-base bg-surface p-2.5">
+      <legend className="px-1 text-[0.8125rem] font-semibold text-ink">
+        {titulo}
+      </legend>
+      <p className="mb-2.5 text-[0.75rem] leading-snug text-ink-subtle">
+        {apoio}
+      </p>
+      <div className="space-y-2.5">{children}</div>
+    </fieldset>
+  );
+}
+
+function NotaCenario({ children }: { children: ReactNode }) {
+  return (
+    <p className="border-t border-border-base pt-2 text-[0.75rem] leading-snug text-ink-subtle">
+      {children}
+    </p>
   );
 }

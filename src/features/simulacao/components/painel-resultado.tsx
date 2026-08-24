@@ -8,6 +8,8 @@ import { Metrica } from "@/components/ui/metrica";
 import { formatarMoeda } from "@/lib/format";
 import { registrarEvento } from "@/lib/analytics";
 import { TabelaComparativa } from "./tabela-comparativa";
+import { EtiquetaAnexo } from "./seletor-atividade";
+import { explicarBloqueio } from "../domain/classificacao";
 import { ComposicaoEncargos, PassosCalculo } from "./composicao-encargos";
 import type { Simulacao, TipoAtuacao } from "../types";
 
@@ -34,7 +36,7 @@ export function PainelResultado({
   desatualizado: boolean;
   onAbrirPremissas: () => void;
 }) {
-  const { comparacao } = simulacao;
+  const { comparacao, classificacao } = simulacao;
   const [aba, setAba] = useState<TipoAtuacao>(simulacao.entrada.tipoAtuacao);
   const abasRef = useRef<Partial<Record<TipoAtuacao, HTMLButtonElement | null>>>(
     {},
@@ -51,22 +53,58 @@ export function PainelResultado({
   const cenarioDaAba =
     aba === "cnpj" ? comparacao.cnpj : comparacao.pessoaFisica;
 
+  /*
+   * Há veredito para dar?
+   *
+   * Quando o anexo não tem cálculo suportado — ou a empresa já saiu do
+   * Simples — o cenário CNPJ está incompleto por construção: falta um
+   * tributo inteiro. Anunciar "o CNPJ rende mais R$ X" em cima disso
+   * seria contradizer, no mesmo painel, o aviso que diz que o número
+   * não vale. Os números da Pessoa Física seguem válidos e continuam
+   * na tabela; o que some é a COMPARAÇÃO.
+   *
+   * Classificação pendente é outro caso: ali existe uma alíquota de
+   * recurso declarada, o contador sabe o que está vendo, e o
+   * comparativo continua sendo o comportamento de sempre.
+   */
+  const comparavel =
+    classificacao.bloqueio !== "anexo-sem-calculo" &&
+    classificacao.bloqueio !== "acima-do-teto";
+
   return (
     <div className="space-y-3">
       <Painel className={desatualizado ? "border-l-2 border-l-atencao" : undefined}>
         <PainelCabecalho
           titulo="Comparativo"
           descricao="Mesma receita e mesmos custos nos dois enquadramentos."
+          /*
+            O anexo aparece JUNTO do número que ele produziu. Separá-lo
+            do resultado deixaria o contador conferindo a comparação sem
+            saber sob qual enquadramento ela foi feita.
+          */
           acoes={
-            desatualizado ? (
-              <Badge tom="atencao" ponto>
-                Valores alterados
-              </Badge>
-            ) : undefined
+            <span className="flex flex-wrap items-center gap-1.5">
+              {desatualizado && (
+                <Badge tom="atencao" ponto>
+                  Valores alterados
+                </Badge>
+              )}
+              {classificacao.anexo ? (
+                <EtiquetaAnexo
+                  anexo={classificacao.anexo}
+                  manual={classificacao.manual}
+                />
+              ) : (
+                <Badge tom="atencao" ponto>
+                  Sem enquadramento
+                </Badge>
+              )}
+            </span>
           }
         />
 
         {/* Resumo executivo: a resposta antes do detalhamento. */}
+        {comparavel ? (
         <div className="grid divide-y divide-[var(--border)] border-b border-border-base sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           <Metrica
             rotulo="Maior resultado estimado"
@@ -102,8 +140,40 @@ export function PainelResultado({
             enfase
           />
         </div>
+        ) : (
+          <div className="border-b border-border-base px-4 py-3.5">
+            <p className="text-[0.875rem] font-medium text-ink">
+              Sem comparação para esta análise
+            </p>
+            <p className="mt-1 max-w-prose text-[0.8125rem] leading-relaxed text-ink-muted">
+              O cenário CNPJ está incompleto —{" "}
+              {classificacao.bloqueio === "acima-do-teto"
+                ? "a empresa já não cabe no Simples Nacional"
+                : `o Anexo ${classificacao.anexo} tem um encargo que este modelo não calcula`}
+              . Declarar um vencedor a partir dele levaria a uma decisão
+              errada. Os números da Pessoa Física abaixo seguem válidos.
+            </p>
+          </div>
+        )}
 
         <TabelaComparativa comparacao={comparacao} />
+
+        {/*
+          Bloqueio de cálculo vem ANTES do aviso genérico: é específico
+          desta análise, e o contador precisa saber que o número do
+          cenário CNPJ não representa o Simples real.
+        */}
+        {classificacao.bloqueio && (
+          <p
+            role="status"
+            className="flex items-start gap-1.5 border-t border-border-base px-4 py-2.5 text-[0.75rem] leading-snug text-atencao"
+          >
+            <span aria-hidden="true">⚠</span>
+            <span>
+              {explicarBloqueio(classificacao.bloqueio, classificacao.anexo)}
+            </span>
+          </p>
+        )}
 
         <p className="border-t border-border-base px-4 py-2.5 text-[0.75rem] leading-snug text-ink-subtle">
           Estimativa baseada em premissas simplificadas e ainda não validadas

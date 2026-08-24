@@ -21,7 +21,7 @@ import {
   CHAVE_SESSAO,
   lerSessaoDemo,
 } from "@/features/sessao/services/sessao-demo";
-import { simular } from "../domain/calcular";
+import { classificacaoDe, simular } from "../domain/calcular";
 import {
   mesmaEntrada,
   proLaboreSugerido,
@@ -133,6 +133,17 @@ export function AreaDeTrabalho() {
     () => (entradaExibida ? simular(entradaExibida) : null),
     [entradaExibida],
   );
+
+  /*
+   * Enquadramento do RASCUNHO, não do último cálculo.
+   *
+   * A classificação responde antes de calcular — é ela que decide
+   * quais campos o formulário mostra. Se dependesse do resultado, o
+   * contador escolheria a atividade e nada mudaria na tela até
+   * clicar em Calcular, invertendo justamente a ordem que o contador
+   * pediu.
+   */
+  const classificacao = useMemo(() => classificacaoDe(entrada), [entrada]);
 
   const desatualizado =
     entradaExibida !== null && !mesmaEntrada(entrada, entradaExibida);
@@ -298,7 +309,14 @@ export function AreaDeTrabalho() {
       />
 
       <main id="conteudo" className="min-h-0 flex-1">
-        <div className="grid min-[960px]:grid-cols-[21rem_minmax(0,1fr)] min-[1280px]:grid-cols-[21rem_minmax(0,1fr)_19.5rem]">
+        {/*
+          A coluna de dados alarga a partir de 1280px para caber PF e
+          PJ lado a lado — a simultaneidade que o contador pediu. Em
+          troca, a coluna de contexto volta só em 1600px: entre 1280 e
+          1599 ela continua acessível pelo painel lateral, e o que
+          ganha o espaço é o preenchimento, não a consulta.
+        */}
+        <div className="grid min-[960px]:grid-cols-[23rem_minmax(0,1fr)] min-[1280px]:grid-cols-[34rem_minmax(0,1fr)] min-[1440px]:grid-cols-[40rem_minmax(0,1fr)] min-[1600px]:grid-cols-[40rem_minmax(0,1fr)_19.5rem]">
           {/* ZONA 1 — dados, sempre visíveis. */}
           <section
             aria-label="Dados da análise"
@@ -318,6 +336,7 @@ export function AreaDeTrabalho() {
 
             <FormularioSimulacao
               entrada={entrada}
+              classificacao={classificacao}
               referencia={referencia}
               erros={erros}
               jaCalculou={simulacao !== null}
@@ -361,8 +380,9 @@ export function AreaDeTrabalho() {
                   Nenhum cálculo executado
                 </p>
                 <p className="mt-1 max-w-md text-[0.8125rem] leading-relaxed text-ink-muted">
-                  Preencha os dados da análise e calcule para visualizar o
-                  comparativo entre Pessoa Física e CNPJ.
+                  Comece pela atividade: é ela que define o anexo do Simples e
+                  quais valores precisam ser informados. Depois preencha os
+                  dois cenários e calcule a comparação.
                 </p>
                 <dl
                   id="minimo-necessario"
@@ -376,6 +396,10 @@ export function AreaDeTrabalho() {
                   <Requisito
                     rotulo="Custos do negócio (pode ser zero)"
                     ok={entrada.custosMensais >= 0}
+                  />
+                  <Requisito
+                    rotulo="Atividade identificada (define o anexo)"
+                    ok={classificacao.anexo !== null}
                   />
                 </dl>
                 {/*
@@ -402,7 +426,7 @@ export function AreaDeTrabalho() {
           {/* ZONA 3 — contexto. Vira painel lateral abaixo de 1280px. */}
           <aside
             aria-label="Contexto profissional"
-            className="coluna-rolavel hidden min-w-0 border-l border-border-base min-[1280px]:block"
+            className="coluna-rolavel hidden min-w-0 border-l border-border-base min-[1600px]:block"
           >
             {contexto}
           </aside>
