@@ -1,7 +1,9 @@
 # Pendências — segunda rodada com o contador
 
 **Contexto:** a primeira revisão (agosto/2026) respondeu **9 de 30**
-perguntas. As respostas aplicadas estão em
+perguntas; a segunda rodada trouxe o pedido de fluxo por atividade,
+preenchimento simultâneo de PF e PJ e honorários contábeis separados —
+os três **implementados** na v2.3.0. As respostas aplicadas estão em
 [`PREMISSAS_DE_CALCULO.md`](PREMISSAS_DE_CALCULO.md). Este documento
 concentra o que ficou em aberto, priorizado.
 
@@ -52,39 +54,53 @@ mais comum entre os clientes.
 
 ---
 
-### Bloqueio 2 — As tabelas do Simples por anexo
+### Bloqueio 2 — As tabelas do Simples por anexo · **IMPLEMENTADO, FALTA ACEITE**
 
-Você explicou o Fator R e listou as alíquotas iniciais de cada anexo. Isso
-já nos permitiu documentar **por que** os 11% fixos de hoje estão errados,
-mas não é suficiente para calcular.
+Você explicou o Fator R e listou as alíquotas iniciais de cada anexo.
+Com isso, transcrevemos as **tabelas completas dos cinco anexos** da
+LC 123/2006 (redação da LC 155/2016) e conferimos contra duas
+referências profissionais de 2026. As alíquotas iniciais que você
+informou batem com a primeira faixa de cada tabela.
 
-As alíquotas iniciais que você deu valem para a primeira faixa do RBT12
-(até R$ 180 mil/ano). Acima disso, a alíquota efetiva sobe — e sem a
-parcela a deduzir de cada faixa, subestimaríamos o imposto de todo cliente
-com faturamento acima de R$ 15 mil/mês.
+O simulador **deixou de usar a alíquota fixa de 11%** no caminho normal.
+Agora ele identifica a atividade, apura o Fator R e aplica a alíquota
+efetiva real. O impacto, num faturamento de R$ 20 mil com RBT12 de
+R$ 240 mil:
 
-**Precisamos das tabelas completas dos anexos III e V** (os dois que
-importam para prestador de serviço):
+| Situação | Anexo | Alíquota efetiva | DAS mensal |
+| --- | --- | ---: | ---: |
+| Como era (11% fixos) | — | 11,00% | R$ 2.200,00 |
+| Engenharia, folha 0 | V | 16,13% | R$ 3.225,00 |
+| Engenharia, folha em 28% | III | 7,30% | R$ 1.460,00 |
+| Contabilidade | III | 6,00% | R$ 1.200,00 |
 
-| Faixa de RBT12 | Alíquota nominal | Parcela a deduzir |
-| --- | ---: | ---: |
-| até R$ 180.000 | ____% | R$ ______ |
-| de R$ 180.000,01 a R$ 360.000 | ____% | R$ ______ |
-| de R$ 360.000,01 a R$ 720.000 | ____% | R$ ______ |
-| de R$ 720.000,01 a R$ 1.800.000 | ____% | R$ ______ |
-| de R$ 1.800.000,01 a R$ 3.600.000 | ____% | R$ ______ |
-| de R$ 3.600.000,01 a R$ 4.800.000 | ____% | R$ ______ |
+Era exatamente o que você apontou: os 11% escondiam uma diferença de
+**R$ 1.765,00 por mês** entre os dois anexos possíveis da mesma
+atividade.
 
-**E responda:**
+**O que ainda precisamos de você:**
 
-5. Como o usuário informa a atividade? Uma pergunta do tipo *"a atividade
-   exige diploma para ser exercida?"* separa III de V com precisão
-   suficiente, ou precisamos de uma lista de CNAEs?
-6. **Fator R:** a folha entra como pró-labore + encargos, ou só o
-   pró-labore? Considera os últimos 12 meses?
-7. No primeiro ano de empresa, sem RBT12 de 12 meses, o que usar?
-8. Vale começar só com III e V, deixando I, II e IV para depois? Nosso
-   público é prestador de serviço.
+1. **Confere a transcrição?** Estão em
+   `docs/CLASSIFICACAO_ATIVIDADES.md` e no painel *Premissas do
+   modelo*. Enquanto não houver seu aceite, elas seguem marcadas como
+   "a validar" — não como validadas.
+2. **A composição da folha do Fator R está certa?** Usamos: salários +
+   contribuição patronal + FGTS + pró-labore, dos últimos 12 meses,
+   em um campo único. Quebrar em parcelas ajudaria ou atrapalharia na
+   triagem?
+3. **Primeiro ano de empresa.** Sem 12 meses de RBT12, hoje projetamos
+   a receita mensal × 12 e avisamos na tela que projetamos. É o que a
+   Receita manda fazer, ou existe regra própria (proporcionalização)?
+4. **Anexo IV.** Classificamos advocacia, construção civil, limpeza e
+   vigilância corretamente, mas **bloqueamos o cálculo**: a CPP fica
+   fora do DAS e o motor assume que ela está dentro. Vale implementar a
+   CPP de 20% sobre a folha como encargo à parte, ou o Anexo IV fica
+   fora do escopo por enquanto?
+5. **CPP nos Anexos III e V.** Assumimos que a contribuição patronal
+   está embutida no DAS. Procede para os dois?
+6. **O catálogo de atividades.** São 22 atividades de prestação de
+   serviço. Quais faltam para cobrir o seu dia a dia? A lista está em
+   `docs/CLASSIFICACAO_ATIVIDADES.md`.
 
 ---
 
@@ -94,8 +110,8 @@ importam para prestador de serviço):
 
 9. **INSS sobre pró-labore (11%).** Assumimos que a contribuição patronal
    (CPP) está embutida na alíquota do DAS. Isso procede para o Anexo III?
-   E para o Anexo IV, onde você mencionou que o INSS patronal fica fora da
-   guia única?
+   E para o V? *(O Anexo IV já está bloqueado no cálculo justamente por
+   isso — ver Bloqueio 2, item 4.)*
 10. **Lucro distribuído isento.** Em que condições deixa de valer?
     Precisamos alertar sobre limite de distribuição sem escrituração
     contábil regular?
@@ -106,48 +122,53 @@ importam para prestador de serviço):
 12. **Custos de ter empresa.** Além de honorários contábeis, o que
     estamos esquecendo? Taxas municipais, alvará, certificado digital,
     honorário extra de fechamento anual?
-13. **R$ 300/mês de contabilidade** é referência razoável? Varia muito
-    por região ou porte?
+13. **R$ 300/mês de contabilidade** é referência razoável para a
+    **empresa**? Varia muito por região e porte?
+14. **E para o autônomo?** Os honorários de PF e PJ agora são campos
+    independentes, como você pediu. O da PF começa em **zero**, porque
+    não recebemos referência — preferimos não inventar um número que
+    inclinaria a comparação em silêncio. Qual valor você usaria como
+    ponto de partida?
 
 ### Cenário Pessoa Física
 
-14. **Custos dedutíveis no livro-caixa.** Assumimos que tudo o que o
+15. **Custos dedutíveis no livro-caixa.** Assumimos que tudo o que o
     usuário informa é dedutível. O que normalmente **não** entra? Vale
     quebrar o campo em categorias?
-15. **Dependentes, despesas médicas e educação.** Qual tem mais impacto
+16. **Dependentes, despesas médicas e educação.** Qual tem mais impacto
     prático e valeria incluir primeiro?
-16. **Ajuste anual do IRPF.** Só calculamos o carnê-leão mensal. Isso
+17. **Ajuste anual do IRPF.** Só calculamos o carnê-leão mensal. Isso
     distorce a comparação com o CNPJ?
-17. **ISS municipal do autônomo.** Deveria entrar? Como lidar com a
+18. **ISS municipal do autônomo.** Deveria entrar? Como lidar com a
     variação entre municípios sem pedir o CEP?
 
 ---
 
 ## 🟢 Produto — moldam a próxima versão
 
-18. **MEI como terceiro cenário.** Você disse que nem todo profissional
+19. **MEI como terceiro cenário.** Você disse que nem todo profissional
     pode ser MEI e que a triagem inicial olha faturamento e atividade.
     Vale colocá-lo como terceiro cenário, ou basta um alerta do tipo
     *"esta atividade não permite MEI"*?
-19. **O resultado principal.** Você disse que o mais útil é *"o valor a
+20. **O resultado principal.** Você disse que o mais útil é *"o valor a
     ser economizado — custo anual de X na PF e custo anual de Y na PJ"*.
     Hoje mostramos "quanto sobra por mês". Confirma que devemos inverter
     o destaque para **custo anual comparado** e economia?
-20. **Perguntas na triagem.** O que você pergunta a um cliente antes de
+21. **Perguntas na triagem.** O que você pergunta a um cliente antes de
     recomendar PF ou PJ, além de receita, custos e pró-labore?
-21. Existe alguma pergunta que, **sozinha**, elimina cenários?
-22. Algum campo atual é **desnecessário** ou confunde?
-23. **Terminologia.** Estão certos: "receita bruta mensal", "custos do
+22. Existe alguma pergunta que, **sozinha**, elimina cenários?
+23. Algum campo atual é **desnecessário** ou confunde?
+24. **Terminologia.** Estão certos: "receita bruta mensal", "custos do
     negócio", "resultado líquido", "encargos estimados"? Ou você usaria
     outros termos com um cliente?
-24. **Intervalo em vez de valor exato.** "Entre R$ 6.200 e R$ 6.900"
+25. **Intervalo em vez de valor exato.** "Entre R$ 6.200 e R$ 6.900"
     comunicaria melhor a incerteza do modelo?
-25. **Próximo simulador.** Precificação de hora? Reserva mensal para
+26. **Próximo simulador.** Precificação de hora? Reserva mensal para
     impostos? Ponto de equilíbrio? Pró-labore ideal?
-26. **Ferramenta de trabalho.** Para você usar com clientes, o que
+27. **Ferramenta de trabalho.** Para você usar com clientes, o que
     precisaria existir — relatório em PDF? histórico por cliente? um
     espaço para você mesmo ajustar as alíquotas?
-27. **Risco de publicar.** Você disse que o aviso atual basta porque a
+28. **Risco de publicar.** Você disse que o aviso atual basta porque a
     venda inicial seria entre contadores. Se isso mudar e chegar ao
     cliente final, o que precisa mudar antes?
 
@@ -165,6 +186,11 @@ Registrado para não perguntarmos de novo.
 | Retenção de 11% pelo tomador PJ | ✅ Ignorar — é antecipação, não muda o resultado |
 | Aviso legal atual | ✅ Suficiente para venda entre contadores |
 | Origem dos 28% de pró-labore | ✅ É o patamar do Fator R |
+| Fluxo começa pela atividade | ✅ Implementado — atividade → anexo → dados |
+| PF e PJ preenchidos juntos | ✅ Implementado — colunas lado a lado a partir de 1280px |
+| Honorários contábeis separados | ✅ Implementado — campos independentes, sem relação fixa entre eles |
+| Tabelas dos anexos I a V | ✅ Transcritas e em uso — falta seu aceite |
+| Fator R decide III × V | ✅ Implementado, com limite inclusivo em 28% |
 
 ---
 

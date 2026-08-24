@@ -20,7 +20,9 @@ serviço. MVP em validação contábil. Leia o `README.md` antes de mexer.
 1. **Nenhum número tributário fora de
    `src/features/simulacao/domain/calculation-rules.ts`.** Sem alíquota,
    teto ou faixa em componente React. Um contador precisa auditar as
-   regras sem ler JSX.
+   regras sem ler JSX. A única extensão é
+   `domain/catalogo-atividades.ts`, que guarda o vínculo entre atividade
+   e anexos possíveis — CNAE e classificação, nunca alíquota.
 2. **Toda premissa carrega metadados** (`descricao`, `porQueExiste`,
    `status`, `ondeUsada`). Eles aparecem na interface — não são comentário
    decorativo.

@@ -5,6 +5,86 @@ Versionamento semântico.
 
 ---
 
+## [2.3.0] — 2026-08-24
+
+Release de domínio. A segunda rodada com o contador pediu três coisas, e
+as três estão implementadas: **o fluxo começa pela atividade**, **PF e PJ
+são preenchidos juntos** e **os honorários contábeis são independentes**.
+
+No caminho, o **bloqueio nº 2 do modelo saiu do ar**: o cenário CNPJ
+deixou de usar uma alíquota fixa de 11% e passa a apurar a alíquota
+efetiva real do Simples Nacional, pelo anexo resolvido a partir da
+atividade e do Fator R.
+
+`VERSAO_REGRAS` foi de `v1.1-2026-08` para `v1.2-2026-08`.
+
+Detalhamento em
+[`docs/CLASSIFICACAO_ATIVIDADES.md`](docs/CLASSIFICACAO_ATIVIDADES.md).
+
+### Adicionado
+
+- **Fluxo por atividade.** A primeira pergunta da análise passou a ser
+  "qual atividade será analisada?". Um seletor com busca por descrição,
+  CNAE ou sinônimo — padrão ARIA de combobox, operável só pelo teclado —
+  encontra a atividade em um catálogo de 22 serviços. A partir dela, o
+  sistema mostra o enquadramento antes de pedir qualquer valor.
+- **Classificação tributária auditável.** Cartão de enquadramento com
+  anexos possíveis, situação do Fator R e um "Por que esta
+  classificação?" que abre o motivo, os números que o produziram e a
+  fonte legal.
+- **Tabelas dos cinco anexos do Simples Nacional.** Transcritas da
+  LC 123/2006 (redação da LC 155/2016), com faixas de RBT12, alíquotas
+  nominais e parcelas a deduzir. Testes de integridade garantem ordem,
+  ausência de sobreposição, fechamento no teto do regime e que a parcela
+  a deduzir só reduza a carga.
+- **Fator R.** Apurado sobre a folha e a receita dos últimos 12 meses,
+  com limite inclusivo em 28% — exatamente 28% já vale Anexo III. Os
+  campos de RBT12 e folha só aparecem em atividade sujeita a ele.
+- **Classificação manual.** O contador pode sobrepor o anexo, com motivo
+  opcional. Fica gravada na análise e **nunca se apresenta como
+  automática**.
+- **Preenchimento simultâneo de PF e PJ.** A partir de 1280px os dois
+  cenários ficam lado a lado, em `fieldset` próprios. Abaixo disso,
+  empilham.
+
+### Corrigido
+
+- **Honorários contábeis deixaram de ser um valor só.** Havia um único
+  `custoContabilidade`, aplicado apenas ao CNPJ. Agora são dois campos
+  independentes, sem relação fixa entre eles. O da PF começa em **zero**
+  de propósito: não recebemos referência profissional, e um número
+  inventado inclinaria a comparação em silêncio.
+- **O cenário Pessoa Física passou a ter custo contábil.** Antes ele
+  simplesmente não existia, o que dava ao autônomo uma vantagem
+  artificial na comparação.
+- **A alíquota de 11% deixou de ser o caminho normal.** Sobrevive apenas
+  como recurso para atividade não identificada — e, nesse caso, o
+  resultado vem etiquetado como "Sem enquadramento", com aviso de que
+  não representa o Simples Nacional.
+
+### Escopo declarado
+
+- **Anexo IV classificado, mas não calculado.** Advocacia, construção
+  civil, limpeza e vigilância são reconhecidas corretamente, e o cálculo
+  do cenário CNPJ é bloqueado com o motivo na tela: a contribuição
+  patronal fica fora da guia única e o motor assume que está dentro.
+  Calcular assim produziria erro por construção.
+- **Anexos I e II** têm tabela, mas não têm atividade no catálogo:
+  comércio e indústria estão fora do escopo do produto.
+- **As tabelas não têm aceite do contador.** Estão como "a validar".
+
+### Compatibilidade
+
+- Análises gravadas pela v2.1 e v2.2 **continuam sendo lidas**. O
+  honorário antigo vira o da empresa, o do autônomo entra zerado, e a
+  análise volta como classificação pendente — ninguém informou atividade
+  naquela época, e atribuir uma agora seria inventar dado.
+- **Nenhum resultado de cálculo mudou** para entradas sem atividade:
+  a comparação numérica com a v2.2.0 em seis cenários deu diferença
+  zero.
+
+---
+
 ## [2.2.0] — 2026-08-23
 
 Release de interação. Auditoria de **todos os controles de ação** da

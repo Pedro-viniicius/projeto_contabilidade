@@ -1,14 +1,24 @@
 # Premissas de cálculo — Clareza
 
-**Versão das regras:** `v1.1-2026-08`
+**Versão das regras:** `v1.2-2026-08`
 **Arquivo-fonte:** `src/features/simulacao/domain/calculation-rules.ts`
 **Última revisão contábil:** agosto de 2026 (parcial — 9 de 30 pontos respondidos)
 
 > **Leia isto primeiro.** Uma primeira revisão contábil aconteceu em
-> agosto de 2026 e validou **3 das 10 premissas**. As demais seguem sem
-> validação, e duas delas foram confirmadas como **erradas** — estão
-> marcadas com ⚠️ abaixo. Pendências em
-> [`PENDENCIAS_CONTADOR.md`](PENDENCIAS_CONTADOR.md).
+> agosto de 2026 e apontou **duas premissas erradas por construção**. Uma
+> delas — a alíquota única de 11% sobre o faturamento — **foi corrigida
+> na v2.3.0**: o simulador passou a identificar a atividade, apurar o
+> Fator R e aplicar a alíquota efetiva real das tabelas do Simples
+> Nacional. A outra, a tabela do IRPF com a isenção de R$ 5.000, segue
+> bloqueada à espera dos números.
+>
+> As tabelas dos anexos foram transcritas da LC 123/2006 e conferidas
+> contra referências profissionais, mas **ainda não receberam aceite do
+> contador** — estão como "a validar", não como validadas.
+>
+> Detalhamento da classificação em
+> [`CLASSIFICACAO_ATIVIDADES.md`](CLASSIFICACAO_ATIVIDADES.md);
+> pendências em [`PENDENCIAS_CONTADOR.md`](PENDENCIAS_CONTADOR.md).
 >
 > Nas premissas ainda não validadas, os valores foram escolhidos para que
 > a simulação seja **compreensível e fácil de corrigir**, não para produzir
@@ -20,9 +30,16 @@
 ## Como o sistema está organizado
 
 Todo número de natureza tributária vive em **um único arquivo**
-(`calculation-rules.ts`). Nenhum componente de interface contém alíquota,
-teto ou faixa. Para mudar o comportamento do simulador, altera-se aquele
-arquivo — e só ele.
+(`calculation-rules.ts`) — inclusive as tabelas dos cinco anexos do
+Simples Nacional e o limite do Fator R. Nenhum componente de interface
+contém alíquota, teto ou faixa.
+
+Um segundo arquivo do domínio, `catalogo-atividades.ts`, guarda o
+**vínculo entre atividade e anexos possíveis**. Ele não contém número
+tributário nenhum: só CNAE, descrição e quais anexos a atividade pode
+ocupar. A mecânica que usa esses dados (alíquota efetiva, Fator R,
+resolução do anexo) fica em `simples-nacional.ts` e `classificacao.ts`,
+funções puras que leem os números de `calculation-rules.ts`.
 
 Cada premissa carrega, junto do valor, três metadados que aparecem na
 interface do produto (painel **Premissas do modelo** e a linha expansível
@@ -53,6 +70,32 @@ de cada encargo, na composição do cálculo):
 
 **O que fica de fora:** sazonalidade, 13º, férias, meses sem faturamento.
 A projeção anual é simplesmente o resultado mensal × 12.
+
+---
+
+### Simples Nacional
+
+| Regra | Valor/Premissa | Onde é usada | Status |
+| --- | --- | --- | --- |
+| Tabelas por anexo | 5 anexos × 6 faixas de RBT12 | Alíquota efetiva do cenário CNPJ | A validar |
+| Fator R — limite | 28% da receita de 12 meses | Escolha entre Anexo III e V | Validada tecnicamente |
+| Fator R — composição da folha | Salários + patronal + FGTS + pró-labore, 12 meses | Cálculo do Fator R | A validar |
+| Anexos com cálculo | III e V | Cenário CNPJ | A validar |
+| Teto da RBT12 | R$ 4.800.000 em 12 meses | Bloqueio do cálculo acima do teto | Validada tecnicamente |
+
+**Alíquota efetiva:**
+
+```text
+(RBT12 × alíquota nominal − parcela a deduzir) ÷ RBT12
+```
+
+RBT12 igual a zero **não** divide por zero: sem receita acumulada não há
+o que deduzir, e a efetiva é a nominal da primeira faixa.
+
+**O que fica de fora:** partilha do DAS entre tributos, ISS fixo de
+escritórios contábeis, sublimites estaduais de ICMS/ISS, CPP fora do DAS
+(motivo do bloqueio do Anexo IV) e regra própria para o primeiro ano de
+empresa — hoje projetamos a receita mensal por 12 e avisamos na tela.
 
 ---
 
@@ -119,8 +162,9 @@ avaliada na revisão e descartada por não alterar o resultado prático.
 
 | Regra | Valor/Premissa | Onde é usada | Status |
 | --- | --- | --- | --- |
-| Alíquota efetiva sobre o faturamento | 11% | Tributos da empresa | ⚠️ Incorreta |
-| Custo contábil mensal | R$ 300,00/mês (editável) | Honorários e obrigações acessórias | A validar |
+| DAS pelo anexo resolvido | Tabelas do Simples × RBT12 | Tributos da empresa | A validar |
+| Alíquota de recurso | 11% | **Só** quando a classificação está pendente | ⚠️ Incorreta |
+| Honorários contábeis — Empresa/PJ | R$ 300,00/mês (editável) | Custo fixo da empresa | A validar |
 | INSS sobre pró-labore | 11% | Retenção do sócio | A validar |
 | Pró-labore sugerido | 28% do faturamento | Valor inicial do formulário | Hipótese temporária |
 | Lucro distribuído | Tratado como isento | Resultado após pró-labore | A validar |
@@ -128,47 +172,69 @@ avaliada na revisão e descartada por não alterar o resultado prático.
 **Ordem do cálculo:**
 
 ```
-tributos do faturamento = receita × 11%
+alíquota efetiva        = (RBT12 × nominal do anexo − parcela) ÷ RBT12
+tributos do faturamento = receita × alíquota efetiva
+                          (sem anexo resolvido: receita × 11% de recurso,
+                           e o resultado sai marcado "sem enquadramento")
 INSS do pró-labore      = min(pró-labore, teto do INSS) × 11%
 base do IRRF            = pró-labore − INSS do pró-labore
 IRRF                    = base do IRRF × alíquota da faixa − parcela a deduzir
                           (mesma tabela do IRPF)
-encargos                = tributos + contabilidade + INSS + IRRF
+encargos                = tributos + honorários PJ + INSS + IRRF
 resultado líquido       = receita − custos − encargos
 ```
 
 ---
 
-## ⚠️ A maior simplificação desta versão
+## ✅ Corrigido na v2.3.0 — o Simples Nacional real
 
-> **O cenário CNPJ usa uma alíquota efetiva única de 11% sobre o
-> faturamento no lugar das tabelas do Simples Nacional.**
-
-A revisão contábil de agosto/2026 confirmou que isto não é apenas
-impreciso — **é errado por construção**:
+Até a v2.2.0 o cenário CNPJ usava **uma alíquota efetiva única de 11%**
+no lugar das tabelas do Simples. A revisão contábil de agosto/2026
+confirmou que isso não era impreciso — era **errado por construção**:
 
 > "o CNPJ com atividade de cunho intelectual pode transitar entre Anexo V
 > e Anexo III; o Fator R define o anexo através da folha salarial"
 
-Anexos e alíquotas iniciais informados na revisão:
+Agora o caminho normal é: **atividade → anexo(s) possível(is) → Fator R
+→ alíquota efetiva sobre a RBT12**. O impacto, num faturamento de
+R$ 20 mil com RBT12 de R$ 240 mil:
 
-| Anexo | Natureza | Alíquota inicial |
-| --- | --- | ---: |
-| I | Comércio | 4% |
-| II | Indústria | 4,5% |
-| III | Serviços gerais | 6% |
-| IV | Serviços com encargos (CPP fora do DAS) | 4,5% |
-| V | Serviços intelectuais | 15,5% |
+| Situação | Anexo | Alíquota efetiva | DAS mensal |
+| --- | --- | ---: | ---: |
+| Como era (11% fixos) | — | 11,00% | R$ 2.200,00 |
+| Engenharia, folha 0 | V | 16,13% | R$ 3.225,00 |
+| Engenharia, folha em 28% | III | 7,30% | R$ 1.460,00 |
+| Contabilidade | III | 6,00% | R$ 1.200,00 |
 
-O **Fator R** faz a empresa do Anexo V migrar para o III quando a folha
-atinge 28% do faturamento. Para um prestador intelectual, a diferença
-entre 15,5% e 6% é de **9,5 pontos percentuais** — que a alíquota única de
-11% apaga completamente.
+Entre os dois anexos possíveis da **mesma atividade**, R$ 1.765,00 por
+mês. Era exatamente essa diferença que os 11% apagavam.
 
-**O que falta para corrigir:** as tabelas completas de cada anexo (alíquota
-nominal e parcela a deduzir por faixa) e o cálculo do RBT12. As alíquotas
-iniciais acima valem apenas para a primeira faixa (RBT12 até R$ 180 mil);
-acima disso, subestimam.
+### O que ainda não está resolvido
+
+- **A alíquota de recurso continua existindo**, e continua errada. Ela só
+  entra quando a atividade não é identificada — e, nesse caso, o
+  resultado aparece etiquetado como **"Sem enquadramento"**, com o aviso
+  de que não representa o Simples Nacional.
+- **Anexo IV classificado, não calculado.** A contribuição patronal fica
+  fora da guia única e o motor assume que está dentro. Calcular assim
+  produziria erro por construção, então o cálculo é bloqueado com o
+  motivo na tela.
+- **As tabelas não têm aceite do contador.** Foram transcritas da
+  LC 123/2006 e conferidas contra duas referências profissionais de 2026,
+  e as alíquotas iniciais batem com as que ele informou. Isso é
+  conferência, não validação.
+
+---
+
+## ⚠️ A maior simplificação que resta
+
+> **A tabela do IRPF está sabidamente desatualizada e não contempla a
+> isenção de R$ 5.000.**
+
+É o bloqueio nº 1 do modelo, e afeta o cenário Pessoa Física e o IRRF
+sobre pró-labore ao mesmo tempo. Não preenchemos por conta própria: a
+isenção envolve uma zona de transição, e errar o desenho dela distorce
+justamente a faixa de renda mais comum entre os clientes.
 
 O percentual de 28% sugerido como pró-labore teve sua origem confirmada:
 é exatamente o patamar do Fator R. Isso valida de onde o número veio, mas
@@ -201,7 +267,10 @@ Além dos números, o modelo assume estruturalmente:
 
 | Quero mudar… | Arquivo |
 | --- | --- |
-| Uma alíquota, teto ou faixa | `src/features/simulacao/domain/calculation-rules.ts` |
+| Uma alíquota, teto, faixa ou tabela de anexo | `src/features/simulacao/domain/calculation-rules.ts` |
+| Acrescentar ou corrigir uma atividade | `src/features/simulacao/domain/catalogo-atividades.ts` |
+| A regra que escolhe o anexo | `src/features/simulacao/domain/classificacao.ts` |
+| A mecânica do Simples (efetiva, Fator R) | `src/features/simulacao/domain/simples-nacional.ts` |
 | A ordem/fórmula de um cenário | `src/features/simulacao/domain/calcular.ts` |
 | O texto explicativo do resultado | `src/features/simulacao/domain/explicar.ts` |
 | Limites e mensagens de validação | `src/features/simulacao/schemas/simulacao-schema.ts` |
@@ -210,7 +279,8 @@ Depois de qualquer alteração, rode `npm run test`. Os testes em
 `calcular.test.ts` verificam invariantes (monotonicidade do IRPF, teto do
 INSS, coerência entre encargos e líquido) e vão apontar inconsistências.
 
-**Ao revisar as premissas, incremente `VERSAO_REGRAS`** (a revisão de
-agosto/2026 levou de `v1-mvp-2026-08` para `v1.1-2026-08`). Ela
+**Ao revisar as premissas, incremente `VERSAO_REGRAS`** (`v1-mvp-2026-08`
+→ `v1.1-2026-08` na revisão de agosto/2026 → `v1.2-2026-08` com a
+entrada das tabelas do Simples e do Fator R). Ela
 é gravada junto de cada simulação salva e de cada feedback enviado, para
 sabermos com qual modelo aquele número foi produzido.

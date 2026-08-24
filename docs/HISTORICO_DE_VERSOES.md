@@ -5,9 +5,46 @@ versão é sobrescrita: a anterior continua recuperável a qualquer momento.
 
 ---
 
-## V2.2.0 — Ações auto-explicativas
+## V2.3.0 — Fluxo por atividade
 
 **Status:** em uso.
+
+**Tag:** `v2.3.0`
+**Branch:** `main`
+**Data:** agosto de 2026
+**Versão das regras:** `v1.2-2026-08`
+
+### O que mudou
+
+A ordem das perguntas. Até a V2.2 o produto pedia valores antes de saber
+o que estava sendo analisado; agora começa pela atividade, mostra o
+enquadramento possível e só então pede os números que aquele
+enquadramento exige.
+
+Com a atividade em mãos, o cenário CNPJ deixou de usar a alíquota fixa de
+11% e passou a apurar a **alíquota efetiva real do Simples Nacional**,
+pelo anexo resolvido via Fator R. Era o segundo dos dois erros por
+construção apontados pela revisão contábil de agosto/2026.
+
+PF e PJ passaram a ser preenchidos lado a lado a partir de 1280px, e os
+honorários contábeis viraram dois campos independentes.
+
+### Como voltar
+
+```bash
+git checkout v2.2.0
+```
+
+As análises gravadas pela V2.3 continuam legíveis pela V2.2? **Não
+integralmente** — os campos novos são ignorados, e o honorário da
+empresa é lido, mas atividade, RBT12 e folha se perdem. O caminho
+inverso (ler registro antigo na V2.3) é suportado e testado.
+
+---
+
+## V2.2.0 — Ações auto-explicativas
+
+**Status:** substituída pela V2.3.0.
 
 **Tag:** `v2.2.0`
 **Branch:** `main`
