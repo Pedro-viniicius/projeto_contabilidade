@@ -53,11 +53,46 @@ export interface FaixaIrpf {
 }
 
 /**
+ * Anexo do Simples Nacional (LC 123/2006, com a redação da LC 155/2016).
+ *
+ * A ordem é a da lei, não uma escala de valor: o Anexo III não é
+ * "melhor" que o V, é outro conjunto de atividades.
+ */
+export type Anexo = "I" | "II" | "III" | "IV" | "V";
+
+export const ROTULO_ANEXO: Record<Anexo, string> = {
+  I: "Anexo I — Comércio",
+  II: "Anexo II — Indústria",
+  III: "Anexo III — Serviços",
+  IV: "Anexo IV — Serviços com CPP fora do DAS",
+  V: "Anexo V — Serviços intelectuais",
+};
+
+/**
+ * Faixa de uma tabela do Simples Nacional.
+ *
+ * `ate` é o limite superior da RECEITA BRUTA DOS ÚLTIMOS 12 MESES
+ * (RBT12) — não do faturamento do mês.
+ *
+ * Diferente da tabela do IRPF, aqui NÃO existe faixa aberta: a última
+ * fecha no teto do regime, porque acima dele não há mais Simples. Um
+ * `null` no fim fingiria que a tabela continua e devolveria imposto
+ * para uma empresa que já deveria estar em outro regime.
+ */
+export interface FaixaSimples {
+  readonly ate: number;
+  readonly aliquota: number;
+  readonly parcelaADeduzir: number;
+}
+
+export type TabelasSimples = Readonly<Record<Anexo, readonly FaixaSimples[]>>;
+
+/**
  * Versão do conjunto de regras. Sempre que o contador revisar as
  * premissas, incremente esta string — ela é gravada junto de cada
  * simulação salva, para sabermos com qual modelo o número foi gerado.
  */
-export const VERSAO_REGRAS = "v1.1-2026-08";
+export const VERSAO_REGRAS = "v1.2-2026-08";
 
 export const REGRAS = {
   /** Meses considerados na projeção anual. */
@@ -69,6 +104,100 @@ export const REGRAS = {
     status: "hipotese-temporaria",
     ondeUsada: "Projeção anual dos dois cenários",
   }),
+
+  simplesNacional: {
+    limiteRbt12: premissa({
+      valor: 4_800_000,
+      descricao:
+        "Teto de receita bruta acumulada em 12 meses para permanecer no Simples Nacional.",
+      porQueExiste:
+        "Acima deste valor a empresa sai do Simples e passa a Lucro Presumido ou Real — regimes que este simulador NÃO calcula. Serve para bloquear o cálculo em vez de devolver um número inventado.",
+      status: "validada-tecnicamente",
+      ondeUsada: "Cenário CNPJ — validação da RBT12",
+    }),
+
+    fatorRLimite: premissa({
+      valor: 0.28,
+      descricao:
+        "Proporção entre a folha dos últimos 12 meses e a receita bruta dos últimos 12 meses que leva uma atividade do Anexo V para o Anexo III.",
+      porQueExiste:
+        "LC 123/2006, art. 18: atingidos 28%, as atividades sujeitas ao Fator R são tributadas pelo Anexo III; abaixo disso, pelo Anexo V. O limite é de igualdade inclusiva — exatamente 28% já vale Anexo III. Confirmado na revisão contábil de agosto/2026.",
+      status: "validada-tecnicamente",
+      ondeUsada: "Resolução do anexo aplicável no cenário CNPJ",
+    }),
+
+    fatorRComposicaoFolha: premissa({
+      valor:
+        "Salários, contribuição patronal, FGTS e pró-labore dos últimos 12 meses",
+      descricao:
+        "O que a lei manda somar no numerador do Fator R.",
+      porQueExiste:
+        "LC 123/2006, art. 18: a folha inclui a remuneração paga a pessoas físicas nos 12 meses anteriores, mais a contribuição patronal e o FGTS efetivamente recolhidos, INCLUÍDAS as retiradas de pró-labore. O simulador pede o total já somado, em um campo só: quebrá-lo em parcelas exigiria pedir dados de folha que o contador ainda não tem na triagem.",
+      status: "a-validar",
+      ondeUsada: "Cálculo do Fator R",
+    }),
+
+    anexosComCalculo: premissa<readonly Anexo[]>({
+      valor: ["III", "V"],
+      descricao:
+        "Anexos em que este simulador aceita calcular o cenário CNPJ.",
+      porQueExiste:
+        "III e V cobrem o prestador de serviço, que é o público da ferramenta, e nos dois a contribuição patronal está dentro do DAS — hipótese que o motor assume. O Anexo IV recolhe a CPP FORA da guia única e o cálculo ficaria errado por construção, então ele é classificado mas não calculado. I e II (comércio e indústria) estão fora do escopo do produto.",
+      status: "a-validar",
+      ondeUsada: "Cenário CNPJ",
+    }),
+
+    tabelas: premissa<TabelasSimples>({
+      valor: {
+        I: [
+          { ate: 180_000, aliquota: 0.04, parcelaADeduzir: 0 },
+          { ate: 360_000, aliquota: 0.073, parcelaADeduzir: 5_940 },
+          { ate: 720_000, aliquota: 0.095, parcelaADeduzir: 13_860 },
+          { ate: 1_800_000, aliquota: 0.107, parcelaADeduzir: 22_500 },
+          { ate: 3_600_000, aliquota: 0.143, parcelaADeduzir: 87_300 },
+          { ate: 4_800_000, aliquota: 0.19, parcelaADeduzir: 378_000 },
+        ],
+        II: [
+          { ate: 180_000, aliquota: 0.045, parcelaADeduzir: 0 },
+          { ate: 360_000, aliquota: 0.078, parcelaADeduzir: 5_940 },
+          { ate: 720_000, aliquota: 0.1, parcelaADeduzir: 13_860 },
+          { ate: 1_800_000, aliquota: 0.112, parcelaADeduzir: 22_500 },
+          { ate: 3_600_000, aliquota: 0.147, parcelaADeduzir: 85_500 },
+          { ate: 4_800_000, aliquota: 0.3, parcelaADeduzir: 720_000 },
+        ],
+        III: [
+          { ate: 180_000, aliquota: 0.06, parcelaADeduzir: 0 },
+          { ate: 360_000, aliquota: 0.112, parcelaADeduzir: 9_360 },
+          { ate: 720_000, aliquota: 0.135, parcelaADeduzir: 17_640 },
+          { ate: 1_800_000, aliquota: 0.16, parcelaADeduzir: 35_640 },
+          { ate: 3_600_000, aliquota: 0.21, parcelaADeduzir: 125_640 },
+          { ate: 4_800_000, aliquota: 0.33, parcelaADeduzir: 648_000 },
+        ],
+        IV: [
+          { ate: 180_000, aliquota: 0.045, parcelaADeduzir: 0 },
+          { ate: 360_000, aliquota: 0.09, parcelaADeduzir: 8_100 },
+          { ate: 720_000, aliquota: 0.102, parcelaADeduzir: 12_420 },
+          { ate: 1_800_000, aliquota: 0.14, parcelaADeduzir: 39_780 },
+          { ate: 3_600_000, aliquota: 0.22, parcelaADeduzir: 183_780 },
+          { ate: 4_800_000, aliquota: 0.33, parcelaADeduzir: 828_000 },
+        ],
+        V: [
+          { ate: 180_000, aliquota: 0.155, parcelaADeduzir: 0 },
+          { ate: 360_000, aliquota: 0.18, parcelaADeduzir: 4_500 },
+          { ate: 720_000, aliquota: 0.195, parcelaADeduzir: 9_900 },
+          { ate: 1_800_000, aliquota: 0.205, parcelaADeduzir: 17_100 },
+          { ate: 3_600_000, aliquota: 0.23, parcelaADeduzir: 62_100 },
+          { ate: 4_800_000, aliquota: 0.305, parcelaADeduzir: 540_000 },
+        ],
+      },
+      descricao:
+        "Tabelas de alíquota nominal e parcela a deduzir dos cinco anexos do Simples Nacional, por faixa de RBT12.",
+      porQueExiste:
+        "Substituem a alíquota efetiva única de 11% que a revisão contábil de agosto/2026 apontou como errada por construção. Transcritas dos anexos da LC 123/2006 (redação da LC 155/2016) e conferidas contra duas referências profissionais de 2026. As alíquotas iniciais batem com as que o contador informou: I 4%, II 4,5%, III 6%, IV 4,5%, V 15,5%. Falta o aceite formal do contador sobre a transcrição completa.",
+      status: "a-validar",
+      ondeUsada: "Cenário CNPJ — alíquota efetiva sobre o faturamento",
+    }),
+  },
 
   pessoaFisica: {
     inssAliquota: premissa({
@@ -98,6 +227,16 @@ export const REGRAS = {
       status: "validada-tecnicamente",
       ondeUsada: "Cenário Pessoa Física",
     }),
+    custoContabilidadeMensal: premissa({
+      valor: 0,
+      descricao:
+        "Honorários contábeis mensais do autônomo. Começa em zero, de propósito.",
+      porQueExiste:
+        "A revisão de agosto/2026 pediu explicitamente que o custo contábil da PF fosse editável em separado do da empresa, porque costuma ser bem menor — e proibiu amarrar um ao outro. Como não recebemos um valor de referência para a PF, o padrão é zero: um número inventado aqui inclinaria a comparação para o lado errado sem que ninguém percebesse. O contador informa o valor real do cliente.",
+      status: "a-validar",
+      ondeUsada: "Cenário Pessoa Física",
+    }),
+
     irpfFaixas: premissa<readonly FaixaIrpf[]>({
       valor: [
         { ate: 2259.2, aliquota: 0, parcelaADeduzir: 0 },
@@ -121,16 +260,16 @@ export const REGRAS = {
       descricao:
         "Alíquota efetiva única estimada sobre o faturamento, cobrindo os tributos da empresa prestadora de serviços.",
       porQueExiste:
-        "⚠️ SABIDAMENTE INCORRETA POR CONSTRUÇÃO. A revisão contábil de agosto/2026 apontou que ignorar o Fator R é o que torna o resultado errado, não apenas impreciso: atividade de cunho intelectual transita entre o Anexo V (a partir de 15,5%) e o Anexo III (a partir de 6%) conforme a folha atinja 28% do faturamento. Uma alíquota única de 11% apaga uma diferença de até 9,5 pontos percentuais. Corrigir exige escolha de anexo, Fator R e as tabelas completas do Simples com RBT12 — ainda não recebidas. Bloqueio nº 2 do modelo.",
+        "⚠️ SOBREVIVENTE, E APENAS COMO ÚLTIMO RECURSO. Deixou de ser o caminho normal: com a atividade identificada, o motor usa as tabelas reais do Simples, o RBT12 e o Fator R. Esta alíquota só entra quando a CLASSIFICAÇÃO ESTÁ PENDENTE — atividade não encontrada no catálogo — e o resultado nesse caso vem marcado como estimativa sem enquadramento. Continua errada por construção pelo motivo apontado em agosto/2026: uma alíquota única apaga a diferença de até 9,5 pontos entre os Anexos III e V.",
       status: "hipotese-temporaria",
       ondeUsada: "Cenário CNPJ",
     }),
     custoContabilidadeMensal: premissa({
       valor: 300,
       descricao:
-        "Custo mensal médio de honorários contábeis e obrigações acessórias da empresa.",
+        "Honorários contábeis mensais da EMPRESA, incluindo obrigações acessórias.",
       porQueExiste:
-        "Manter uma empresa tem custo fixo que a Pessoa Física não tem. Ignorar isso distorceria a comparação. O valor é editável pelo usuário.",
+        "Manter uma empresa tem custo fixo que a Pessoa Física não tem. É um valor de partida editável, INDEPENDENTE do honorário da PF: a revisão de agosto/2026 vetou usar um número só para os dois cenários, porque a diferença entre eles é justamente parte do que se está comparando. Se os R$ 300 são referência razoável — e quanto varia por região e porte — segue em aberto.",
       status: "a-validar",
       ondeUsada: "Cenário CNPJ",
     }),
@@ -167,7 +306,7 @@ export const REGRAS = {
 /** Lista achatada das premissas, para exibição auditável na interface. */
 export interface PremissaListada {
   readonly chave: string;
-  readonly grupo: "Geral" | "Pessoa Física" | "CNPJ";
+  readonly grupo: "Geral" | "Simples Nacional" | "Pessoa Física" | "CNPJ";
   readonly valorFormatado: string;
   readonly descricao: string;
   readonly porQueExiste: string;
@@ -185,7 +324,7 @@ const brl = (v: number) =>
  * para que a documentação da premissa viva ao lado do seu valor.
  */
 export function listarPremissas(): readonly PremissaListada[] {
-  const { pessoaFisica: pf, cnpj } = REGRAS;
+  const { pessoaFisica: pf, cnpj, simplesNacional: sn } = REGRAS;
   const faixaTopo = pf.irpfFaixas.valor[pf.irpfFaixas.valor.length - 1];
 
   return [
@@ -194,6 +333,40 @@ export function listarPremissas(): readonly PremissaListada[] {
       grupo: "Geral",
       valorFormatado: `${REGRAS.mesesNoAno.valor} meses`,
       ...meta(REGRAS.mesesNoAno),
+    },
+    {
+      chave: "Simples Nacional — tabelas por anexo",
+      grupo: "Simples Nacional",
+      valorFormatado: `${Object.keys(sn.tabelas.valor).length} anexos, ${
+        sn.tabelas.valor.III.length
+      } faixas de RBT12 cada`,
+      ...meta(sn.tabelas),
+    },
+    {
+      chave: "Fator R — limite",
+      grupo: "Simples Nacional",
+      valorFormatado: `${pct(sn.fatorRLimite.valor)} da receita`,
+      ...meta(sn.fatorRLimite),
+    },
+    {
+      chave: "Fator R — composição da folha",
+      grupo: "Simples Nacional",
+      valorFormatado: sn.fatorRComposicaoFolha.valor,
+      ...meta(sn.fatorRComposicaoFolha),
+    },
+    {
+      chave: "Anexos com cálculo suportado",
+      grupo: "Simples Nacional",
+      valorFormatado: sn.anexosComCalculo.valor
+        .map((a) => `Anexo ${a}`)
+        .join(" e "),
+      ...meta(sn.anexosComCalculo),
+    },
+    {
+      chave: "Teto da RBT12 no Simples",
+      grupo: "Simples Nacional",
+      valorFormatado: `${brl(sn.limiteRbt12.valor)} em 12 meses`,
+      ...meta(sn.limiteRbt12),
     },
     {
       chave: "INSS — alíquota",
@@ -214,6 +387,12 @@ export function listarPremissas(): readonly PremissaListada[] {
       ...meta(pf.inssPiso),
     },
     {
+      chave: "Honorários contábeis — Autônomo/PF",
+      grupo: "Pessoa Física",
+      valorFormatado: `${brl(pf.custoContabilidadeMensal.valor)}/mês`,
+      ...meta(pf.custoContabilidadeMensal),
+    },
+    {
       chave: "IRPF — tabela progressiva mensal",
       grupo: "Pessoa Física",
       valorFormatado: `${pf.irpfFaixas.valor.length} faixas, de 0% a ${pct(
@@ -222,13 +401,13 @@ export function listarPremissas(): readonly PremissaListada[] {
       ...meta(pf.irpfFaixas),
     },
     {
-      chave: "Alíquota efetiva sobre o faturamento",
+      chave: "Alíquota de recurso — classificação pendente",
       grupo: "CNPJ",
       valorFormatado: pct(cnpj.aliquotaEfetivaFaturamento.valor),
       ...meta(cnpj.aliquotaEfetivaFaturamento),
     },
     {
-      chave: "Custo contábil mensal",
+      chave: "Honorários contábeis — Empresa/PJ",
       grupo: "CNPJ",
       valorFormatado: `${brl(cnpj.custoContabilidadeMensal.valor)}/mês`,
       ...meta(cnpj.custoContabilidadeMensal),
