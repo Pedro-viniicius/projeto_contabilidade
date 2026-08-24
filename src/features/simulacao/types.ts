@@ -3,10 +3,34 @@
  * Camada independente de React — pode ser reaproveitada em API futura.
  */
 
+import type { Anexo } from "./domain/calculation-rules";
+import type { Classificacao } from "./domain/classificacao";
+
 export type TipoAtuacao = "pessoa-fisica" | "cnpj";
 
-/** Entrada já validada, pronta para o motor de cálculo. */
+/**
+ * Entrada já validada, pronta para o motor de cálculo.
+ *
+ * A ATIVIDADE vem primeiro de propósito. É ela que define o
+ * enquadramento possível e, com isso, quais dos campos abaixo têm
+ * significado — o mesmo caminho que o contador percorre antes de
+ * perguntar qualquer valor ao cliente.
+ */
 export interface EntradaSimulacao {
+  /**
+   * Atividade selecionada no catálogo. `null` = classificação
+   * pendente, e o cenário CNPJ sai marcado como sem enquadramento.
+   */
+  readonly atividadeId: string | null;
+  /**
+   * Anexo definido À MÃO pelo contador, sobrepondo a classificação
+   * automática. `null` = automático. Fica gravado no registro para
+   * que uma análise antiga nunca apresente escolha manual como
+   * classificação do sistema.
+   */
+  readonly anexoManual: Anexo | null;
+  /** Justificativa livre e opcional da escolha manual. */
+  readonly motivoAnexoManual?: string;
   /** Cenário que o usuário quer ver em destaque. */
   readonly tipoAtuacao: TipoAtuacao;
   /** Faturamento bruto mensal em reais. */
@@ -15,8 +39,26 @@ export interface EntradaSimulacao {
   readonly custosMensais: number;
   /** Pró-labore mensal em reais. Usado apenas no cenário CNPJ. */
   readonly proLabore: number;
-  /** Honorários contábeis mensais em reais. Usado apenas no cenário CNPJ. */
-  readonly custoContabilidade: number;
+  /**
+   * Honorários contábeis mensais do AUTÔNOMO.
+   *
+   * Campo próprio, independente do da empresa: a revisão contábil
+   * pediu explicitamente que os dois não compartilhassem valor, porque
+   * a diferença entre eles é parte do que a comparação mede.
+   */
+  readonly honorariosContabeisPf: number;
+  /** Honorários contábeis mensais da EMPRESA. */
+  readonly honorariosContabeisPj: number;
+  /**
+   * Receita bruta acumulada dos últimos 12 meses. `0` = não informada;
+   * o motor projeta a receita mensal e avisa que projetou.
+   */
+  readonly rbt12: number;
+  /**
+   * Folha dos últimos 12 meses para o Fator R — salários, encargos e
+   * pró-labore somados. Só tem efeito em atividade sujeita ao Fator R.
+   */
+  readonly folha12m: number;
 }
 
 /** Uma linha do "passo a passo" do cálculo, exibida na transparência. */
@@ -83,6 +125,11 @@ export interface Comparacao {
 /** Saída completa do motor de cálculo. */
 export interface Simulacao {
   readonly entrada: EntradaSimulacao;
+  /**
+   * Enquadramento apurado para a entrada, com o motivo. É o que a
+   * interface exibe em "Por que este anexo?" — sem recalcular nada.
+   */
+  readonly classificacao: Classificacao;
   readonly comparacao: Comparacao;
   /** Cenário escolhido pelo usuário, em destaque no resultado. */
   readonly principal: ResultadoCenario;

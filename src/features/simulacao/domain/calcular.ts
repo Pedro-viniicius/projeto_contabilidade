@@ -8,6 +8,8 @@
  */
 
 import { REGRAS, VERSAO_REGRAS, type FaixaIrpf } from "./calculation-rules";
+import { classificar, type Classificacao } from "./classificacao";
+import { calcularAliquotaEfetiva } from "./simples-nacional";
 import type {
   Comparacao,
   Encargo,
@@ -103,6 +105,18 @@ export function calcularCenarioPessoaFisica(
 ): ResultadoCenario {
   const receita = arredondar(naoNegativo(entrada.receitaMensal));
   const custos = arredondar(naoNegativo(entrada.custosMensais));
+  /*
+   * Honorário PRÓPRIO do autônomo, jamais o da empresa. É o pedido
+   * literal da revisão contábil: os dois custos existem, são
+   * diferentes, e amarrá-los esconderia parte da resposta.
+   *
+   * Fica FORA da base do livro-caixa: entra como encargo do cenário,
+   * porque tratá-lo como custo dedutível suporia uma dedutibilidade
+   * que ninguém validou.
+   */
+  const contabilidade = arredondar(
+    naoNegativo(entrada.honorariosContabeisPf),
+  );
 
   const base = calcularBaseLivroCaixa(receita, custos);
   const salarioContribuicao = salarioDeContribuicao(base);
@@ -135,9 +149,16 @@ export function calcularCenarioPessoaFisica(
         faixa.aliquota,
       )} com parcela a deduzir de ${brl(faixa.parcelaADeduzir)}.`,
     },
+    {
+      rotulo: "Honorários contábeis — Autônomo/PF",
+      valorMensal: contabilidade,
+      premissa: "Honorários contábeis — Autônomo/PF",
+      explicacao:
+        "Custo contábil informado para o cenário Pessoa Física. Independente do honorário da empresa — o padrão é zero até que o contador informe o valor do cliente.",
+    },
   ];
 
-  const totalEncargos = arredondar(inss + irpf);
+  const totalEncargos = arredondar(inss + irpf + contabilidade);
   const liquido = arredondar(base - totalEncargos);
 
   const passos: PassoCalculo[] = [
@@ -168,8 +189,16 @@ export function calcularCenarioPessoaFisica(
       premissa: "IRPF — tabela progressiva mensal",
     },
     {
+      rotulo: "Honorários contábeis — Autônomo/PF",
+      formula: "Valor informado na análise",
+      valor: contabilidade,
+      premissa: "Honorários contábeis — Autônomo/PF",
+    },
+    {
       rotulo: "Resultado líquido mensal",
-      formula: `${brl(base)} − ${brl(inss)} − ${brl(irpf)}`,
+      formula: `${brl(base)} − ${brl(inss)} − ${brl(irpf)} − ${brl(
+        contabilidade,
+      )}`,
       valor: liquido,
     },
   ];
@@ -188,22 +217,31 @@ export function calcularCenarioPessoaFisica(
 
 /**
  * Cenário CNPJ / Prestador de serviço.
- * Alíquota efetiva única sobre o faturamento + custo contábil +
- * encargos do pró-labore. Lucro distribuído tratado como isento.
+ *
+ * A tributação sobre o faturamento sai do ANEXO resolvido pela
+ * classificação: alíquota efetiva do Simples calculada sobre a RBT12.
+ * A alíquota única de recurso só entra quando não há anexo — e o
+ * resultado, nesse caso, sai declaradamente sem enquadramento.
+ *
+ * A classificação é recebida pronta, não recalculada aqui: um único
+ * ponto decide o anexo, e é ele que a auditoria exibe.
  */
 export function calcularCenarioCnpj(
   entrada: EntradaSimulacao,
+  classificacao: Classificacao,
 ): ResultadoCenario {
   const receita = arredondar(naoNegativo(entrada.receitaMensal));
   const custos = arredondar(naoNegativo(entrada.custosMensais));
-  const contabilidade = arredondar(naoNegativo(entrada.custoContabilidade));
+  const contabilidade = arredondar(
+    naoNegativo(entrada.honorariosContabeisPj),
+  );
   /* O pró-labore não pode ser maior que o faturamento: seria incoerente. */
   const proLabore = arredondar(
     Math.min(naoNegativo(entrada.proLabore), receita),
   );
 
-  const aliquota = REGRAS.cnpj.aliquotaEfetivaFaturamento.valor;
-  const impostoFaturamento = arredondar(receita * aliquota);
+  const tributacao = tributacaoDoFaturamento(receita, classificacao);
+  const { aliquota, impostoFaturamento } = tributacao;
 
   const baseInssProLabore = Math.min(
     proLabore,
@@ -218,21 +256,19 @@ export function calcularCenarioCnpj(
 
   const encargos: Encargo[] = [
     {
-      rotulo: "Tributos sobre o faturamento",
+      rotulo: tributacao.rotulo,
       valorMensal: impostoFaturamento,
       base: receita,
       aliquota,
-      premissa: "Alíquota efetiva sobre o faturamento",
-      explicacao: `Alíquota efetiva única de ${pct(
-        aliquota,
-      )} sobre o faturamento. Simplificação do MVP no lugar das tabelas do Simples Nacional.`,
+      premissa: tributacao.premissa,
+      explicacao: tributacao.explicacao,
     },
     {
-      rotulo: "Honorários contábeis",
+      rotulo: "Honorários contábeis — Empresa/PJ",
       valorMensal: contabilidade,
-      premissa: "Custo contábil mensal",
+      premissa: "Honorários contábeis — Empresa/PJ",
       explicacao:
-        "Custo fixo de manter a empresa regular. Não existe no cenário Pessoa Física.",
+        "Custo fixo de manter a empresa regular. Editado em separado do honorário do autônomo — os dois cenários têm custos contábeis próprios.",
     },
     {
       rotulo: "INSS sobre pró-labore",
@@ -264,16 +300,16 @@ export function calcularCenarioCnpj(
 
   const passos: PassoCalculo[] = [
     {
-      rotulo: "Tributos sobre o faturamento",
-      formula: `${brl(receita)} × ${pct(aliquota)}`,
+      rotulo: tributacao.rotulo,
+      formula: tributacao.formula,
       valor: impostoFaturamento,
-      premissa: "Alíquota efetiva sobre o faturamento",
+      premissa: tributacao.premissa,
     },
     {
-      rotulo: "Honorários contábeis",
-      formula: "Valor informado na simulação",
+      rotulo: "Honorários contábeis — Empresa/PJ",
+      formula: "Valor informado na análise",
       valor: contabilidade,
-      premissa: "Custo contábil mensal",
+      premissa: "Honorários contábeis — Empresa/PJ",
     },
     {
       rotulo: "INSS sobre pró-labore",
@@ -310,6 +346,64 @@ export function calcularCenarioCnpj(
   });
 }
 
+/**
+ * Tributação do faturamento, com o texto que a explica.
+ *
+ * Dois caminhos, e a diferença entre eles nunca fica implícita:
+ *
+ *  - ANEXO RESOLVIDO → alíquota efetiva do Simples sobre a RBT12,
+ *    pela fórmula da LC 123/2006;
+ *  - CLASSIFICAÇÃO PENDENTE → alíquota única de recurso, e a
+ *    explicação diz, com todas as letras, que não representa o
+ *    Simples real.
+ */
+function tributacaoDoFaturamento(
+  receita: number,
+  classificacao: Classificacao,
+): {
+  aliquota: number;
+  impostoFaturamento: number;
+  rotulo: string;
+  premissa: string;
+  explicacao: string;
+  formula: string;
+} {
+  const { anexo, fatorR } = classificacao;
+
+  if (anexo === null) {
+    const aliquota = REGRAS.cnpj.aliquotaEfetivaFaturamento.valor;
+    return {
+      aliquota,
+      impostoFaturamento: arredondar(receita * aliquota),
+      rotulo: "Tributos sobre o faturamento (sem enquadramento)",
+      premissa: "Alíquota de recurso — classificação pendente",
+      explicacao: `Sem atividade identificada, o motor não tem anexo para consultar e aplica uma alíquota única de recurso de ${pct(
+        aliquota,
+      )}. NÃO representa o Simples Nacional: identifique a atividade para obter a alíquota efetiva real.`,
+      formula: `${brl(receita)} × ${pct(aliquota)}`,
+    };
+  }
+
+  const rbt12 = fatorR?.rbt12 ?? 0;
+  const efetiva = calcularAliquotaEfetiva(rbt12, anexo);
+  const { faixa } = efetiva;
+
+  return {
+    aliquota: efetiva.aliquota,
+    impostoFaturamento: arredondar(receita * efetiva.aliquota),
+    rotulo: `Simples Nacional — Anexo ${anexo} (DAS)`,
+    premissa: "Simples Nacional — tabelas por anexo",
+    explicacao: `Alíquota efetiva de ${pct(
+      efetiva.aliquota,
+    )} sobre o faturamento do mês, apurada no Anexo ${anexo} para uma RBT12 de ${brl(
+      efetiva.rbt12,
+    )}: faixa de ${pct(faixa.aliquota)} com parcela a deduzir de ${brl(
+      faixa.parcelaADeduzir,
+    )}.`,
+    formula: `${brl(receita)} × ${pct(efetiva.aliquota)}`,
+  };
+}
+
 function montarCenario(args: {
   tipo: TipoAtuacao;
   nome: string;
@@ -336,10 +430,13 @@ function montarCenario(args: {
   };
 }
 
-/** Compara os dois cenários com a mesma entrada. */
-export function compararCenarios(entrada: EntradaSimulacao): Comparacao {
+/** Compara os dois cenários com a mesma entrada e o mesmo enquadramento. */
+export function compararCenarios(
+  entrada: EntradaSimulacao,
+  classificacao: Classificacao = classificacaoDe(entrada),
+): Comparacao {
   const pessoaFisica = calcularCenarioPessoaFisica(entrada);
-  const cnpj = calcularCenarioCnpj(entrada);
+  const cnpj = calcularCenarioCnpj(entrada, classificacao);
   const diferencaMensal = arredondar(
     Math.abs(cnpj.liquidoMensal - pessoaFisica.liquidoMensal),
   );
@@ -358,11 +455,32 @@ export function compararCenarios(entrada: EntradaSimulacao): Comparacao {
   };
 }
 
-/** Ponto de entrada único do motor de cálculo. */
+/** Enquadramento derivado da entrada. Um lugar só decide o anexo. */
+export function classificacaoDe(entrada: EntradaSimulacao): Classificacao {
+  return classificar({
+    atividadeId: entrada.atividadeId,
+    anexoManual: entrada.anexoManual,
+    motivoAnexoManual: entrada.motivoAnexoManual,
+    receitaMensal: entrada.receitaMensal,
+    rbt12: entrada.rbt12,
+    folha12m: entrada.folha12m,
+  });
+}
+
+/**
+ * Ponto de entrada único do motor de cálculo.
+ *
+ * A ordem reproduz o raciocínio do contador: primeiro o enquadramento,
+ * depois os números. A classificação é apurada UMA vez e atravessa o
+ * cálculo inteiro — a interface exibe exatamente o anexo que produziu
+ * o resultado, nunca um recalculado à parte.
+ */
 export function simular(entrada: EntradaSimulacao): Simulacao {
-  const comparacao = compararCenarios(entrada);
+  const classificacao = classificacaoDe(entrada);
+  const comparacao = compararCenarios(entrada, classificacao);
   return {
     entrada,
+    classificacao,
     comparacao,
     principal:
       entrada.tipoAtuacao === "cnpj" ? comparacao.cnpj : comparacao.pessoaFisica,

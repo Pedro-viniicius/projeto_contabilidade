@@ -4,11 +4,16 @@ import { simular } from "./calcular";
 import type { EntradaSimulacao } from "../types";
 
 const entrada = (parcial: Partial<EntradaSimulacao> = {}): EntradaSimulacao => ({
+  atividadeId: null,
+  anexoManual: null,
   tipoAtuacao: "pessoa-fisica",
   receitaMensal: 10_000,
   custosMensais: 1_500,
   proLabore: 2_800,
-  custoContabilidade: 300,
+  honorariosContabeisPf: 0,
+  honorariosContabeisPj: 300,
+  rbt12: 0,
+  folha12m: 0,
   ...parcial,
 });
 
@@ -59,7 +64,10 @@ describe("explicarComparacao", () => {
         receitaMensal: 1,
         custosMensais: 0,
         proLabore: 0,
-        custoContabilidade: 0,
+        honorariosContabeisPf: 0,
+  honorariosContabeisPj: 0,
+  rbt12: 0,
+  folha12m: 0,
       }),
     );
     if (s.comparacao.vencedor === null) {

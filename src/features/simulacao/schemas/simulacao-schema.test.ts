@@ -10,11 +10,16 @@ import {
 import { REGRAS } from "../domain/calculation-rules";
 
 const valida = {
+  atividadeId: null,
+  anexoManual: null,
   tipoAtuacao: "pessoa-fisica" as const,
   receitaMensal: 10_000,
   custosMensais: 1_500,
   proLabore: 2_800,
-  custoContabilidade: 300,
+  honorariosContabeisPf: 0,
+  honorariosContabeisPj: 300,
+  rbt12: 0,
+  folha12m: 0,
 };
 
 function erroDe(dados: unknown, campo: string) {
@@ -82,10 +87,24 @@ describe("simulacaoSchema", () => {
 });
 
 describe("valoresPadrao", () => {
-  it("parte do custo contábil definido nas premissas", () => {
-    expect(valoresPadrao().custoContabilidade).toBe(
+  it("parte dos honorários definidos em premissas SEPARADAS por cenário", () => {
+    expect(valoresPadrao().honorariosContabeisPj).toBe(
       REGRAS.cnpj.custoContabilidadeMensal.valor,
     );
+    expect(valoresPadrao().honorariosContabeisPf).toBe(
+      REGRAS.pessoaFisica.custoContabilidadeMensal.valor,
+    );
+  });
+
+  it("não assume custo contábil para o autônomo", () => {
+    /* Nenhuma referência profissional foi recebida para a PF: um valor
+       inventado aqui inclinaria a comparação em silêncio. */
+    expect(valoresPadrao().honorariosContabeisPf).toBe(0);
+  });
+
+  it("começa sem atividade — classificação pendente, nunca chutada", () => {
+    expect(valoresPadrao().atividadeId).toBeNull();
+    expect(valoresPadrao().anexoManual).toBeNull();
   });
 });
 
@@ -109,11 +128,16 @@ describe("proLaboreSugerido", () => {
 
 describe("mesmaEntrada", () => {
   const a = {
+    atividadeId: null,
+    anexoManual: null,
     tipoAtuacao: "cnpj" as const,
     receitaMensal: 10_000,
     custosMensais: 1_500,
     proLabore: 2_800,
-    custoContabilidade: 300,
+    honorariosContabeisPf: 0,
+    honorariosContabeisPj: 300,
+    rbt12: 0,
+    folha12m: 0,
   };
 
   it("reconhece entradas idênticas", () => {
@@ -124,10 +148,15 @@ describe("mesmaEntrada", () => {
     /* O `JSON.stringify` que isto substituiu dizia "alterado" só porque
        o objeto foi montado noutra ordem. */
     const invertida = {
-      custoContabilidade: 300,
+      honorariosContabeisPf: 0,
+      honorariosContabeisPj: 300,
+      rbt12: 0,
+      folha12m: 0,
       proLabore: 2_800,
       custosMensais: 1_500,
       receitaMensal: 10_000,
+      anexoManual: null,
+      atividadeId: null,
       tipoAtuacao: "cnpj" as const,
     };
     expect(mesmaEntrada(a, invertida)).toBe(true);
@@ -142,8 +171,15 @@ describe("mesmaEntrada", () => {
     expect(mesmaEntrada(a, { ...a, receitaMensal: 10_000.01 })).toBe(false);
     expect(mesmaEntrada(a, { ...a, custosMensais: 0 })).toBe(false);
     expect(mesmaEntrada(a, { ...a, proLabore: 2_801 })).toBe(false);
-    expect(mesmaEntrada(a, { ...a, custoContabilidade: 299 })).toBe(false);
+    expect(mesmaEntrada(a, { ...a, honorariosContabeisPj: 299 })).toBe(false);
     expect(mesmaEntrada(a, { ...a, tipoAtuacao: "pessoa-fisica" })).toBe(false);
+    /* Os honorários de PF e PJ são campos distintos: mexer em um NÃO
+       pode passar despercebido só porque o outro ficou igual. */
+    expect(mesmaEntrada(a, { ...a, honorariosContabeisPf: 150 })).toBe(false);
+    expect(mesmaEntrada(a, { ...a, atividadeId: "engenharia" })).toBe(false);
+    expect(mesmaEntrada(a, { ...a, anexoManual: "V" })).toBe(false);
+    expect(mesmaEntrada(a, { ...a, rbt12: 120_000 })).toBe(false);
+    expect(mesmaEntrada(a, { ...a, folha12m: 40_000 })).toBe(false);
   });
 });
 
@@ -156,7 +192,10 @@ describe("simulacaoSalvaSchema", () => {
       receitaMensal: 10_000,
       custosMensais: 1_500,
       proLabore: 2_800,
-      custoContabilidade: 300,
+      honorariosContabeisPf: 0,
+      honorariosContabeisPj: 300,
+      rbt12: 0,
+      folha12m: 0,
     },
     versaoRegras: "v1.1-2026-08",
     referencia: "Cliente XPTO",
@@ -215,6 +254,82 @@ describe("simulacaoSalvaSchema", () => {
       simulacaoSalvaSchema.safeParse({
         ...valido,
         entrada: { ...valido.entrada, receitaMensal: -1 },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+/*
+ * MIGRAÇÃO DE REGISTRO ANTIGO.
+ *
+ * Rejeitar o formato da v2.1 apagaria o histórico do contador numa
+ * atualização — trabalho que ele não pediu para perder.
+ */
+describe("registro gravado antes da v2.2.0", () => {
+  const legado = {
+    id: "antigo",
+    criadaEm: "2026-08-01T10:00:00.000Z",
+    versaoRegras: "v1.1-2026-08",
+    referencia: "Cliente XPTO",
+    entrada: {
+      tipoAtuacao: "cnpj" as const,
+      receitaMensal: 10_000,
+      custosMensais: 1_500,
+      proLabore: 2_800,
+      custoContabilidade: 300,
+    },
+  };
+
+  it("continua sendo aceito", () => {
+    expect(simulacaoSalvaSchema.safeParse(legado).success).toBe(true);
+  });
+
+  it("o honorário único vira o da EMPRESA, não o do autônomo", () => {
+    const r = simulacaoSalvaSchema.parse(legado);
+    expect(r.entrada.honorariosContabeisPj).toBe(300);
+    /* O custo contábil da PF nunca existiu naquela versão: replicá-lo
+       inventaria uma despesa que o contador nunca informou. */
+    expect(r.entrada.honorariosContabeisPf).toBe(0);
+  });
+
+  it("volta como CLASSIFICAÇÃO PENDENTE, sem anexo atribuído", () => {
+    const r = simulacaoSalvaSchema.parse(legado);
+    expect(r.entrada.atividadeId).toBeNull();
+    expect(r.entrada.anexoManual).toBeNull();
+  });
+
+  it("RBT12 e folha entram zeradas, para o motor projetar e avisar", () => {
+    const r = simulacaoSalvaSchema.parse(legado);
+    expect(r.entrada.rbt12).toBe(0);
+    expect(r.entrada.folha12m).toBe(0);
+  });
+
+  it("preserva identidade, datas e rótulo", () => {
+    const r = simulacaoSalvaSchema.parse(legado);
+    expect(r.id).toBe("antigo");
+    expect(r.criadaEm).toBe(legado.criadaEm);
+    expect(r.referencia).toBe("Cliente XPTO");
+    expect(r.versaoRegras).toBe("v1.1-2026-08");
+  });
+
+  it("registro atual atravessa a migração sem ser alterado", () => {
+    const atual = { ...legado, entrada: { ...valida, tipoAtuacao: "cnpj" as const } };
+    const r = simulacaoSalvaSchema.parse(atual);
+    expect(r.entrada).toEqual(atual.entrada);
+  });
+
+  it("registro sem entrada nenhuma continua sendo rejeitado", () => {
+    /* Migrar não pode virar "aceitar qualquer coisa". */
+    expect(
+      simulacaoSalvaSchema.safeParse({ ...legado, entrada: { foo: 1 } }).success,
+    ).toBe(false);
+  });
+
+  it("atividade que saiu do catálogo não ressuscita classificada", () => {
+    expect(
+      simulacaoSalvaSchema.safeParse({
+        ...legado,
+        entrada: { ...valida, atividadeId: "atividade-extinta" },
       }).success,
     ).toBe(false);
   });
