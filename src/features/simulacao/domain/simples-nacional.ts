@@ -13,35 +13,28 @@ import {
   type Anexo,
   type FaixaSimples,
 } from "./calculation-rules";
+import {
+  aliquotaEfetivaDaFaixa,
+  calcularFatorR,
+  calcularRbt12,
+  comporDas,
+  faixaDoRbt12,
+  type ComposicaoDas,
+} from "./apuracao-simples";
 
-/** Arredonda para 2 casas evitando erro de ponto flutuante binário. */
-function arredondar2(valor: number): number {
-  return Math.round((valor + Number.EPSILON) * 100) / 100;
-}
-
-/** Garante um número finito e não negativo. */
-function naoNegativo(valor: number): number {
-  return Number.isFinite(valor) && valor > 0 ? valor : 0;
-}
-
-/** Tabela completa de um anexo. */
+/**
+ * Tabela completa de um anexo.
+ *
+ * A MATEMÁTICA (faixa, alíquota efetiva, Fator R, composição do DAS,
+ * proporcionalização da RBT12) mora em `apuracao-simples.ts`, que é a
+ * transcrição da planilha do contador. Aqui ficam só as decisões que
+ * a classificação precisa tomar em cima daqueles números.
+ */
 export function tabelaDoAnexo(anexo: Anexo): readonly FaixaSimples[] {
   return REGRAS.simplesNacional.tabelas.valor[anexo];
 }
 
-/**
- * Faixa de RBT12 em que a receita acumulada cai.
- *
- * Acima do teto do regime a tabela acaba, e caímos na última faixa.
- * Isso NÃO é um enquadramento válido — é o melhor palpite possível
- * para exibir um número enquanto `acimaDoTeto` avisa, em alto e bom
- * som, que a empresa já não cabe no Simples.
- */
-export function faixaDoRbt12(rbt12: number, anexo: Anexo): FaixaSimples {
-  const tabela = tabelaDoAnexo(anexo);
-  const valor = naoNegativo(rbt12);
-  return tabela.find((f) => valor <= f.ate) ?? tabela[tabela.length - 1];
-}
+export { faixaDoRbt12, calcularFatorR };
 
 /** Resultado do cálculo da alíquota efetiva, com o que a originou. */
 export interface AliquotaEfetiva {
@@ -50,55 +43,35 @@ export interface AliquotaEfetiva {
   readonly faixa: FaixaSimples;
   /** Fração. 0,0812 = 8,12%. */
   readonly aliquota: number;
+  /** Como o DAS se reparte entre União e ISS/ICMS. */
+  readonly composicao: ComposicaoDas;
   /** A RBT12 estourou o teto do Simples. */
   readonly acimaDoTeto: boolean;
 }
 
 /**
- * Alíquota efetiva do Simples Nacional.
+ * Alíquota efetiva do Simples Nacional sobre a RBT12 informada.
  *
- *     (RBT12 × alíquota nominal − parcela a deduzir) ÷ RBT12
- *
- * RBT12 zero NÃO divide por zero: sem receita acumulada não há o que
- * deduzir, e a alíquota efetiva é a nominal da primeira faixa. É a
- * mesma coisa que o limite da fórmula quando a RBT12 tende a zero.
- *
- * O resultado é limitado a [0, alíquota nominal]: uma parcela a
- * deduzir maior que o imposto nominal produziria alíquota negativa,
- * o que não existe.
+ * Delega a conta a `apuracao-simples.ts` e acrescenta o que a
+ * interface precisa saber: a composição do DAS e se a receita já
+ * estourou o teto do regime.
  */
 export function calcularAliquotaEfetiva(
   rbt12: number,
   anexo: Anexo,
 ): AliquotaEfetiva {
-  const base = naoNegativo(rbt12);
+  const base = Number.isFinite(rbt12) && rbt12 > 0 ? rbt12 : 0;
   const faixa = faixaDoRbt12(base, anexo);
-  const acimaDoTeto = base > REGRAS.simplesNacional.limiteRbt12.valor;
+  const aliquota = aliquotaEfetivaDaFaixa(base, faixa);
 
-  if (base === 0) {
-    return { anexo, rbt12: 0, faixa, aliquota: faixa.aliquota, acimaDoTeto };
-  }
-
-  const bruta = (base * faixa.aliquota - faixa.parcelaADeduzir) / base;
-  const aliquota = Math.min(Math.max(bruta, 0), faixa.aliquota);
-  return { anexo, rbt12: base, faixa, aliquota, acimaDoTeto };
-}
-
-/**
- * Fator R = folha dos últimos 12 meses ÷ receita bruta dos últimos 12
- * meses.
- *
- * Sem receita acumulada o quociente não existe. Devolvemos `null` em
- * vez de zero: zero significaria "folha nenhuma", e levaria a
- * classificar no Anexo V uma empresa sobre a qual não sabemos nada.
- */
-export function calcularFatorR(
-  folha12m: number,
-  rbt12: number,
-): number | null {
-  const receita = naoNegativo(rbt12);
-  if (receita === 0) return null;
-  return naoNegativo(folha12m) / receita;
+  return {
+    anexo,
+    rbt12: base,
+    faixa,
+    aliquota,
+    composicao: comporDas(aliquota, faixa),
+    acimaDoTeto: base > REGRAS.simplesNacional.limiteRbt12.valor,
+  };
 }
 
 /** O Fator R apurado atinge o limite legal? */
@@ -110,10 +83,12 @@ export function atingeFatorR(fatorR: number | null): boolean {
 /**
  * Anexo aplicável entre dois candidatos sujeitos ao Fator R.
  *
- * A regra da LC 123/2006 é de igualdade inclusiva: exatamente 28% já
- * vale o anexo de serviços. `null` quando não há Fator R apurável —
- * quem chama decide o que dizer ao contador, em vez de receber um
- * palpite.
+ * Planilha, célula O17: `SE(fatorR < 28%; alíquota do Anexo V;
+ * alíquota do Anexo III)`. A regra da LC 123/2006 é de igualdade
+ * inclusiva: exatamente 28% já vale o Anexo III.
+ *
+ * `null` quando não há Fator R apurável — quem chama decide o que
+ * dizer ao contador, em vez de receber um palpite.
  */
 export function resolverAnexoPorFatorR(
   fatorR: number | null,
@@ -143,14 +118,28 @@ export interface Rbt12Aplicada {
   readonly projetada: boolean;
 }
 
+/**
+ * RBT12 efetivamente usada no cálculo.
+ *
+ * Informada pelo contador, vale. Em branco, anualizamos a receita do
+ * mês pela regra de proporcionalização da planilha — que com um mês
+ * de atividade dá exatamente a projeção de 12× que fazíamos antes.
+ * Quem chama recebe `projetada: true` para poder avisar na tela.
+ */
 export function rbt12Aplicada(
   rbt12Informada: number,
   receitaMensal: number,
+  mesesAtividade = 1,
 ): Rbt12Aplicada {
-  const informada = naoNegativo(rbt12Informada);
+  const informada =
+    Number.isFinite(rbt12Informada) && rbt12Informada > 0 ? rbt12Informada : 0;
   if (informada > 0) return { valor: informada, projetada: false };
   return {
-    valor: arredondar2(naoNegativo(receitaMensal) * REGRAS.mesesNoAno.valor),
+    valor: calcularRbt12(
+      (Number.isFinite(receitaMensal) && receitaMensal > 0 ? receitaMensal : 0) *
+        mesesAtividade,
+      mesesAtividade,
+    ),
     projetada: true,
   };
 }

@@ -83,6 +83,18 @@ export interface FaixaSimples {
   readonly ate: number;
   readonly aliquota: number;
   readonly parcelaADeduzir: number;
+  /**
+   * Como a alíquota efetiva se reparte entre a União e o tributo
+   * local (ICMS no comércio/indústria, ISS nos serviços).
+   *
+   * Frações que somam 1. É o que permite decompor o DAS e, no caso
+   * dos serviços, saber quando a parcela do ISS bate no teto de 5
+   * pontos percentuais.
+   */
+  readonly reparticao: {
+    readonly federal: number;
+    readonly local: number;
+  };
 }
 
 export type TabelasSimples = Readonly<Record<Anexo, readonly FaixaSimples[]>>;
@@ -147,47 +159,67 @@ export const REGRAS = {
       ondeUsada: "Cenário CNPJ",
     }),
 
+    tetoIssPontos: premissa({
+      valor: 5,
+      descricao:
+        "Teto, em pontos percentuais da alíquota efetiva, da parcela destinada ao ISS.",
+      porQueExiste:
+        "LC 123/2006, art. 18: quando a repartição levaria o ISS acima de 5% da receita, a parcela do ISS trava em 5 pontos e o excedente é redistribuído aos tributos federais. NÃO muda o total do DAS — muda a composição. A planilha do contador embute isso como um limiar fixo por anexo (14,92537% no III e V, 12,5% no IV); aqui a regra é derivada da própria repartição da faixa, o que dá o mesmo resultado e continua valendo se a repartição mudar.",
+      status: "a-validar",
+      ondeUsada: "Composição do DAS nos anexos de serviço",
+    }),
+
+    mesesParaProporcionalizar: premissa({
+      valor: 12,
+      descricao:
+        "Meses usados para anualizar a receita quando a empresa tem menos de 12 meses de atividade.",
+      porQueExiste:
+        "Empresa nova não tem 12 meses de histórico. A planilha do contador resolve isso dividindo a receita acumulada pelos meses de atividade e multiplicando por 12 — é a proporcionalização do art. 18, §2º da LC 123/2006. Substitui a projeção grosseira que fazíamos (receita do mês × 12), que só acertava quando havia exatamente um mês.",
+      status: "a-validar",
+      ondeUsada: "Cálculo da RBT12 de empresa com menos de 12 meses",
+    }),
+
     tabelas: premissa<TabelasSimples>({
       valor: {
         I: [
-          { ate: 180_000, aliquota: 0.04, parcelaADeduzir: 0 },
-          { ate: 360_000, aliquota: 0.073, parcelaADeduzir: 5_940 },
-          { ate: 720_000, aliquota: 0.095, parcelaADeduzir: 13_860 },
-          { ate: 1_800_000, aliquota: 0.107, parcelaADeduzir: 22_500 },
-          { ate: 3_600_000, aliquota: 0.143, parcelaADeduzir: 87_300 },
-          { ate: 4_800_000, aliquota: 0.19, parcelaADeduzir: 378_000 },
+          { ate: 180_000, aliquota: 0.04, parcelaADeduzir: 0, reparticao: { federal: 0.66, local: 0.34 } },
+          { ate: 360_000, aliquota: 0.073, parcelaADeduzir: 5_940, reparticao: { federal: 0.66, local: 0.34 } },
+          { ate: 720_000, aliquota: 0.095, parcelaADeduzir: 13_860, reparticao: { federal: 0.665, local: 0.335 } },
+          { ate: 1_800_000, aliquota: 0.107, parcelaADeduzir: 22_500, reparticao: { federal: 0.665, local: 0.335 } },
+          { ate: 3_600_000, aliquota: 0.143, parcelaADeduzir: 87_300, reparticao: { federal: 0.665, local: 0.335 } },
+          { ate: 4_800_000, aliquota: 0.19, parcelaADeduzir: 378_000, reparticao: { federal: 1, local: 0 } },
         ],
         II: [
-          { ate: 180_000, aliquota: 0.045, parcelaADeduzir: 0 },
-          { ate: 360_000, aliquota: 0.078, parcelaADeduzir: 5_940 },
-          { ate: 720_000, aliquota: 0.1, parcelaADeduzir: 13_860 },
-          { ate: 1_800_000, aliquota: 0.112, parcelaADeduzir: 22_500 },
-          { ate: 3_600_000, aliquota: 0.147, parcelaADeduzir: 85_500 },
-          { ate: 4_800_000, aliquota: 0.3, parcelaADeduzir: 720_000 },
+          { ate: 180_000, aliquota: 0.045, parcelaADeduzir: 0, reparticao: { federal: 0.68, local: 0.32 } },
+          { ate: 360_000, aliquota: 0.078, parcelaADeduzir: 5_940, reparticao: { federal: 0.68, local: 0.32 } },
+          { ate: 720_000, aliquota: 0.1, parcelaADeduzir: 13_860, reparticao: { federal: 0.68, local: 0.32 } },
+          { ate: 1_800_000, aliquota: 0.112, parcelaADeduzir: 22_500, reparticao: { federal: 0.68, local: 0.32 } },
+          { ate: 3_600_000, aliquota: 0.147, parcelaADeduzir: 85_500, reparticao: { federal: 0.68, local: 0.32 } },
+          { ate: 4_800_000, aliquota: 0.3, parcelaADeduzir: 720_000, reparticao: { federal: 1, local: 0 } },
         ],
         III: [
-          { ate: 180_000, aliquota: 0.06, parcelaADeduzir: 0 },
-          { ate: 360_000, aliquota: 0.112, parcelaADeduzir: 9_360 },
-          { ate: 720_000, aliquota: 0.135, parcelaADeduzir: 17_640 },
-          { ate: 1_800_000, aliquota: 0.16, parcelaADeduzir: 35_640 },
-          { ate: 3_600_000, aliquota: 0.21, parcelaADeduzir: 125_640 },
-          { ate: 4_800_000, aliquota: 0.33, parcelaADeduzir: 648_000 },
+          { ate: 180_000, aliquota: 0.06, parcelaADeduzir: 0, reparticao: { federal: 0.665, local: 0.335 } },
+          { ate: 360_000, aliquota: 0.112, parcelaADeduzir: 9_360, reparticao: { federal: 0.68, local: 0.32 } },
+          { ate: 720_000, aliquota: 0.135, parcelaADeduzir: 17_640, reparticao: { federal: 0.675, local: 0.325 } },
+          { ate: 1_800_000, aliquota: 0.16, parcelaADeduzir: 35_640, reparticao: { federal: 0.675, local: 0.325 } },
+          { ate: 3_600_000, aliquota: 0.21, parcelaADeduzir: 125_640, reparticao: { federal: 0.665, local: 0.335 } },
+          { ate: 4_800_000, aliquota: 0.33, parcelaADeduzir: 648_000, reparticao: { federal: 1, local: 0 } },
         ],
         IV: [
-          { ate: 180_000, aliquota: 0.045, parcelaADeduzir: 0 },
-          { ate: 360_000, aliquota: 0.09, parcelaADeduzir: 8_100 },
-          { ate: 720_000, aliquota: 0.102, parcelaADeduzir: 12_420 },
-          { ate: 1_800_000, aliquota: 0.14, parcelaADeduzir: 39_780 },
-          { ate: 3_600_000, aliquota: 0.22, parcelaADeduzir: 183_780 },
-          { ate: 4_800_000, aliquota: 0.33, parcelaADeduzir: 828_000 },
+          { ate: 180_000, aliquota: 0.045, parcelaADeduzir: 0, reparticao: { federal: 0.555, local: 0.445 } },
+          { ate: 360_000, aliquota: 0.09, parcelaADeduzir: 8_100, reparticao: { federal: 0.6, local: 0.4 } },
+          { ate: 720_000, aliquota: 0.102, parcelaADeduzir: 12_420, reparticao: { federal: 0.6, local: 0.4 } },
+          { ate: 1_800_000, aliquota: 0.14, parcelaADeduzir: 39_780, reparticao: { federal: 0.6, local: 0.4 } },
+          { ate: 3_600_000, aliquota: 0.22, parcelaADeduzir: 183_780, reparticao: { federal: 0.6, local: 0.4 } },
+          { ate: 4_800_000, aliquota: 0.33, parcelaADeduzir: 828_000, reparticao: { federal: 1, local: 0 } },
         ],
         V: [
-          { ate: 180_000, aliquota: 0.155, parcelaADeduzir: 0 },
-          { ate: 360_000, aliquota: 0.18, parcelaADeduzir: 4_500 },
-          { ate: 720_000, aliquota: 0.195, parcelaADeduzir: 9_900 },
-          { ate: 1_800_000, aliquota: 0.205, parcelaADeduzir: 17_100 },
-          { ate: 3_600_000, aliquota: 0.23, parcelaADeduzir: 62_100 },
-          { ate: 4_800_000, aliquota: 0.305, parcelaADeduzir: 540_000 },
+          { ate: 180_000, aliquota: 0.155, parcelaADeduzir: 0, reparticao: { federal: 0.86, local: 0.14 } },
+          { ate: 360_000, aliquota: 0.18, parcelaADeduzir: 4_500, reparticao: { federal: 0.83, local: 0.17 } },
+          { ate: 720_000, aliquota: 0.195, parcelaADeduzir: 9_900, reparticao: { federal: 0.81, local: 0.19 } },
+          { ate: 1_800_000, aliquota: 0.205, parcelaADeduzir: 17_100, reparticao: { federal: 0.79, local: 0.21 } },
+          { ate: 3_600_000, aliquota: 0.23, parcelaADeduzir: 62_100, reparticao: { federal: 0.765, local: 0.235 } },
+          { ate: 4_800_000, aliquota: 0.305, parcelaADeduzir: 540_000, reparticao: { federal: 1, local: 0 } },
         ],
       },
       descricao:
@@ -361,6 +393,18 @@ export function listarPremissas(): readonly PremissaListada[] {
         .map((a) => `Anexo ${a}`)
         .join(" e "),
       ...meta(sn.anexosComCalculo),
+    },
+    {
+      chave: "Teto do ISS no DAS",
+      grupo: "Simples Nacional",
+      valorFormatado: `${sn.tetoIssPontos.valor} pontos percentuais`,
+      ...meta(sn.tetoIssPontos),
+    },
+    {
+      chave: "Proporcionalização da RBT12",
+      grupo: "Simples Nacional",
+      valorFormatado: `Receita acumulada ÷ meses de atividade × ${sn.mesesParaProporcionalizar.valor}`,
+      ...meta(sn.mesesParaProporcionalizar),
     },
     {
       chave: "Teto da RBT12 no Simples",
