@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type RefObject } from "react";
 import { centavosParaTexto, textoParaCentavos } from "@/lib/format";
 
 interface Props {
@@ -12,6 +12,8 @@ interface Props {
   autoFocus?: boolean;
   /** Sugestão clicável exibida ao lado do rótulo. */
   sugestao?: { texto: string; onAplicar: () => void };
+  /** Permite que outra parte da tela traga o foco para este campo. */
+  campoRef?: RefObject<HTMLInputElement | null>;
 }
 
 /**
@@ -30,6 +32,7 @@ export function CampoMoeda({
   erro,
   autoFocus,
   sugestao,
+  campoRef,
 }: Props) {
   const id = useId();
   const idAjuda = `${id}-ajuda`;
@@ -70,6 +73,7 @@ export function CampoMoeda({
           R$
         </span>
         <input
+          ref={campoRef}
           id={id}
           inputMode="decimal"
           type="text"

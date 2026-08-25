@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode, RefObject } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import { Button } from "@/components/ui/button";
 import { IconeRecalcular } from "@/components/ui/icone";
 import { CampoMoeda } from "@/components/ui/campo-moeda";
@@ -12,6 +12,7 @@ import { REGRAS, type Anexo } from "../domain/calculation-rules";
 import { atividadePorId } from "../domain/catalogo-atividades";
 import type { Classificacao } from "../domain/classificacao";
 import { rotuloCalculo } from "./acoes-analise";
+import type { CampoPendente } from "./acao-enquadramento";
 import { SeletorAtividade } from "./seletor-atividade";
 import { CartaoClassificacao } from "./cartao-classificacao";
 import {
@@ -54,6 +55,7 @@ export function FormularioSimulacao({
   aviso,
   formRef,
   onCampo,
+  onCampos,
   onProLabore,
   onReferencia,
   onCalcular,
@@ -73,6 +75,8 @@ export function FormularioSimulacao({
     campo: K,
     valor: EntradaSimulacaoValidada[K],
   ) => void;
+  /** Altera vários campos numa única atualização de estado. */
+  onCampos: (patch: Partial<EntradaSimulacaoValidada>) => void;
   /** Separado de `onCampo`: marca que a sugestão automática não vale mais. */
   onProLabore: (valor: number) => void;
   onReferencia: (valor: string) => void;
@@ -80,6 +84,21 @@ export function FormularioSimulacao({
 }) {
   const atividade = atividadePorId(entrada.atividadeId);
   const precisaFatorR = classificacao.sujeitaFatorR;
+
+  /*
+   * "Informar atividade" e "Informar receita mensal" precisam LEVAR o
+   * contador ao campo, não só nomeá-lo. Sem isso, a ação principal do
+   * bloco de enquadramento seria só mais um texto dizendo o que
+   * procurar — e o campo pode estar fora da área visível.
+   */
+  const refAtividade = useRef<HTMLInputElement>(null);
+  const refReceita = useRef<HTMLInputElement>(null);
+
+  function irPara(campo: CampoPendente) {
+    const alvo = campo === "atividade" ? refAtividade : refReceita;
+    alvo.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+    alvo.current?.focus({ preventScroll: true });
+  }
 
   return (
     <form
@@ -96,6 +115,7 @@ export function FormularioSimulacao({
         <GrupoCampos titulo="1. Atividade">
           <SeletorAtividade
             atividade={atividade}
+            campoRef={refAtividade}
             onSelecionar={(id) => onCampo("atividadeId", id)}
             onLimpar={() => onCampo("atividadeId", null)}
           />
@@ -110,6 +130,10 @@ export function FormularioSimulacao({
             }
             onMotivoManual={(motivo) =>
               onCampo("motivoAnexoManual", motivo || undefined)
+            }
+            onIrPara={irPara}
+            onVoltarAoAutomatico={() =>
+              onCampos({ anexoManual: null, motivoAnexoManual: undefined })
             }
           />
         </GrupoCampos>
@@ -128,6 +152,7 @@ export function FormularioSimulacao({
 
           <CampoMoeda
             rotulo="Receita bruta mensal"
+            campoRef={refReceita}
             valor={entrada.receitaMensal}
             onChange={(v) => onCampo("receitaMensal", v)}
             erro={erros.receitaMensal}

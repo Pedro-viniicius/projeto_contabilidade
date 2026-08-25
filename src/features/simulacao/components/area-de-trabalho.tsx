@@ -246,6 +246,26 @@ export function AreaDeTrabalho() {
     setErros((atual) => ({ ...atual, [campo]: undefined }));
   }
 
+  /*
+   * Altera VÁRIOS campos de uma vez.
+   *
+   * Chamar `atualizar` duas vezes seguidas no mesmo manipulador não
+   * funciona: as duas leem o mesmo `entrada` do closure, e a segunda
+   * descarta a alteração da primeira. Era o que fazia "Voltar ao
+   * automático" não voltar — ele limpava o anexo e o motivo em duas
+   * chamadas, e só o motivo sobrevivia.
+   */
+  function atualizarVarios(patch: Partial<EntradaSimulacaoValidada>) {
+    setRascunho({ ...entrada, ...patch });
+    setErros((atual) => {
+      const limpos = { ...atual };
+      for (const campo of Object.keys(patch) as (keyof ErrosSimulacao)[]) {
+        limpos[campo] = undefined;
+      }
+      return limpos;
+    });
+  }
+
   /** Repõe uma análise do histórico nos campos — sem trocar de tela. */
   function abrirRegistro(id: string) {
     const registro = abrirDoHistorico(id);
@@ -345,6 +365,7 @@ export function AreaDeTrabalho() {
               aviso={aviso}
               formRef={formRef}
               onCampo={atualizar}
+              onCampos={atualizarVarios}
               onProLabore={(v) => {
                 proLaboreTocado.current = true;
                 atualizar("proLabore", v);

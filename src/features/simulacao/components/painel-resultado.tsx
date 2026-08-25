@@ -95,8 +95,15 @@ export function PainelResultado({
                   manual={classificacao.manual}
                 />
               ) : (
+                /*
+                  "Sem enquadramento" dizia o que FALTA; o contador
+                  precisa saber o que isso significa para o número que
+                  está olhando. "Provisório" diz exatamente isso, e é o
+                  que impede tomar o resultado de reserva por um cálculo
+                  real do Simples.
+                */
                 <Badge tom="atencao" ponto>
-                  Sem enquadramento
+                  Resultado provisório
                 </Badge>
               )}
             </span>

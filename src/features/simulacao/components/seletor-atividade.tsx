@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useId, useRef, useState, type RefObject } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   buscarAtividades,
@@ -27,10 +27,17 @@ export function SeletorAtividade({
   atividade,
   onSelecionar,
   onLimpar,
+  campoRef,
 }: {
   atividade: AtividadeTributaria | null;
   onSelecionar: (id: string) => void;
   onLimpar: () => void;
+  /**
+   * Deixa outra parte da tela trazer o foco para cá — é o que faz
+   * "Informar atividade", lá no bloco de enquadramento, levar o
+   * contador ao campo em vez de só o mandar procurá-lo.
+   */
+  campoRef?: RefObject<HTMLInputElement | null>;
 }) {
   const id = useId();
   const idLista = `${id}-lista`;
@@ -40,7 +47,8 @@ export function SeletorAtividade({
   const [termo, setTermo] = useState("");
   const [aberto, setAberto] = useState(false);
   const [ativo, setAtivo] = useState(0);
-  const campoRef = useRef<HTMLInputElement>(null);
+  const campoProprio = useRef<HTMLInputElement>(null);
+  const campo = campoRef ?? campoProprio;
   const listaRef = useRef<HTMLUListElement>(null);
 
   const resultados = aberto ? buscarAtividades(termo) : [];
@@ -129,7 +137,7 @@ export function SeletorAtividade({
             onClick={() => {
               onLimpar();
               /* O foco volta para onde a próxima ação acontece. */
-              requestAnimationFrame(() => campoRef.current?.focus());
+              requestAnimationFrame(() => campo.current?.focus());
             }}
             className="alvo-toque shrink-0 rounded-sm border border-border-base px-1.5 py-0.5 text-[0.75rem] text-ink-muted transition-colors hover:border-border-strong hover:bg-surface-muted hover:text-ink"
           >
@@ -150,7 +158,7 @@ export function SeletorAtividade({
 
       <div className="relative mt-1">
         <input
-          ref={campoRef}
+          ref={campo}
           id={id}
           type="text"
           role="combobox"
