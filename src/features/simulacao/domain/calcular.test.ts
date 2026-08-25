@@ -557,3 +557,48 @@ describe("bloqueio disponível para a interface", () => {
     expect(s.classificacao.bloqueio).toBeNull();
   });
 });
+
+/*
+ * A composição do DAS que veio da planilha do contador precisa
+ * chegar à auditoria — senão o trabalho fica invisível para quem
+ * confere o número.
+ */
+describe("composição do DAS na auditoria", () => {
+  it("declara a repartição entre federal e ISS", () => {
+    const s = simular(
+      entrada({ atividadeId: "engenharia", rbt12: 240_000, folha12m: 67_200 }),
+    );
+    const das = s.comparacao.cnpj.encargos[0];
+    expect(das.explicacao).toContain("tributos federais");
+    expect(das.explicacao).toContain("ISS");
+  });
+
+  it("avisa quando o teto do ISS é acionado", () => {
+    /* RBT12 alta o bastante para a parcela do ISS passar de 5 p.p. */
+    const s = simular(
+      entrada({
+        atividadeId: "engenharia",
+        receitaMensal: 250_000,
+        rbt12: 3_000_000,
+        folha12m: 3_000_000 * 0.28,
+      }),
+    );
+    const das = s.comparacao.cnpj.encargos[0];
+    expect(s.classificacao.anexo).toBe("III");
+    expect(das.explicacao).toContain("travado no teto");
+  });
+
+  it("o teto não altera o valor do DAS, só a repartição", () => {
+    const comTeto = simular(
+      entrada({
+        atividadeId: "engenharia",
+        receitaMensal: 250_000,
+        rbt12: 3_000_000,
+        folha12m: 3_000_000 * 0.28,
+      }),
+    );
+    const das = comTeto.comparacao.cnpj.encargos[0];
+    /* O total continua sendo receita × alíquota efetiva. */
+    expect(das.valorMensal).toBe(arredondar(250_000 * das.aliquota!));
+  });
+});

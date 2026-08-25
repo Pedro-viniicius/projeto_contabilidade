@@ -386,7 +386,21 @@ function tributacaoDoFaturamento(
 
   const rbt12 = fatorR?.rbt12 ?? 0;
   const efetiva = calcularAliquotaEfetiva(rbt12, anexo);
-  const { faixa } = efetiva;
+  const { faixa, composicao } = efetiva;
+
+  /*
+   * A composição vem da planilha do contador: o DAS se reparte entre
+   * tributos federais e ISS, e o ISS trava em 5 pontos percentuais.
+   * O teto REDISTRIBUI — o total não muda —, mas o contador precisa
+   * ver que ele foi acionado, porque muda o que a prefeitura recebe.
+   */
+  const detalheComposicao = ` Reparte-se em ${pct(
+    composicao.federal,
+  )} de tributos federais e ${pct(composicao.local)} de ISS${
+    composicao.tetoLocalAplicado
+      ? `, com o ISS travado no teto de ${REGRAS.simplesNacional.tetoIssPontos.valor} pontos percentuais e o excedente redistribuído à União`
+      : ""
+  }.`;
 
   return {
     aliquota: efetiva.aliquota,
@@ -399,7 +413,7 @@ function tributacaoDoFaturamento(
       efetiva.rbt12,
     )}: faixa de ${pct(faixa.aliquota)} com parcela a deduzir de ${brl(
       faixa.parcelaADeduzir,
-    )}.`,
+    )}.${detalheComposicao}`,
     formula: `${brl(receita)} × ${pct(efetiva.aliquota)}`,
   };
 }

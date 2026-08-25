@@ -165,6 +165,66 @@ simplificação declarada, não um dado.
 
 ---
 
+## A planilha do contador como fonte
+
+A apuração foi transcrita da planilha **"CÁLCULO DO SIMPLES NACIONAL"**
+fornecida pelo contador. `domain/apuracao-simples.ts` aponta a célula de
+origem de cada função, para que a conferência seja linha a linha.
+
+A planilha trabalha em **pontos percentuais** (13,5 = 13,5%); o domínio
+trabalha em frações (0,135). A tradução é verificada por testes que
+comparam com **igualdade exata de ponto flutuante** contra os valores que
+estavam em cache na planilha:
+
+| Célula | Anexo | Valor na planilha | No domínio |
+| --- | --- | ---: | --- |
+| I12 | II | 6,6697767971960396% | idêntico |
+| I13 | III | 9,261534105522232% | idêntico |
+| I16 | IV | 7,2157740130717745% | idêntico |
+| N17 | V | 17,121269140854313% | idêntico |
+
+Todos com a mesma RBT12 de **R$ 416.188,32**, deduzida a partir do
+primeiro valor e confirmada pelos outros três.
+
+### O que a planilha trouxe de novo
+
+**1. RBT12 dos 12 meses ANTERIORES.** A planilha soma de `EDATE(-12)` a
+`EDATE(-1)` — o mês que está sendo apurado não entra na base. Incluí-lo
+inflaria a RBT12 e poderia empurrar o cliente para a faixa seguinte sem
+motivo.
+
+**2. Proporcionalização da RBT12.** `soma ÷ meses de atividade × 12`.
+É a regra do art. 18, §2º da LC 123/2006 e **responde à pergunta que
+estava em aberto** sobre o primeiro ano de empresa. Substitui a projeção
+que fazíamos (receita do mês × 12), que era o caso particular de um mês.
+
+**3. Teto do ISS em 5 pontos percentuais.** Quando a repartição levaria
+o ISS acima de 5% da receita, ele trava em 5 pontos e o excedente vai
+para os tributos federais. **O total do DAS não muda — muda a
+composição.**
+
+A planilha embute isso como um limiar fixo por anexo (14,92537% no III e
+V; 12,5% no IV). Esses números não são arbitrários: são exatamente
+`5 ÷ parcela do ISS` da faixa. Implementamos a regra **derivada da
+repartição**, o que dá o mesmo resultado e continua correto se a
+repartição de alguma faixa mudar.
+
+**4. Repartição federal × ISS/ICMS por faixa.** Passou a fazer parte da
+tabela de cada anexo, o que permite decompor o DAS na auditoria.
+
+### O que ficou de fora, e por quê
+
+- **Substituição tributária** (coluna S) e **ISS retido** (coluna U):
+  dependem de saber se o tomador retém, algo que a triagem não pergunta.
+- **Anexo I com PIS/COFINS isento** (linhas 43-50): é comércio, fora do
+  escopo do produto.
+- **Anexo III na variante ICMS** (linhas 25-30): idêntica em alíquota e
+  parcela à variante ISS; muda só a repartição. Usamos a **variante
+  ISS**, que é a do prestador de serviço — é também a que a própria
+  planilha usa no caminho do Anexo V.
+
+---
+
 ## Anexos suportados
 
 | Anexo | Classificação | Cálculo | Por quê |
@@ -225,6 +285,8 @@ classificada**: o schema valida o id contra a lista vigente.
 
 ### Oficial
 
+- **Planilha "CÁLCULO DO SIMPLES NACIONAL"**, do contador que valida o
+  produto — origem da apuração transcrita em `apuracao-simples.ts`.
 - **Lei Complementar 123/2006**, com a redação da **Lei Complementar
   155/2016** — Anexos I a V (faixas de RBT12, alíquotas nominais e
   parcelas a deduzir), fórmula da alíquota efetiva, regra do Fator R e
@@ -257,7 +319,9 @@ terceiro para funcionar.
    pelo contador — segue como pergunta aberta.
 4. **Folha do Fator R em um campo só.** Sem quebra em salários,
    encargos e pró-labore.
-5. **Primeiro ano de empresa.** Sem 12 meses de histórico, projetamos.
-   O que a Receita manda usar nesse caso segue sem resposta.
+5. **Primeiro ano de empresa.** ✅ Resolvido pela planilha: a RBT12 é
+   proporcionalizada (soma ÷ meses de atividade × 12). Falta expor o
+   campo "meses de atividade" na interface — hoje o domínio aceita o
+   parâmetro e a tela ainda assume um mês.
 6. **Status de todas as entradas: "a validar".** Nenhuma se declara
    validada tecnicamente, porque nenhuma recebeu aceite profissional.

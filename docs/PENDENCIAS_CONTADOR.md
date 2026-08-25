@@ -88,9 +88,10 @@ atividade.
    contribuição patronal + FGTS + pró-labore, dos últimos 12 meses,
    em um campo único. Quebrar em parcelas ajudaria ou atrapalharia na
    triagem?
-3. **Primeiro ano de empresa.** Sem 12 meses de RBT12, hoje projetamos
-   a receita mensal × 12 e avisamos na tela que projetamos. É o que a
-   Receita manda fazer, ou existe regra própria (proporcionalização)?
+3. **Primeiro ano de empresa.** ✅ **Respondido pela sua planilha.** Ela
+   proporcionaliza: `soma dos meses ÷ meses de atividade × 12`. Está
+   implementado. Só confirme se o simulador deve **perguntar** os meses
+   de atividade ou se dá para inferir de outra forma.
 4. **Anexo IV.** Classificamos advocacia, construção civil, limpeza e
    vigilância corretamente, mas **bloqueamos o cálculo**: a CPP fica
    fora do DAS e o motor assume que ela está dentro. Vale implementar a
@@ -98,7 +99,14 @@ atividade.
    fora do escopo por enquanto?
 5. **CPP nos Anexos III e V.** Assumimos que a contribuição patronal
    está embutida no DAS. Procede para os dois?
-6. **O catálogo de atividades.** São 22 atividades de prestação de
+6. **Teto do ISS.** Sua planilha trava o ISS em 5 pontos com um limiar
+   fixo por anexo (14,92537 no III e V, 12,5 no IV). Implementamos a
+   regra derivada da repartição da faixa, que dá o mesmo resultado.
+   Confirma que é isso mesmo?
+7. **Substituição tributária e ISS retido.** As colunas S e U da sua
+   planilha ficaram de fora: dependem de saber se o tomador retém.
+   Vale perguntar isso na triagem?
+8. **O catálogo de atividades.** São 22 atividades de prestação de
    serviço. Quais faltam para cobrir o seu dia a dia? A lista está em
    `docs/CLASSIFICACAO_ATIVIDADES.md`.
 
@@ -191,6 +199,9 @@ Registrado para não perguntarmos de novo.
 | Honorários contábeis separados | ✅ Implementado — campos independentes, sem relação fixa entre eles |
 | Tabelas dos anexos I a V | ✅ Transcritas e em uso — falta seu aceite |
 | Fator R decide III × V | ✅ Implementado, com limite inclusivo em 28% |
+| Apuração conferida contra a planilha | ✅ Valores em cache reproduzidos com igualdade exata |
+| Proporcionalização da RBT12 | ✅ Implementada, vinda da planilha |
+| Teto do ISS em 5 pontos | ✅ Implementado — redistribui, não desconta |
 
 ---
 
