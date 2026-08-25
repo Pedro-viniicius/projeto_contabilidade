@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { classificar, explicarBloqueio } from "./classificacao";
+import {
+  classificar,
+  explicarBloqueio,
+  resumoBloqueio,
+} from "./classificacao";
 import type { ContextoClassificacao } from "./classificacao";
 import { REGRAS } from "./calculation-rules";
 
@@ -191,10 +195,48 @@ describe("teto do Simples Nacional", () => {
 });
 
 describe("explicarBloqueio", () => {
-  it("dá um motivo em pt-BR para cada bloqueio", () => {
-    expect(explicarBloqueio("classificacao-pendente", null)).toMatch(/pendente/i);
-    expect(explicarBloqueio("anexo-sem-calculo", "IV")).toContain("Anexo IV");
+  it("classificação pendente avisa que o número não é o Simples real", () => {
+    /* O que precisa chegar ao contador não é a palavra "pendente" — é
+       que o valor exibido não representa o Simples Nacional. */
+    const texto = explicarBloqueio("classificacao-pendente", null);
+    expect(texto).toMatch(/provisóri/i);
+    expect(texto).toContain("não representa o Simples Nacional");
+  });
+
+  it("Anexo IV explica a contribuição patronal fora do DAS", () => {
+    const texto = explicarBloqueio("anexo-sem-calculo", "IV");
+    expect(texto).toContain("Anexo IV");
+    expect(texto).toContain("FORA da guia única");
+  });
+
+  it("NÃO atribui a CPP fora do DAS a anexos onde ela está dentro", () => {
+    /* No Anexo I a contribuição patronal está DENTRO da guia única: ele
+       fica fora por escopo de produto, não por causa da CPP. Repetir o
+       motivo do Anexo IV aqui seria afirmar algo falso. */
+    for (const anexo of ["I", "II"] as const) {
+      const texto = explicarBloqueio("anexo-sem-calculo", anexo);
+      expect(texto).toContain(`Anexo ${anexo}`);
+      expect(texto).not.toContain("guia única");
+      expect(texto).toMatch(/escopo/i);
+    }
+  });
+
+  it("acima do teto fala do teto", () => {
     expect(explicarBloqueio("acima-do-teto", "III")).toMatch(/teto/i);
+  });
+});
+
+describe("resumoBloqueio", () => {
+  it("cabe em uma linha para não competir com a ação principal", () => {
+    for (const b of [
+      "classificacao-pendente",
+      "anexo-sem-calculo",
+      "acima-do-teto",
+    ] as const) {
+      const resumo = resumoBloqueio(b);
+      expect(resumo.length).toBeLessThan(90);
+      expect(resumo.length).toBeLessThan(explicarBloqueio(b, "IV").length);
+    }
   });
 });
 

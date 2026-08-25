@@ -215,16 +215,39 @@ function bloqueioDe(anexo: Anexo, acimaDoTeto: boolean): BloqueioCalculo | null 
   return null;
 }
 
-/** Explicação do bloqueio, em pt-BR, pronta para a interface. */
+/**
+ * Resumo do bloqueio: uma linha, para ficar ao lado da ação sem
+ * competir com ela. O detalhe completo fica em `explicarBloqueio`.
+ */
+export function resumoBloqueio(bloqueio: BloqueioCalculo): string {
+  switch (bloqueio) {
+    case "classificacao-pendente":
+      return "Enquanto o anexo não for definido, o cálculo do CNPJ é provisório.";
+    case "anexo-sem-calculo":
+      return "Este anexo ainda não é calculado: o resultado do CNPJ não vale.";
+    case "acima-do-teto":
+      return "Acima do teto do Simples: o resultado do CNPJ não vale.";
+  }
+}
+
+/** Explicação completa do bloqueio, em pt-BR, pronta para a interface. */
 export function explicarBloqueio(
   bloqueio: BloqueioCalculo,
   anexo: Anexo | null,
 ): string {
   switch (bloqueio) {
     case "classificacao-pendente":
-      return "Classificação pendente: o cenário CNPJ usa uma alíquota de recurso e não representa o Simples Nacional real.";
+      return "Sem anexo definido, o cenário CNPJ recorre a uma alíquota única de reserva. O número aparece, mas é provisório: não representa o Simples Nacional.";
     case "anexo-sem-calculo":
-      return `O Anexo ${anexo} recolhe a contribuição patronal FORA da guia única do Simples. Este simulador ainda não modela esse encargo, então o cálculo do cenário CNPJ ficaria errado por construção.`;
+      /*
+       * O motivo do Anexo IV é específico — a contribuição patronal
+       * fica fora da guia única. Dizer isso de QUALQUER anexo sem
+       * cálculo seria falso: no Anexo I, por exemplo, a CPP está
+       * dentro do DAS, e ele está fora por escopo de produto.
+       */
+      return anexo === "IV"
+        ? "O Anexo IV recolhe a contribuição patronal FORA da guia única do Simples. Este simulador ainda não modela esse encargo, então o cálculo do cenário CNPJ ficaria errado por construção."
+        : `O Anexo ${anexo} está fora do escopo de cálculo desta versão, voltada a prestadores de serviço. A classificação vale; o resultado do cenário CNPJ, não.`;
     case "acima-do-teto":
       return "A receita acumulada em 12 meses ultrapassa o teto do Simples Nacional. O enquadramento passaria a Lucro Presumido ou Real, regimes que este simulador não calcula.";
   }
