@@ -27,6 +27,9 @@ export const IconeRecalcular = () => <Glifo>↻</Glifo>;
 /** Abrir um painel sobreposto sem sair da análise. */
 export const IconePainel = () => <Glifo>▤</Glifo>;
 
+/** Análises recentes deste navegador. */
+export const IconeHistorico = () => <Glifo>≡</Glifo>;
+
 /** Fechar um painel. Ação de baixo risco, universalmente entendida. */
 export const IconeFechar = () => <Glifo>✕</Glifo>;
 

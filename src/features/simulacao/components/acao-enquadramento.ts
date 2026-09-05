@@ -59,6 +59,25 @@ export function acaoDoEnquadramento(
 }
 
 /**
+ * O bloco de enquadramento pode encolher para uma linha?
+ *
+ * Só quando NÃO há nada a resolver. Encolher com pendência aberta
+ * esconderia justamente o caminho para sair dela, e encolher com o
+ * cálculo bloqueado esconderia que o número do cenário CNPJ não vale.
+ *
+ * A escolha manual NÃO impede o resumo — mas o resumo é obrigado a
+ * declará-la, porque ela sobrepõe a classificação do sistema e a
+ * análise precisa continuar auditável depois de qualquer rolagem.
+ */
+export function enquadramentoResolvido(
+  classificacao: Classificacao,
+): boolean {
+  if (classificacao.anexo === null) return false;
+  if (classificacao.bloqueio !== null) return false;
+  return classificacao.atividade !== null || classificacao.manual;
+}
+
+/**
  * Rótulo do detalhe técnico, ciente do estado.
  *
  * "Por que esta classificação?" não faz sentido quando não existe

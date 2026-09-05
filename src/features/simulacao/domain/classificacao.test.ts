@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   classificar,
   explicarBloqueio,
+  podeCompararCenarios,
   resumoBloqueio,
 } from "./classificacao";
 import type { ContextoClassificacao } from "./classificacao";
@@ -244,5 +245,37 @@ describe("determinismo", () => {
   it("mesma entrada, mesma classificação", () => {
     const entrada = ctx({ atividadeId: "arquitetura", folha12m: 30_000 });
     expect(classificar(entrada)).toEqual(classificar(entrada));
+  });
+});
+
+describe("podeCompararCenarios", () => {
+  it("compara quando o cenário CNPJ é calculável", () => {
+    expect(podeCompararCenarios(classificar(ctx({ atividadeId: "contabilidade" })))).toBe(
+      true,
+    );
+  });
+
+  it("compara também com classificação pendente", () => {
+    /* Ali existe uma alíquota de recurso DECLARADA, e o contador sabe
+       o que está vendo: o comparativo segue sendo o de sempre. */
+    const pendente = classificar(ctx({ atividadeId: null }));
+    expect(pendente.bloqueio).toBe("classificacao-pendente");
+    expect(podeCompararCenarios(pendente)).toBe(true);
+  });
+
+  it("NÃO compara quando falta um tributo inteiro no CNPJ", () => {
+    /* Anunciar um vencedor a partir de um cenário incompleto
+       contradiria, no mesmo painel, o aviso de que o número não vale. */
+    const semCalculo = classificar(ctx({ anexoManual: "IV" }));
+    expect(semCalculo.bloqueio).toBe("anexo-sem-calculo");
+    expect(podeCompararCenarios(semCalculo)).toBe(false);
+  });
+
+  it("NÃO compara acima do teto do Simples", () => {
+    const acimaDoTeto = classificar(
+      ctx({ atividadeId: "contabilidade", rbt12: 100_000_000 }),
+    );
+    expect(acimaDoTeto.bloqueio).toBe("acima-do-teto");
+    expect(podeCompararCenarios(acimaDoTeto)).toBe(false);
   });
 });

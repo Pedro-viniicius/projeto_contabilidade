@@ -86,6 +86,43 @@ Arquitetura de informação. O motor de cálculo não mudou.
 
 ---
 
+## V2.4 — entregue (área de trabalho de duas zonas)
+
+Iteração de UX para uso repetido. **O motor de cálculo não mudou** —
+apenas ganhou um campo de metadado (`categoria`) em cada encargo, para
+que a composição possa ser casada entre os dois cenários sem depender do
+texto do rótulo.
+
+### Layout
+- [x] Terceira coluna permanente removida; duas zonas (≈40/60)
+- [x] Histórico e auditoria em painel lateral sob demanda
+- [x] `+ Nova análise` como ação primária única, na barra superior
+- [x] PF × CNPJ divididos por container query, não por media query
+- [x] Contexto da análise compacto depois de resolvido, com "Alterar"
+
+### Preenchimento
+- [x] Receita e custos agrupados como dados compartilhados
+- [x] "Situação atual do cliente" no lugar de "enquadramento atual"
+- [x] Ajuda por divulgação progressiva (botão `?`) no lugar de texto fixo
+- [x] Sugestões explicam a origem do valor antes de oferecer o clique
+- [x] Conferências de entrada que pedem confirmação sem bloquear
+
+### Resultado
+- [x] Conclusão em uma frase, condicionada às premissas
+- [x] Diferença mensal e anual com sentido explícito
+- [x] Estágio de validação colado ao resultado, com atalho para as pendentes
+- [x] Coluna de diferença nomeia cenário e direção, sem depender de sinal
+- [x] Composição dos encargos PF × CNPJ na mesma tabela, sem abas
+- [x] Seção "O que explica a diferença?" derivada do cálculo
+- [x] Escolha manual de anexo visível junto do número que produziu
+
+### Histórico
+- [x] Busca por referência, atividade ou CNAE
+- [x] Duplicar análise sem herdar a identidade do original
+- [x] "Salvo neste navegador", com a ausência de sincronização declarada
+
+---
+
 ## Melhorias após feedback do contador
 
 Itens que **provavelmente** virão da revisão. Priorizar apenas o que ele

@@ -8,7 +8,13 @@
  */
 
 import { formatarMoeda, formatarPercentual } from "@/lib/format";
-import type { Simulacao } from "../types";
+import {
+  compararEncargos,
+  maioresContribuintes,
+  type LinhaEncargoComparada,
+} from "./comparar-encargos";
+import { NOME_CURTO } from "./diferenca-semantica";
+import type { Simulacao, TipoAtuacao } from "../types";
 
 export interface Explicacao {
   readonly titulo: string;
@@ -105,4 +111,134 @@ export function explicarComparacao(simulacao: Simulacao): string {
   return `Com estes números, ${melhor.nome} deixa ${formatarMoeda(
     comparacao.diferencaMensal,
   )} a mais por mês — ${formatarMoeda(comparacao.diferencaAnual)} no ano.`;
+}
+
+/* ------------------------------------------------------------------
+ * CONCLUSÃO DO COMPARATIVO
+ * ------------------------------------------------------------------ */
+
+export interface ConclusaoComparacao {
+  /** Frase de conclusão. Nunca uma recomendação de enquadramento. */
+  readonly titulo: string;
+  /** Cenário de maior líquido. `null` no empate. */
+  readonly vencedor: TipoAtuacao | null;
+  /** "R$ 2.001,97 a mais por mês", já com o sentido explícito. */
+  readonly mensal: string;
+  readonly anual: string;
+}
+
+/**
+ * O veredito do comparativo, em uma frase.
+ *
+ * "MAIOR RESULTADO ESTIMADO" acima de um nome de cenário obriga o
+ * contador a montar a frase de cabeça antes de repeti-la ao cliente.
+ * Aqui a frase já vem pronta — e vem CONDICIONADA às premissas, porque
+ * é isso que ela é: uma estimativa sob hipóteses declaradas, não uma
+ * indicação de regime.
+ */
+export function concluirComparacao(simulacao: Simulacao): ConclusaoComparacao {
+  const { comparacao } = simulacao;
+
+  if (comparacao.vencedor === null) {
+    return {
+      titulo:
+        "Nas premissas atuais, os dois cenários chegam ao mesmo resultado líquido estimado.",
+      vencedor: null,
+      mensal: "Sem diferença mensal",
+      anual: "Sem diferença anual",
+    };
+  }
+
+  const nome = NOME_CURTO[comparacao.vencedor];
+  return {
+    titulo: `Nas premissas atuais, ${nome} apresenta maior resultado líquido estimado.`,
+    vencedor: comparacao.vencedor,
+    mensal: `${formatarMoeda(comparacao.diferencaMensal)} a mais por mês`,
+    anual: `${formatarMoeda(comparacao.diferencaAnual)} a mais por ano`,
+  };
+}
+
+/* ------------------------------------------------------------------
+ * O QUE EXPLICA A DIFERENÇA
+ * ------------------------------------------------------------------ */
+
+export interface ExplicacaoDiferenca {
+  /** Frases factuais, da mais relevante para a menos. */
+  readonly motivos: readonly string[];
+  /** Linhas de encargo que mais pesam, para destacar na composição. */
+  readonly contribuintes: readonly LinhaEncargoComparada[];
+}
+
+function pesoDe(linha: LinhaEncargoComparada): number {
+  return Math.abs(
+    (linha.cnpj?.valorMensal ?? 0) - (linha.pessoaFisica?.valorMensal ?? 0),
+  );
+}
+
+/**
+ * Por que os dois cenários diferem — derivado do cálculo, nunca fixo.
+ *
+ * É o texto que o contador repete ao cliente. Por isso cada frase cita
+ * números que estão na tabela logo acima: quem conferir, encontra.
+ * Quando não há diferença material, o módulo diz isso em vez de
+ * inventar um motivo.
+ */
+export function explicarDiferenca(simulacao: Simulacao): ExplicacaoDiferenca {
+  const { comparacao } = simulacao;
+  const { pessoaFisica: pf, cnpj } = comparacao;
+  const composicao = compararEncargos(comparacao);
+  const contribuintes = maioresContribuintes(composicao);
+  const motivos: string[] = [];
+
+  /*
+   * Receita e custos são iguais por construção nos dois cenários — é o
+   * que torna a comparação justa. Logo, TODA a diferença de líquido
+   * vem dos encargos. Dizer isso primeiro evita que o contador procure
+   * a causa no lugar errado.
+   */
+  motivos.push(
+    `Receita e custos são os mesmos nos dois cenários, então a diferença de resultado vem inteiramente dos encargos: ${formatarPercentual(
+      pf.cargaSobreReceita,
+    )} da receita na Pessoa Física contra ${formatarPercentual(
+      cnpj.cargaSobreReceita,
+    )} no CNPJ.`,
+  );
+
+  for (const linha of contribuintes) {
+    const valorPf = linha.pessoaFisica?.valorMensal ?? 0;
+    const valorCnpj = linha.cnpj?.valorMensal ?? 0;
+
+    if (linha.apenasEm === "cnpj") {
+      motivos.push(
+        `${linha.rotulo} pesa ${formatarMoeda(
+          valorCnpj,
+        )} por mês no CNPJ e não tem equivalente na Pessoa Física.`,
+      );
+      continue;
+    }
+    if (linha.apenasEm === "pessoa-fisica") {
+      motivos.push(
+        `${linha.rotulo} pesa ${formatarMoeda(
+          valorPf,
+        )} por mês na Pessoa Física e não tem equivalente no CNPJ.`,
+      );
+      continue;
+    }
+    motivos.push(
+      `${linha.rotulo}: ${formatarMoeda(valorPf)} na Pessoa Física contra ${formatarMoeda(
+        valorCnpj,
+      )} no CNPJ — ${linha.diferenca.texto.toLowerCase()}.`,
+    );
+  }
+
+  if (contribuintes.length === 0) {
+    motivos.push(
+      "Nenhum encargo isolado responde pela diferença: os valores praticamente empatam linha a linha.",
+    );
+  }
+
+  return {
+    motivos,
+    contribuintes: contribuintes.slice().sort((a, b) => pesoDe(b) - pesoDe(a)),
+  };
 }

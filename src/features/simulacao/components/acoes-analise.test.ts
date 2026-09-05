@@ -22,10 +22,11 @@ describe("rótulo da ação de cálculo", () => {
     expect(rotuloCalculo(false)).toBe("Calcular análise");
   });
 
-  it("distingue recalcular de calcular", () => {
+  it("distingue atualizar de calcular", () => {
     /* As duas ações têm consequências diferentes: uma cria o
-       resultado, a outra atualiza o registro que já existe. */
-    expect(rotuloCalculo(true)).toBe("Recalcular análise");
+       resultado, a outra traz o resultado exibido de volta aos
+       valores que estão nos campos. */
+    expect(rotuloCalculo(true)).toBe("Atualizar resultados");
     expect(rotuloCalculo(true)).not.toBe(rotuloCalculo(false));
   });
 

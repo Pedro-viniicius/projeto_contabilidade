@@ -18,11 +18,20 @@ export function Escolha<T extends string>({
   opcoes,
   valor,
   onChange,
+  apoio,
 }: {
   legenda: string;
   opcoes: readonly OpcaoEscolha<T>[];
   valor: T;
   onChange: (valor: T) => void;
+  /**
+   * Texto único do grupo, exibido sob as opções.
+   *
+   * Preferível a repetir a mesma frase na `descricao` de cada opção:
+   * quando o que precisa ser dito vale para todas, dizer uma vez faz o
+   * contador ler uma vez.
+   */
+  apoio?: string;
 }) {
   const nome = useId();
   const selecionada = opcoes.find((o) => o.valor === valor);
@@ -61,9 +70,9 @@ export function Escolha<T extends string>({
         })}
       </div>
 
-      {selecionada?.descricao && (
+      {(apoio ?? selecionada?.descricao) && (
         <p className="mt-1 text-[0.75rem] leading-snug text-ink-subtle">
-          {selecionada.descricao}
+          {apoio ?? selecionada?.descricao}
         </p>
       )}
     </fieldset>

@@ -16,12 +16,14 @@ function referenciaLegivel(referencia?: string | null): string {
 /**
  * Rótulo da ação primária da zona de dados.
  *
- * "Calcular análise" e "Recalcular análise" são ações diferentes com
- * consequências diferentes — a primeira cria o resultado, a segunda
- * atualiza o que já está na tela e no histórico. O texto muda junto.
+ * "Calcular análise" e "Atualizar resultados" são ações diferentes com
+ * consequências diferentes — a primeira CRIA o resultado, a segunda
+ * traz o resultado que já está na tela de volta aos valores dos
+ * campos. O texto muda junto, e o segundo nomeia o que muda na tela
+ * (os resultados), não o que a máquina faz (recalcular).
  */
 export function rotuloCalculo(jaCalculou: boolean): string {
-  return jaCalculou ? "Recalcular análise" : "Calcular análise";
+  return jaCalculou ? "Atualizar resultados" : "Calcular análise";
 }
 
 export interface ContextoNovaAnalise {

@@ -1,44 +1,57 @@
 "use client";
 
 import { Logo } from "@/components/ui/logo";
-import { IconePainel } from "@/components/ui/icone";
+import { IconeHistorico } from "@/components/ui/icone";
 import { AlternarTema } from "@/components/tema/alternar-tema";
 import { BotaoInstalar } from "@/components/pwa/botao-instalar";
 import { MenuUsuario } from "@/features/sessao/components/menu-usuario";
 import { resumoValidacao } from "@/features/simulacao/domain/calculation-rules";
+import { BotaoNovaAnalise } from "@/features/simulacao/components/botao-nova-analise";
 import type { SessaoDemo } from "@/features/sessao/schemas/sessao-schema";
 
 /**
- * Barra superior da área de trabalho.
+ * BARRA SUPERIOR — identidade, contexto e as três portas do trabalho.
  *
- * Substitui a navegação lateral da V2: como tudo passou a acontecer em
- * uma tela só, uma coluna de 224px de menu era espaço horizontal gasto
- * com links para lugar nenhum. Aqui ficam apenas identidade, contexto
- * da análise atual e controles de sessão.
+ * Reúne, da esquerda para a direita: quem é o produto, QUAL análise
+ * está aberta, e os controles globais — histórico, auditoria e a ação
+ * primária de começar outra análise.
  *
- * Os dois controles à direita abrem painéis, e dizem isso: têm contorno
- * (não são texto de status), `aria-haspopup="dialog"` e `aria-expanded`.
+ * "+ Nova análise" mora aqui, e só aqui. Até a v2.3 ela aparecia duas
+ * vezes na mesma tela, com o mesmo peso visual: dois botões idênticos
+ * disputando a mesma decisão é uma escolha a mais para tomar, não uma
+ * conveniência. Posição fixa e previsível — a barra nunca rola —, alvo
+ * grande e contraste próprio: o botão é encontrado sem procura.
+ *
+ * Os controles que abrem painéis dizem isso antes do clique: têm
+ * contorno (não são texto de status), `aria-haspopup="dialog"` e
+ * `aria-expanded`.
  */
 export function BarraSuperior({
   sessao,
   referencia,
-  contextoAberto,
-  premissasAbertas,
-  onAbrirPremissas,
-  onAbrirContexto,
+  historicoAberto,
+  auditoriaAberta,
+  jaCalculou,
+  desatualizado,
+  temValoresPreenchidos,
+  onAbrirHistorico,
+  onAbrirAuditoria,
+  onNovaAnalise,
 }: {
   sessao: SessaoDemo;
   /** Rótulo da análise em edição, quando houver. */
   referencia: string;
-  contextoAberto: boolean;
-  premissasAbertas: boolean;
-  onAbrirPremissas: () => void;
-  /** Abre a coluna de contexto como painel — usado abaixo de 1280px. */
-  onAbrirContexto: () => void;
+  historicoAberto: boolean;
+  auditoriaAberta: boolean;
+  jaCalculou: boolean;
+  desatualizado: boolean;
+  temValoresPreenchidos: boolean;
+  onAbrirHistorico: () => void;
+  onAbrirAuditoria: () => void;
+  onNovaAnalise: () => void;
 }) {
-  const { pendentes, total } = resumoValidacao();
+  const { total, validadas, pendentes } = resumoValidacao();
   const tudoValidado = pendentes === 0;
-  const estadoModelo = tudoValidado ? "Modelo validado" : "Modelo em validação";
 
   return (
     <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center gap-2 border-b border-border-base bg-background/95 px-3 backdrop-blur sm:px-4">
@@ -56,8 +69,7 @@ export function BarraSuperior({
 
       {/*
         Vocabulário único: a análise se chama "análise" em toda a
-        interface. "Nova simulação" aqui contradizia "Nova análise" nos
-        botões e no histórico.
+        interface, do botão ao histórico.
       */}
       <p className="hidden min-w-0 flex-1 truncate text-[0.8125rem] text-ink-muted sm:block">
         {referencia || "Nova análise"}
@@ -65,20 +77,15 @@ export function BarraSuperior({
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
         {/*
-          Status do modelo: informação real, e atalho para auditá-la.
-          Sem preenchimento nem contorno, era indistinguível de um
-          indicador passivo. Ganhou o mesmo tratamento dos demais
-          controles secundários — superfície elevada + borda —, porque
-          na paleta do projeto a linha sozinha tem contraste baixo
-          demais para carregar a affordance. O nome acessível começa
-          pelo rótulo visível e diz o que o clique faz.
+          Estágio de validação: informação real E a porta da auditoria.
+          Os dois papéis são o mesmo gesto — quem lê "13 pendentes"
+          quer saber quais são —, e separá-los criaria dois controles
+          para uma pergunta só.
         */}
-        <button
-          type="button"
-          onClick={onAbrirPremissas}
-          aria-haspopup="dialog"
-          aria-expanded={premissasAbertas}
-          className="alvo-toque hidden min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface px-2 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink min-[640px]:inline-flex"
+        <BotaoBarra
+          onClick={onAbrirAuditoria}
+          expandido={auditoriaAberta}
+          className="hidden min-[900px]:inline-flex"
         >
           <span
             aria-hidden="true"
@@ -86,35 +93,84 @@ export function BarraSuperior({
               tudoValidado ? "bg-positivo" : "bg-atencao"
             }`}
           />
-          {estadoModelo}
-          {!tudoValidado && (
-            <span className="tnum text-ink-subtle">
-              {pendentes}/{total}
-            </span>
-          )}
-          <span className="sr-only"> — abrir premissas do modelo</span>
-        </button>
-
-        {/* Abaixo de 1280px a coluna de contexto vira painel sob demanda. */}
-        <button
-          type="button"
-          onClick={onAbrirContexto}
-          aria-haspopup="dialog"
-          aria-expanded={contextoAberto}
-          className="alvo-toque inline-flex min-h-8 items-center gap-1.5 rounded-md border border-border-strong bg-surface px-2 text-[0.8125rem] text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink min-[1280px]:hidden"
-        >
-          <IconePainel />
-          Contexto
+          {tudoValidado ? "Modelo revisado" : "Modelo em validação"}
+          <span className="tnum text-ink-subtle">
+            {validadas}/{total}
+          </span>
           <span className="sr-only">
             {" "}
-            — abrir painel com histórico e auditoria
+            premissas validadas — abrir premissas e auditoria
           </span>
-        </button>
+        </BotaoBarra>
+
+        {/* Abaixo de 900px o mesmo controle vira um rótulo curto. */}
+        <BotaoBarra
+          onClick={onAbrirAuditoria}
+          expandido={auditoriaAberta}
+          className="min-[900px]:hidden"
+        >
+          <span
+            aria-hidden="true"
+            className={`size-2 shrink-0 rounded-full ${
+              tudoValidado ? "bg-positivo" : "bg-atencao"
+            }`}
+          />
+          Auditoria
+          <span className="sr-only"> — premissas e escopo do modelo</span>
+        </BotaoBarra>
+
+        <BotaoBarra onClick={onAbrirHistorico} expandido={historicoAberto}>
+          <IconeHistorico />
+          <span className="hidden min-[560px]:inline">Histórico</span>
+          <span className="sr-only"> — análises recentes deste navegador</span>
+        </BotaoBarra>
+
+        {/* A ação primária da tela, em posição fixa e previsível. */}
+        <BotaoNovaAnalise
+          jaCalculou={jaCalculou}
+          desatualizado={desatualizado}
+          temValoresPreenchidos={temValoresPreenchidos}
+          onNovaAnalise={onNovaAnalise}
+          tamanho="sm"
+          variante="primaria"
+        />
 
         <BotaoInstalar />
         <AlternarTema />
         <MenuUsuario sessao={sessao} />
       </div>
     </header>
+  );
+}
+
+/** Controle secundário da barra: abre um painel, e declara que abre. */
+function BotaoBarra({
+  onClick,
+  expandido,
+  className,
+  children,
+}: {
+  onClick: () => void;
+  expandido: boolean;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-haspopup="dialog"
+      aria-expanded={expandido}
+      className={[
+        "alvo-toque inline-flex min-h-8 items-center gap-1.5 rounded-md border",
+        "border-border-strong bg-surface px-2 text-[0.8125rem] text-ink-muted",
+        "transition-colors hover:bg-surface-hover hover:text-ink",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {children}
+    </button>
   );
 }

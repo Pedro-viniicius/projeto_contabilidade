@@ -43,6 +43,11 @@ export default function manifest(): MetadataRoute.Manifest {
         url: "/workspace",
       },
       {
+        name: "Análises recentes",
+        short_name: "Histórico",
+        url: "/workspace?painel=historico",
+      },
+      {
         name: "Premissas de cálculo",
         short_name: "Premissas",
         url: "/workspace?painel=premissas",

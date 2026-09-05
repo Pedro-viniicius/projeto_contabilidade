@@ -216,6 +216,26 @@ function bloqueioDe(anexo: Anexo, acimaDoTeto: boolean): BloqueioCalculo | null 
 }
 
 /**
+ * Há veredito para dar entre os dois cenários?
+ *
+ * Quando o anexo não tem cálculo suportado — ou a empresa já saiu do
+ * Simples — o cenário CNPJ está incompleto POR CONSTRUÇÃO: falta um
+ * tributo inteiro. Anunciar "o CNPJ rende R$ X a mais" em cima disso
+ * contradiria, no mesmo painel, o aviso que diz que o número não vale.
+ * Os números da Pessoa Física seguem válidos; o que some é a COMPARAÇÃO.
+ *
+ * Classificação pendente é outro caso: ali existe uma alíquota de
+ * recurso declarada, o contador sabe o que está vendo, e o comparativo
+ * continua sendo o comportamento de sempre.
+ */
+export function podeCompararCenarios(classificacao: Classificacao): boolean {
+  return (
+    classificacao.bloqueio !== "anexo-sem-calculo" &&
+    classificacao.bloqueio !== "acima-do-teto"
+  );
+}
+
+/**
  * Resumo do bloqueio: uma linha, para ficar ao lado da ação sem
  * competir com ela. O detalhe completo fica em `explicarBloqueio`.
  */
