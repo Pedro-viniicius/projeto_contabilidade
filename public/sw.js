@@ -13,7 +13,7 @@
 
 /* Bump obrigatório a cada mudança de casca: sem isso o usuário que já
    instalou continua vendo a interface antiga vinda do cache. */
-const VERSAO = "clareza-v2-7-0";
+const VERSAO = "clareza-v2-7-1";
 const CACHE_SHELL = `${VERSAO}-shell`;
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 
