@@ -12,6 +12,10 @@ import {
   podeCompararCenarios,
 } from "../domain/classificacao";
 import { concluirComparacao, explicarDiferenca } from "../domain/explicar";
+import {
+  ComparacaoCenarios,
+  DiferencaEntreCenarios,
+} from "./comparacao-cenarios";
 import { TabelaComparativa } from "./tabela-comparativa";
 import { ComposicaoComparada } from "./composicao-comparada";
 import { PassosCalculo } from "./passos-calculo";
@@ -73,12 +77,13 @@ export function PainelResultado({
   const motivosRestantes = explicacao.motivos.slice(comparavel ? 1 : 0);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* ---------- 1 a 4. CONCLUSÃO, TAMANHO, CONFIANÇA E TABELA ---------- */}
       <Painel
         className={desatualizado ? "border-l-2 border-l-atencao" : undefined}
       >
         <PainelCabecalho
+          rotulo="Conclusão da análise"
           titulo="Resultado da comparação"
           descricao="Mesma receita e mesmos custos nos dois enquadramentos."
           /*
@@ -115,25 +120,43 @@ export function PainelResultado({
         />
 
         {comparavel ? (
-          <div className="border-b border-border-base px-4 py-3">
-            {/* 1. A conclusão, em uma frase. */}
-            <p className="max-w-prose text-[0.9375rem] font-semibold leading-snug text-ink">
-              {conclusao.titulo}
-            </p>
+          <>
+            {/*
+              1 e 2. A CONCLUSÃO E O TAMANHO DELA.
 
-            {/* 2. O tamanho da diferença — mensal e anual, com sentido. */}
-            {conclusao.vencedor !== null && (
-              <dl className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
-                <Diferenca rotulo="Por mês" valor={conclusao.mensal} />
-                <Diferenca rotulo="Por ano" valor={conclusao.anual} />
-              </dl>
-            )}
+              Este bloco é o topo da hierarquia da tela inteira: o
+              resultado precisa pesar mais que os campos que o
+              produziram. Ele consegue isso pela tipografia — a
+              diferença mensal é o maior número do produto —, não por
+              cor forte nem por moldura.
+            */}
+            <div className="border-b border-border-base px-4 py-4">
+              <p className="max-w-prose text-[0.9375rem] font-semibold leading-snug text-ink">
+                {conclusao.titulo}
+              </p>
 
-            {/* 5 (resumo). O principal motivo, já aqui no topo. */}
-            <p className="mt-2 max-w-prose text-[0.8125rem] leading-relaxed text-ink-muted">
-              {explicacao.motivos[0]}
-            </p>
-          </div>
+              <div className="mt-3">
+                <DiferencaEntreCenarios
+                  vencedor={comparacao.vencedor}
+                  mensal={comparacao.diferencaMensal}
+                  anual={comparacao.diferencaAnual}
+                />
+              </div>
+
+              {/* 5 (resumo). O principal motivo, já aqui no topo. */}
+              <p className="mt-3 max-w-prose text-[0.8125rem] leading-relaxed text-ink-muted">
+                {explicacao.motivos[0]}
+              </p>
+            </div>
+
+            {/*
+              3. OS DOIS LADOS, no desenho que o Clareza repete sempre
+              que compara duas alternativas financeiras.
+            */}
+            <div className="@container border-b border-border-base">
+              <ComparacaoCenarios comparacao={comparacao} />
+            </div>
+          </>
         ) : (
           <div className="border-b border-border-base px-4 py-3.5">
             <p className="text-[0.875rem] font-medium text-ink">
@@ -200,6 +223,7 @@ export function PainelResultado({
       {/* ---------- 5 e 6. POR QUÊ, E A AUDITORIA ---------- */}
       <Painel>
         <PainelCabecalho
+          rotulo="Auditoria"
           titulo="O que explica a diferença?"
           descricao="Os dois cenários lado a lado. Abra uma linha para ver a conta e a premissa."
           /*
@@ -348,18 +372,6 @@ export function PainelResultado({
   );
 }
 
-/** Uma metade do par mensal/anual. */
-function Diferenca({ rotulo, valor }: { rotulo: string; valor: string }) {
-  return (
-    <div>
-      <dt className="rotulo-secao">{rotulo}</dt>
-      <dd className="tnum text-[1.0625rem] font-semibold leading-tight text-ink">
-        {valor}
-      </dd>
-    </div>
-  );
-}
-
 /**
  * ESTÁGIO DE VALIDAÇÃO, colado ao resultado.
  *
@@ -377,8 +389,13 @@ function EstadoDoModelo({
   const tudoValidado = pendentes === 0;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border-base px-4 py-2">
-      <p className="flex items-center gap-1.5 text-[0.8125rem] text-ink-muted">
+    /*
+      Faixa de CONFIANÇA, sobre superfície fosca: é metadado do
+      resultado, não resultado. A superfície diferente é o que impede
+      confundir "5 de 18 premissas validadas" com um número calculado.
+    */
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-border-base bg-surface-subtle px-4 py-2">
+      <p className="flex items-center gap-2 text-[0.8125rem] text-ink-muted">
         <span
           aria-hidden="true"
           className={`size-2 shrink-0 rounded-full ${

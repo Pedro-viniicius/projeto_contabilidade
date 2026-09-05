@@ -73,10 +73,17 @@ export function BarraSuperior({
   const rotuloReferencia = referencia.trim();
 
   return (
-    <header className="sticky top-0 z-40 flex h-12 shrink-0 items-center gap-1.5 border-b border-border-base bg-background/95 px-3 backdrop-blur sm:gap-2 sm:px-4">
+    /*
+      52px de altura: a barra precisa acomodar controles de 32px com
+      respiro em cima e embaixo sem virar um cabeçalho de site. Sobre
+      a superfície branca — e não sobre o fundo cinza —, o que separa a
+      barra do trabalho é a borda inferior, e a coluna de dados abaixo
+      dela continua na mesma superfície.
+    */
+    <header className="sticky top-0 z-40 flex h-[3.25rem] shrink-0 items-center gap-1.5 border-b border-border-base bg-surface/92 px-3 backdrop-blur sm:gap-2 sm:px-4">
       {/* ---------- ESQUERDA · contexto atual ---------- */}
       <div className="flex shrink-0 items-center gap-2">
-        <Logo className="size-6 shrink-0" />
+        <Logo className="size-[1.375rem] shrink-0" />
         <span className="hidden text-[0.9375rem] font-semibold tracking-tight text-ink min-[480px]:inline">
           Clareza
         </span>
@@ -87,10 +94,10 @@ export function BarraSuperior({
         cursor de clique, sem hover. O contador não deve precisar testar
         um elemento para descobrir se ele faz alguma coisa.
       */}
-      <div className="hidden min-w-0 flex-1 items-center gap-2 sm:flex">
+      <div className="hidden min-w-0 flex-1 items-center gap-2.5 sm:flex">
         <span
           aria-hidden="true"
-          className="h-4 w-px shrink-0 bg-border-base"
+          className="h-5 w-px shrink-0 bg-border-base"
         />
         <p className="flex min-w-0 items-baseline gap-1.5 text-[0.8125rem]">
           <span className="shrink-0 text-ink-subtle">Análise:</span>
@@ -118,7 +125,7 @@ export function BarraSuperior({
       </div>
 
       {/* ---------- DIREITA · ações do trabalho ---------- */}
-      <div className="ml-auto flex shrink-0 items-center gap-1">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5">
         {/*
           ATENÇÃO, não erro. Pendência de revisão é trabalho a fazer —
           âmbar. Vermelho fica reservado a cálculo que falhou ou entrada
@@ -179,7 +186,7 @@ export function BarraSuperior({
         {/* ---------- EXTREMA DIREITA · usuário ---------- */}
         <span
           aria-hidden="true"
-          className="mx-0.5 hidden h-4 w-px shrink-0 bg-border-base sm:block"
+          className="mx-1 hidden h-5 w-px shrink-0 bg-border-base sm:block"
         />
         {/*
           Em telas muito estreitas os dois controles de PREFERÊNCIA saem
@@ -241,9 +248,10 @@ function BotaoBarra({
       title={title}
       className={[
         "alvo-toque inline-flex min-h-8 items-center gap-1.5 rounded-md border",
-        "px-2 text-[0.8125rem] transition-colors",
+        "px-2.5 text-[0.8125rem] font-medium shadow-sutil",
+        "transition-colors duration-[140ms] active:translate-y-px",
         atencao
-          ? "border-atencao/50 bg-atencao-soft text-atencao hover:border-atencao"
+          ? "border-atencao-borda bg-atencao-soft text-atencao hover:border-atencao"
           : "border-border-strong bg-surface text-ink-muted hover:bg-surface-hover hover:text-ink",
         /* Painel aberto: o botão que o abriu continua dizendo isso. */
         expandido ? "ring-1 ring-accent/40" : "",

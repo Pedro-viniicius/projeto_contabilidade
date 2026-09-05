@@ -10,8 +10,13 @@ export const metadata: Metadata = {
 
 export default function OfflinePage() {
   return (
-    <main id="conteudo" className="mx-auto max-w-[1100px] px-4 py-5 sm:px-6">
-      <Painel className="px-4 py-12 text-center">
+    /* Telas de estado ficam centradas na janela: um painel colado no
+       topo de uma área vazia parece carregamento interrompido. */
+    <main
+      id="conteudo"
+      className="mx-auto flex min-h-dvh max-w-[34rem] flex-col justify-center px-4 py-8 sm:px-6"
+    >
+      <Painel className="px-5 py-8 text-center">
         <h1 className="text-base font-semibold tracking-tight text-ink">
           Sem conexão
         </h1>

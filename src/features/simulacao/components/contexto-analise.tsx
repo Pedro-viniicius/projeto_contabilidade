@@ -82,14 +82,14 @@ export function ContextoAnalise({
     return (
       <section
         aria-label="Atividade e enquadramento"
-        className="rounded-md border border-border-strong bg-surface-muted px-2.5 py-2"
+        className="superficie-sistema px-3 py-2.5"
       >
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2.5">
           <div className="min-w-0">
             <p className="text-[0.8125rem] font-medium leading-snug text-ink">
               {atividade?.descricao ?? "Atividade não identificada"}
             </p>
-            <p className="tnum mt-0.5 text-[0.75rem] leading-snug text-ink-muted">
+            <p className="tnum mt-1 text-[0.75rem] leading-snug text-ink-muted">
               {resumoCompacto(classificacao)}
             </p>
           </div>
@@ -112,7 +112,7 @@ export function ContextoAnalise({
           lado.
         */}
         {manual && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border-base pt-2">
+          <div className="mt-2.5 flex flex-wrap items-center gap-2 border-t border-border-base pt-2.5">
             <Badge tom="atencao" ponto>
               Anexo {anexo} definido manualmente
             </Badge>

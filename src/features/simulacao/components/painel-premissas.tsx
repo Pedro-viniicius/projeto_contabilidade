@@ -201,7 +201,7 @@ function LinhaPremissa({
 
   return (
     <>
-      <tr className="hover:bg-surface-hover">
+      <tr className="transition-colors hover:bg-surface-hover">
         <th scope="row" className="font-normal">
           <button
             type="button"
@@ -222,8 +222,13 @@ function LinhaPremissa({
           </button>
         </th>
         <td className="text-ink-muted">{premissa.grupo}</td>
-        <td className="num font-medium text-ink">{premissa.valorFormatado}</td>
-        <td>
+        <td className="num quebra font-medium text-ink">
+          {premissa.valorFormatado}
+        </td>
+        {/* Status em uma linha: a etiqueta é o que o contador procura
+            varrendo a coluna, e um rótulo quebrado em duas linhas
+            desalinha a varredura. */}
+        <td className="whitespace-nowrap">
           <Badge tom={TOM_STATUS[premissa.status]}>
             {ROTULO_STATUS[premissa.status]}
           </Badge>

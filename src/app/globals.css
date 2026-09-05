@@ -1,65 +1,134 @@
 @import "tailwindcss";
 
 /*
-  Sistema visual do Clareza V2.1 — superfície de trabalho profissional.
-  Direção: neutro, denso, alto contraste, acento contido.
-  O acento sinaliza ação e navegação, nunca julgamento de resultado.
+  ==================================================================
+  SISTEMA VISUAL DO CLAREZA — V2.6
+  ==================================================================
+
+  Direção: plataforma de inteligência contábil. Neutro por padrão,
+  denso o suficiente para uso diário, com o acento verde reservado a
+  ação, seleção e identidade — nunca a julgamento de resultado.
+
+  A maturidade visual nasce de CAMADAS, não de decoração. Toda a
+  hierarquia é construída por quatro recursos, nesta ordem de
+  preferência:
+
+      1. tipografia   (peso e tamanho)
+      2. espaçamento  (agrupamento)
+      3. superfície   (contraste de fundo)
+      4. borda        (delimitação)
+
+  Sombra é o último recurso e fica restrita ao que FLUTUA — painel
+  sobreposto, menu, véu. Conteúdo normal nunca levita.
 
   As duas paletas são declaradas por extenso e depois *atribuídas* aos
   tokens ativos. Isso permite três estados de tema — sistema (padrão),
   claro forçado e escuro forçado — sem repetir valores de cor.
 */
 :root {
-  /* ---- Paleta clara ---- */
-  --c-background: #f6f7f8;
+  /* ================= PALETA CLARA ================= */
+
+  /*
+    Cinco degraus de superfície, do fundo da aplicação ao que flutua.
+    Cada um tem um papel; nenhum é decorativo.
+
+      background      fundo da aplicação — nada de conteúdo mora aqui
+      surface         superfície de trabalho e de painel
+      surface-subtle  agrupamento interno leve (cenários, rodapés)
+      surface-muted   informação DERIVADA: cabeçalho de tabela, total,
+                      classificação do sistema, valor não editável
+      surface-hover   realce transitório de linha e controle
+  */
+  --c-background: #eceff0;
   --c-surface: #ffffff;
-  --c-surface-muted: #eef0f2;
-  --c-surface-hover: #f3f5f6;
-  --c-ink: #12161a;
-  --c-ink-muted: #545c66;
-  --c-ink-subtle: #7d858f;
-  --c-border: #e0e4e7;
-  --c-border-strong: #c8ced3;
-  --c-accent: #0e7c66;
-  --c-accent-hover: #0a6252;
-  --c-accent-soft: #e6f2ef;
-  --c-accent-ink: #08483c;
-  --c-positivo: #0e7c66;
-  --c-negativo: #b4443a;
+  --c-surface-subtle: #f8fafa;
+  --c-surface-muted: #eaefee;
+  --c-surface-hover: #f2f5f4;
+
+  /*
+    Grafite levemente esverdeado — a mesma família do acento, o que
+    faz texto e marca parecerem do mesmo sistema sem tingir nada.
+
+    Contraste medido sobre `--c-surface` (#ffffff):
+      ink         15.9:1
+      ink-muted    6.7:1
+      ink-subtle   4.8:1   ← mínimo AA para texto pequeno
+  */
+  --c-ink: #18201f;
+  --c-ink-muted: #525d5a;
+  --c-ink-subtle: #6b7573;
+
+  --c-border: #dfe4e3;
+  --c-border-strong: #c4ccca;
+
+  /*
+    Esmeralda contida. `accent` carrega texto branco a 5,6:1, o que
+    permite usá-la em botão primário de 13–14px sem exceção de
+    acessibilidade.
+  */
+  --c-accent: #07765f;
+  --c-accent-hover: #065f4d;
+  --c-accent-active: #054e3f;
+  --c-accent-soft: #e3efec;
+  --c-accent-ink: #05513f;
+  --c-accent-borda: #a9cec3;
+
+  --c-positivo: #07765f;
+  --c-positivo-soft: #e3efec;
+  --c-negativo: #b03e35;
   --c-negativo-soft: #fbecea;
-  --c-atencao: #8a6410;
-  --c-atencao-soft: #fdf4e3;
-  --c-neutro-soft: #eef0f2;
-  --c-veu: rgba(18, 22, 26, 0.32);
+  --c-negativo-borda: #e8b7b1;
+  --c-atencao: #8a5d0b;
+  --c-atencao-soft: #fcf3e2;
+  --c-atencao-borda: #e6ca92;
+  --c-neutro-soft: #eaefee;
+
+  --c-veu: rgba(18, 24, 22, 0.34);
   /* Texto/ícone sobre superfície de acento. */
   --c-sobre-acento: #ffffff;
 
-  /* ---- Paleta escura ---- */
-  --e-background: #0c0e10;
-  --e-surface: #141719;
-  --e-surface-muted: #1c2023;
-  --e-surface-hover: #21262a;
-  --e-ink: #eef0f2;
-  --e-ink-muted: #a2aab3;
-  --e-ink-subtle: #79818a;
-  --e-border: #262b2f;
-  --e-border-strong: #3a4147;
-  --e-accent: #3ec9a7;
-  --e-accent-hover: #58d8ba;
+  --c-sombra-sutil: 0 1px 2px rgba(16, 24, 22, 0.05);
+  --c-sombra-flutuante:
+    0 4px 12px -2px rgba(16, 24, 22, 0.1), 0 2px 4px -3px rgba(16, 24, 22, 0.07);
+  --c-sombra-elevada: -12px 0 40px -12px rgba(16, 24, 22, 0.22);
+
+  /* ================= PALETA ESCURA ================= */
+  --e-background: #0d1110;
+  --e-surface: #151a19;
+  --e-surface-subtle: #1a201f;
+  --e-surface-muted: #202726;
+  --e-surface-hover: #262e2c;
+  --e-ink: #edf2f0;
+  --e-ink-muted: #a4aeab;
+  --e-ink-subtle: #838d8a;
+  --e-border: #272f2d;
+  --e-border-strong: #3c4644;
+  --e-accent: #3fc7a4;
+  --e-accent-hover: #59d6b7;
+  --e-accent-active: #6fdfc3;
   --e-accent-soft: #10241f;
-  --e-accent-ink: #9ce8d3;
-  --e-positivo: #3ec9a7;
+  --e-accent-ink: #9fe8d3;
+  --e-accent-borda: #235448;
+  --e-positivo: #3fc7a4;
+  --e-positivo-soft: #10241f;
   --e-negativo: #f08a80;
   --e-negativo-soft: #2a1614;
-  --e-atencao: #e0c07a;
-  --e-atencao-soft: #26200f;
-  --e-neutro-soft: #1c2023;
-  --e-veu: rgba(0, 0, 0, 0.58);
-  --e-sobre-acento: #06120f;
+  --e-negativo-borda: #5c2a25;
+  --e-atencao: #e0bf78;
+  --e-atencao-soft: #251f10;
+  --e-atencao-borda: #4d3f1c;
+  --e-neutro-soft: #202726;
+  --e-veu: rgba(0, 0, 0, 0.6);
+  --e-sobre-acento: #05120f;
+  --e-sombra-sutil: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --e-sombra-flutuante:
+    0 4px 12px -2px rgba(0, 0, 0, 0.5), 0 2px 4px -3px rgba(0, 0, 0, 0.4);
+  --e-sombra-elevada: -12px 0 40px -12px rgba(0, 0, 0, 0.65);
 
-  /* ---- Tokens ativos: claro por padrão ---- */
+  /* ========== TOKENS ATIVOS: claro por padrão ========== */
   --background: var(--c-background);
   --surface: var(--c-surface);
+  --surface-subtle: var(--c-surface-subtle);
   --surface-muted: var(--c-surface-muted);
   --surface-hover: var(--c-surface-hover);
   --ink: var(--c-ink);
@@ -69,22 +138,52 @@
   --border-strong: var(--c-border-strong);
   --accent: var(--c-accent);
   --accent-hover: var(--c-accent-hover);
+  --accent-active: var(--c-accent-active);
   --accent-soft: var(--c-accent-soft);
   --accent-ink: var(--c-accent-ink);
+  --accent-borda: var(--c-accent-borda);
   --positivo: var(--c-positivo);
+  --positivo-soft: var(--c-positivo-soft);
   --negativo: var(--c-negativo);
   --negativo-soft: var(--c-negativo-soft);
+  --negativo-borda: var(--c-negativo-borda);
   --atencao: var(--c-atencao);
   --atencao-soft: var(--c-atencao-soft);
+  --atencao-borda: var(--c-atencao-borda);
   --neutro-soft: var(--c-neutro-soft);
   --veu: var(--c-veu);
   --sobre-acento: var(--c-sobre-acento);
+  --sombra-sutil: var(--c-sombra-sutil);
+  --sombra-flutuante: var(--c-sombra-flutuante);
+  --sombra-elevada: var(--c-sombra-elevada);
   --focus: var(--c-accent);
 
-  /* Raios contidos: software profissional, não app de consumo. */
+  /*
+    Raios contidos: software profissional, não app de consumo.
+      sm  controles pequenos, etiquetas, células
+      md  botões, campos, blocos internos
+      lg  painéis e superfícies de conteúdo
+  */
   --raio-sm: 4px;
   --raio-md: 6px;
-  --raio-lg: 8px;
+  --raio-lg: 10px;
+
+  /*
+    Escala de espaçamento. Declarada para que a revisão possa cobrar
+    aderência: gap de 13px ou 19px não tem token, logo não tem
+    justificativa.
+  */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-6: 1.5rem;
+  --esp-8: 2rem;
+  --esp-10: 2.5rem;
+  --esp-12: 3rem;
+
+  /* Microinteração: curta e funcional. Nunca decorativa. */
+  --transicao: 140ms cubic-bezier(0.2, 0, 0, 1);
 
   color-scheme: light;
 }
@@ -97,6 +196,7 @@
   :root:not([data-tema="claro"]) {
     --background: var(--e-background);
     --surface: var(--e-surface);
+    --surface-subtle: var(--e-surface-subtle);
     --surface-muted: var(--e-surface-muted);
     --surface-hover: var(--e-surface-hover);
     --ink: var(--e-ink);
@@ -106,16 +206,24 @@
     --border-strong: var(--e-border-strong);
     --accent: var(--e-accent);
     --accent-hover: var(--e-accent-hover);
+    --accent-active: var(--e-accent-active);
     --accent-soft: var(--e-accent-soft);
     --accent-ink: var(--e-accent-ink);
+    --accent-borda: var(--e-accent-borda);
     --positivo: var(--e-positivo);
+    --positivo-soft: var(--e-positivo-soft);
     --negativo: var(--e-negativo);
     --negativo-soft: var(--e-negativo-soft);
+    --negativo-borda: var(--e-negativo-borda);
     --atencao: var(--e-atencao);
     --atencao-soft: var(--e-atencao-soft);
+    --atencao-borda: var(--e-atencao-borda);
     --neutro-soft: var(--e-neutro-soft);
     --veu: var(--e-veu);
     --sobre-acento: var(--e-sobre-acento);
+    --sombra-sutil: var(--e-sombra-sutil);
+    --sombra-flutuante: var(--e-sombra-flutuante);
+    --sombra-elevada: var(--e-sombra-elevada);
     --focus: var(--e-accent);
     color-scheme: dark;
   }
@@ -125,6 +233,7 @@
 :root[data-tema="escuro"] {
   --background: var(--e-background);
   --surface: var(--e-surface);
+  --surface-subtle: var(--e-surface-subtle);
   --surface-muted: var(--e-surface-muted);
   --surface-hover: var(--e-surface-hover);
   --ink: var(--e-ink);
@@ -134,16 +243,24 @@
   --border-strong: var(--e-border-strong);
   --accent: var(--e-accent);
   --accent-hover: var(--e-accent-hover);
+  --accent-active: var(--e-accent-active);
   --accent-soft: var(--e-accent-soft);
   --accent-ink: var(--e-accent-ink);
+  --accent-borda: var(--e-accent-borda);
   --positivo: var(--e-positivo);
+  --positivo-soft: var(--e-positivo-soft);
   --negativo: var(--e-negativo);
   --negativo-soft: var(--e-negativo-soft);
+  --negativo-borda: var(--e-negativo-borda);
   --atencao: var(--e-atencao);
   --atencao-soft: var(--e-atencao-soft);
+  --atencao-borda: var(--e-atencao-borda);
   --neutro-soft: var(--e-neutro-soft);
   --veu: var(--e-veu);
   --sobre-acento: var(--e-sobre-acento);
+  --sombra-sutil: var(--e-sombra-sutil);
+  --sombra-flutuante: var(--e-sombra-flutuante);
+  --sombra-elevada: var(--e-sombra-elevada);
   --focus: var(--e-accent);
   color-scheme: dark;
 }
@@ -151,6 +268,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
   --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
   --color-ink: var(--ink);
@@ -160,13 +278,18 @@
   --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-active: var(--accent-active);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
+  --color-accent-borda: var(--accent-borda);
   --color-positivo: var(--positivo);
+  --color-positivo-soft: var(--positivo-soft);
   --color-negativo: var(--negativo);
   --color-negativo-soft: var(--negativo-soft);
+  --color-negativo-borda: var(--negativo-borda);
   --color-atencao: var(--atencao);
   --color-atencao-soft: var(--atencao-soft);
+  --color-atencao-borda: var(--atencao-borda);
   --color-neutro-soft: var(--neutro-soft);
   --color-veu: var(--veu);
   --color-sobre-acento: var(--sobre-acento);
@@ -174,6 +297,10 @@
   --radius-sm: var(--raio-sm);
   --radius-md: var(--raio-md);
   --radius-lg: var(--raio-lg);
+
+  --shadow-sutil: var(--sombra-sutil);
+  --shadow-flutuante: var(--sombra-flutuante);
+  --shadow-elevada: var(--sombra-elevada);
 
   --font-sans: var(--font-geist-sans);
 }
@@ -191,6 +318,13 @@ body {
   color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  /*
+    Ligaduras contextuais e kerning ligados; alternativas discricionárias
+    desligadas. Em tela densa de números, o desenho previsível vale mais
+    que o desenho bonito.
+  */
+  font-feature-settings: "kern" 1;
+  text-rendering: optimizeLegibility;
 }
 
 /* Foco visível e consistente em todos os elementos interativos. */
@@ -237,6 +371,16 @@ body {
 }
 
 /*
+  ==================================================================
+  TIPOGRAFIA FINANCEIRA
+  ==================================================================
+
+  Número é conteúdo de primeira classe neste produto. As classes
+  abaixo formam a escala completa — nenhum componente inventa um
+  tamanho de valor monetário por conta própria.
+*/
+
+/*
   Numerais tabulares: obrigatórios em qualquer valor financeiro.
   Sem isso as colunas de R$ não alinham e a leitura de tabela sofre.
 */
@@ -245,7 +389,67 @@ body {
   font-feature-settings: "tnum";
 }
 
-/* Rótulo de seção em caixa alta — hierarquia sem consumir peso visual. */
+/* Resposta principal da tela: a diferença que decide a análise. */
+.num-primario {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+/* Impacto anual e totais de fechamento. */
+.num-secundario {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* Valor de cenário dentro da comparação assinatura. */
+.num-cenario {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+}
+
+/* Valor lido dentro de listas e blocos de apoio. */
+.num-apoio {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+@media (min-width: 1180px) {
+  .num-primario {
+    font-size: 1.75rem;
+  }
+}
+
+/*
+  ==================================================================
+  HIERARQUIA DE TEXTO
+  ==================================================================
+*/
+
+/*
+  Rótulo de seção em caixa alta — hierarquia sem consumir peso visual.
+  Usa `--ink-subtle`, que agora mede 4,8:1 sobre superfície clara e
+  portanto passa AA em texto pequeno. Era 3,5:1 até a v2.5, e por isso
+  a tela de acesso precisava reescrever a regra à mão.
+*/
 .rotulo-secao {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -254,7 +458,46 @@ body {
   color: var(--ink-subtle);
 }
 
-/* Tabelas financeiras: linhas compactas e separadores discretos. */
+/* Título funcional de bloco — a pergunta que a seção responde. */
+.titulo-bloco {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+/*
+  ==================================================================
+  SUPERFÍCIE DE INFORMAÇÃO DERIVADA
+  ==================================================================
+
+  O contador precisa distinguir, sem pensar, três naturezas de dado:
+
+      EDITÁVEL   campo branco com borda firme — ele digita aqui
+      DERIVADO   superfície fosca sem contorno de campo — o Clareza
+                 concluiu, e não há o que digitar
+      CALCULADO  valor tabular na zona de resultado
+
+  `.superficie-sistema` é a forma do segundo caso. Deliberadamente NÃO
+  se parece com um input: sem borda forte, sem fundo branco, sem altura
+  de controle.
+*/
+.superficie-sistema {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--raio-md);
+}
+
+/*
+  ==================================================================
+  TABELAS FINANCEIRAS
+  ==================================================================
+
+  Linhas confortáveis o bastante para percorrer com o dedo na tela e
+  compactas o bastante para caber uma comparação inteira sem rolagem.
+  Sem bordas verticais: o alinhamento das colunas já separa.
+*/
 .tabela-dados {
   width: 100%;
   border-collapse: collapse;
@@ -263,7 +506,7 @@ body {
 
 .tabela-dados th,
 .tabela-dados td {
-  padding: 0.4375rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   text-align: left;
   border-bottom: 1px solid var(--border);
 }
@@ -276,11 +519,39 @@ body {
   color: var(--ink-subtle);
   background: var(--surface-muted);
   white-space: nowrap;
+  padding-top: 0.4375rem;
+  padding-bottom: 0.4375rem;
 }
 
 .tabela-dados .num {
   text-align: right;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  Coluna numérica que às vezes carrega TEXTO — é o caso do "valor" de
+  uma premissa, que tanto pode ser "R$ 4.800.000,00" quanto "receita
+  acumulada ÷ meses de atividade × 12". Sem quebra, a frase esticava a
+  tabela inteira e empurrava a coluna de status para fora do painel.
+*/
+.tabela-dados .num.quebra {
+  white-space: normal;
+}
+
+/* Linha de fechamento: o número que o contador leva para a conversa. */
+.tabela-dados tr[data-total] {
+  background: var(--surface-muted);
+}
+
+/*
+  Filete forte só no TOPO: é ele que fecha o bloco de linhas acima. A
+  borda inferior segue a regra normal, senão a linha de fechamento no
+  meio da tabela grudaria na seguinte.
+*/
+.tabela-dados tr[data-total] td,
+.tabela-dados tr[data-total] th {
+  border-top: 1px solid var(--border-strong);
 }
 
 .tabela-dados tbody tr:last-child td {
@@ -288,15 +559,45 @@ body {
 }
 
 /*
+  ==================================================================
+  LAYOUT DA ÁREA DE TRABALHO
+  ==================================================================
+
   Colunas do workspace: cada uma rola por conta própria a partir do
   ponto em que o layout vira multizona. Abaixo disso a página rola
   inteira, que é o comportamento esperado no celular.
+
+  `3.25rem` é a altura da barra superior — se ela mudar, muda aqui.
 */
 @media (min-width: 960px) {
   .coluna-rolavel {
-    max-height: calc(100dvh - 3rem);
+    max-height: calc(100dvh - 3.25rem);
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  /* Rolagem discreta: a barra não deve competir com os números. */
+  .coluna-rolavel {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+}
+
+/*
+  Barra de ação do formulário. Fica colada ao rodapé da coluna de
+  dados e precisa continuar legível sobre o conteúdo que passa por
+  baixo — daí o desfoque, e não uma cor opaca que criaria uma faixa
+  pesada permanente.
+*/
+.barra-acao {
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+}
+
+@supports not (backdrop-filter: blur(8px)) {
+  .barra-acao {
+    background: var(--surface);
   }
 }
 

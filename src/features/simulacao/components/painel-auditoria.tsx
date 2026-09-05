@@ -28,7 +28,7 @@ export function PainelAuditoria({
 
   return (
     <div className="space-y-4">
-      <section>
+      <section className="rounded-md border border-border-base bg-surface px-3 py-3">
         <h3 className="rotulo-secao">Modelo de cálculo</h3>
         <p className="mt-1.5 flex items-center gap-1.5 text-[0.875rem] font-medium text-ink">
           <span
@@ -52,9 +52,15 @@ export function PainelAuditoria({
         </p>
       </section>
 
-      <section className="border-t border-border-base pt-3">
-        <h3 className="rotulo-secao mb-1">Abrir detalhamento</h3>
-        <div className="-mx-2">
+      <section>
+        <h3 className="rotulo-secao mb-2">Abrir detalhamento</h3>
+        {/*
+          Superfície própria para a lista. O corpo do painel fica sobre
+          o fundo da aplicação, e sobre ele o realce de linha
+          (`surface-hover`) era invisível — a lista parecia texto, não
+          três controles.
+        */}
+        <div className="divide-y divide-[var(--border)] overflow-hidden rounded-md border border-border-base bg-surface">
           <AcaoAuditoria
             onClick={onAbrirPremissas}
             titulo="Premissas do modelo"
@@ -97,7 +103,7 @@ function AcaoAuditoria({
       type="button"
       onClick={onClick}
       aria-haspopup="dialog"
-      className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left transition-colors hover:bg-surface-hover"
+      className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors duration-[140ms] hover:bg-surface-hover"
     >
       <span className="min-w-0 flex-1">
         <span className="block text-[0.8125rem] font-medium text-ink">

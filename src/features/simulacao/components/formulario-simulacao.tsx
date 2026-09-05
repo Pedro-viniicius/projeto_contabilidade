@@ -136,7 +136,7 @@ export function FormularioSimulacao({
       noValidate
       className="flex min-h-full flex-col"
     >
-      <div className="space-y-3.5 px-4 py-3.5">
+      <div className="space-y-5 px-4 py-4">
         {/* ---------- A. CONTEXTO DA ANÁLISE ---------- */}
         <Secao titulo="Contexto da análise">
           <CampoTexto
@@ -345,45 +345,70 @@ export function FormularioSimulacao({
         que a área visível, e o comando fora de alcance obrigaria a
         rolar de volta a cada iteração.
       */}
-      <div className="sticky bottom-0 mt-auto border-t border-border-base bg-background px-4 py-3">
-        {/*
-          A consequência vem ANTES da ação, não depois: o contador lê
-          por que precisa atualizar e só então alcança o botão. Âmbar,
-          nunca vermelho — nada está errado; o que está na tela é
-          apenas antigo.
-        */}
-        {desatualizado && (
-          <MensagemStatus nivel="atencao" papel="status" className="mb-2">
-            <span className="font-medium">Resultados desatualizados.</span>{" "}
-            Existem alterações ainda não calculadas.
-          </MensagemStatus>
-        )}
+      {/*
+        BARRA DE AÇÃO DO FORMULÁRIO — não "um botão verde no rodapé".
 
-        <div className="flex items-center gap-2">
-          <Button type="submit" tamanho="lg" className="flex-1">
-            {jaCalculou && <IconeRecalcular />}
-            {rotuloCalculo(jaCalculou)}
-          </Button>
-          <kbd
-            aria-hidden="true"
-            className="hidden shrink-0 rounded-sm border border-border-strong px-1.5 py-1 text-[0.6875rem] text-ink-subtle min-[960px]:block"
-          >
-            {ehMac ? "⌘" : "Ctrl"}+↵
-          </kbd>
+        Duas informações, sempre na mesma ordem: o ESTADO do cálculo à
+        esquerda, o COMANDO à direita. É o mesmo par que uma barra de
+        ferramentas de software profissional apresenta, e é o que
+        permite ao contador saber, sem rolar, se o que está na tela
+        ainda vale.
+
+        O botão não ocupa a largura inteira: um controle de 34rem de
+        largura não fica mais fácil de acertar, só mais pesado — e o
+        peso desequilibraria a coluna toda vez que a vista passasse
+        por ali.
+      */}
+      <div className="barra-acao sticky bottom-0 mt-auto px-4 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          {/*
+            A consequência vem ANTES da ação: o contador lê por que
+            precisa atualizar e só então alcança o botão. Âmbar, nunca
+            vermelho — nada está errado; o que está na tela é apenas
+            antigo.
+          */}
+          <div className="min-w-0 flex-1 basis-[14rem]">
+            {desatualizado ? (
+              <MensagemStatus nivel="atencao" papel="status">
+                <span className="font-medium text-ink">
+                  Alterações não calculadas.
+                </span>{" "}
+                O resultado ao lado é anterior a elas.
+              </MensagemStatus>
+            ) : salvo && !aviso ? (
+              /*
+                "Deu certo?" respondido sem toast: confirmação derivada
+                do estado, que some sozinha quando os valores mudam de
+                novo. O texto diz ONDE ficou salvo — não há nuvem, e
+                sugerir que há seria prometer sincronização inexistente.
+              */
+              <MensagemStatus nivel="sucesso">
+                Resultados atualizados{hora ? ` às ${hora}` : ""} · salvos
+                neste navegador
+              </MensagemStatus>
+            ) : (
+              <p className="text-[0.75rem] leading-snug text-ink-subtle">
+                Os dois cenários são calculados de uma vez.
+              </p>
+            )}
+          </div>
+
+          {/* `ml-auto`: quando a linha quebra em coluna estreita, a
+              ação continua ancorada à direita — `justify-between` com
+              um item só numa linha o jogaria para a esquerda. */}
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <kbd
+              aria-hidden="true"
+              className="tnum hidden shrink-0 rounded-sm border border-border-base bg-surface-muted px-1.5 py-1 text-[0.6875rem] text-ink-subtle min-[1180px]:block"
+            >
+              {ehMac ? "⌘" : "Ctrl"}+↵
+            </kbd>
+            <Button type="submit" tamanho="lg">
+              {jaCalculou && <IconeRecalcular />}
+              {rotuloCalculo(jaCalculou)}
+            </Button>
+          </div>
         </div>
-
-        {/*
-          "Deu certo?" respondido sem toast: confirmação derivada do
-          estado, que some sozinha quando os valores mudam de novo. O
-          texto diz ONDE ficou salvo — não há nuvem, e sugerir que há
-          seria prometer sincronização que não existe.
-        */}
-        {salvo && !desatualizado && !aviso && (
-          <MensagemStatus nivel="sucesso" className="mt-2">
-            Resultados atualizados{hora ? ` às ${hora}` : ""} · salvo neste
-            navegador. Os dados não são sincronizados entre dispositivos.
-          </MensagemStatus>
-        )}
 
         {aviso && (
           /* Persistência falhou ou registro corrompido: o contador
@@ -419,14 +444,14 @@ function Secao({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="border-t border-border-base pt-3.5 first:border-t-0 first:pt-0">
-      <legend className="rotulo-secao mb-0.5">{titulo}</legend>
+    <fieldset className="border-t border-border-base pt-4 first:border-t-0 first:pt-0">
+      <legend className="rotulo-secao">{titulo}</legend>
       {apoio && (
-        <p className="mb-2 text-[0.75rem] leading-snug text-ink-subtle">
+        <p className="mt-1 text-[0.75rem] leading-snug text-ink-subtle">
           {apoio}
         </p>
       )}
-      <div className={apoio ? "space-y-3" : "mt-2 space-y-3"}>{children}</div>
+      <div className="mt-2.5 space-y-3">{children}</div>
     </fieldset>
   );
 }
@@ -448,21 +473,27 @@ function Cenario({
   children: ReactNode;
 }) {
   return (
-    <fieldset className="min-w-0 rounded-md border border-border-base bg-surface p-2.5">
-      <legend className="px-1 text-[0.8125rem] font-semibold text-ink">
+    /*
+      Superfície levemente recuada, e não branca: o cenário é um
+      agrupamento DENTRO da coluna de trabalho, e um bloco branco sobre
+      fundo branco precisaria de borda grossa para existir. O recuo faz
+      o mesmo trabalho com menos ruído.
+    */
+    <fieldset className="min-w-0 rounded-md border border-border-base bg-surface-subtle p-3">
+      <legend className="text-[0.8125rem] font-semibold leading-snug text-ink">
         {titulo}
       </legend>
-      <p className="mb-2.5 text-[0.75rem] leading-snug text-ink-subtle">
+      <p className="mt-1 mb-3 text-[0.75rem] leading-snug text-ink-subtle">
         {apoio}
       </p>
-      <div className="space-y-2.5">{children}</div>
+      <div className="space-y-3">{children}</div>
     </fieldset>
   );
 }
 
 function NotaCenario({ children }: { children: ReactNode }) {
   return (
-    <p className="border-t border-border-base pt-2 text-[0.75rem] leading-snug text-ink-subtle">
+    <p className="border-t border-border-base pt-2.5 text-[0.75rem] leading-snug text-ink-subtle">
       {children}
     </p>
   );

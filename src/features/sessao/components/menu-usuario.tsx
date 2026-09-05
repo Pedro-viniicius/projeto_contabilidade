@@ -76,7 +76,7 @@ export function MenuUsuario({ sessao }: { sessao: SessaoDemo }) {
         <div
           role="menu"
           aria-label="Conta"
-          className="absolute right-0 top-[calc(100%+0.375rem)] z-50 w-64 rounded-md border border-border-base bg-surface py-1 shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+          className="shadow-flutuante absolute right-0 top-[calc(100%+0.375rem)] z-50 w-64 rounded-md border border-border-base bg-surface py-1"
         >
           <div className="border-b border-border-base px-3 py-2">
             <p className="truncate text-[0.8125rem] font-medium text-ink">

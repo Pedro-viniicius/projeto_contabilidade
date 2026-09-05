@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DadoDerivado } from "@/components/ui/valor-financeiro";
 import { ROTULO_STATUS, type Anexo } from "../domain/calculation-rules";
 import {
   explicarBloqueio,
@@ -77,13 +78,21 @@ export function CartaoClassificacao({
   const pendencia = acaoDoEnquadramento(classificacao);
 
   return (
+    /*
+      SUPERFÍCIE DE INFORMAÇÃO DERIVADA.
+
+      Fosca, com borda leve e sem altura de controle: é o Clareza
+      falando, não um campo a preencher. A distinção precisa ser
+      reconhecida sem leitura — um bloco derivado com cara de
+      formulário convida a editar o que não é editável.
+    */
     <section
       aria-label="Enquadramento tributário"
-      className="rounded-md border border-border-strong bg-surface-muted"
+      className="superficie-sistema"
     >
       {/* ---------- NÍVEL 1 · status ---------- */}
-      <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 py-2">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
+        <div className="flex items-center gap-2">
           <span className="rotulo-secao">Enquadramento</span>
           {anexo ? (
             <EtiquetaAnexo anexo={anexo} manual={manual} />
@@ -102,7 +111,7 @@ export function CartaoClassificacao({
 
       {/* ---------- NÍVEL 1 · motivo curto + ação principal ---------- */}
       {pendencia && (
-        <div className="space-y-2 border-t border-border-base px-2.5 py-2.5">
+        <div className="space-y-2.5 border-t border-border-base px-3 py-3">
           <p className="text-[0.8125rem] leading-snug text-ink">
             {pendencia.motivo}
           </p>
@@ -133,19 +142,19 @@ export function CartaoClassificacao({
       )}
 
       {/* ---------- NÍVEL 2 · resumo da classificação ---------- */}
-      <dl className="grid gap-1 border-t border-border-base px-2.5 py-2 text-[0.75rem]">
-        <Linha
+      <dl className="grid gap-1.5 border-t border-border-base px-3 py-2.5">
+        <DadoDerivado
           termo={anexo ? "Anexos possíveis" : "Anexo aplicável"}
           valor={textoAnexosPossiveis(classificacao)}
         />
-        <Linha termo="Fator R" valor={textoFatorR(classificacao)} />
+        <DadoDerivado termo="Fator R" valor={textoFatorR(classificacao)} />
       </dl>
 
       {/* Bloqueio de anexo resolvido: aqui não há ação principal acima. */}
       {bloqueio && !pendencia && (
         <p
           role="status"
-          className="flex items-start gap-1.5 border-t border-border-base px-2.5 py-2 text-[0.75rem] leading-snug text-atencao"
+          className="flex items-start gap-1.5 border-t border-border-base px-3 py-2.5 text-[0.75rem] leading-snug text-atencao"
         >
           <span aria-hidden="true">⚠</span>
           <span>{resumoBloqueio(bloqueio)}</span>
@@ -153,7 +162,7 @@ export function CartaoClassificacao({
       )}
 
       {/* ---------- NÍVEL 3 · enquadramento manual ---------- */}
-      <div className="border-t border-border-base px-2.5 py-2.5">
+      <div className="border-t border-border-base px-3 py-2.5">
         {manual ? (
           <ManualAtivo
             classificacao={classificacao}
@@ -161,21 +170,32 @@ export function CartaoClassificacao({
             onMotivoManual={onMotivoManual}
             onVoltarAoAutomatico={onVoltarAoAutomatico}
           />
-        ) : pendencia || manualAberto ? (
-          /*
-            Com a classificação pendente a definição manual é uma
-            alternativa REAL, e fica aberta. Com o anexo já resolvido
-            ela é sobreposição rara e permanece atrás de um botão.
-          */
+        ) : manualAberto ? (
           <ManualDisponivel
             aoAplicar={onAnexoManual}
-            aoDesistir={pendencia ? undefined : () => setManual(false)}
+            aoDesistir={() => setManual(false)}
           />
         ) : (
+          /*
+            DIVULGAÇÃO PROGRESSIVA.
+
+            Até a v2.5 o formulário manual — rótulo, `<select>`, dois
+            botões e uma linha de ajuda — ficava permanentemente aberto
+            sempre que havia pendência. São cerca de 120px de altura
+            gastos com o CAMINHO ALTERNATIVO, exibidos justamente no
+            momento em que a tela precisa mostrar o caminho principal
+            ("Informar atividade") sem competição.
+
+            A alternativa não sumiu e nem ficou mais difícil: é um
+            clique, `aria-expanded` a anuncia, e ela ganha peso de botão
+            secundário quando o enquadramento está pendente — porque aí
+            é uma escolha real, e não uma sobreposição rara.
+          */
           <Button
             type="button"
-            variante="sutil"
+            variante={pendencia ? "secundaria" : "sutil"}
             tamanho="sm"
+            aria-expanded={false}
             onClick={() => setManual(true)}
           >
             Definir anexo manualmente
@@ -190,7 +210,7 @@ export function CartaoClassificacao({
           onClick={() => setDetalhe((a) => !a)}
           aria-expanded={detalheAberto}
           aria-controls={`${id}-detalhe`}
-          className="alvo-toque flex min-h-9 w-full items-center gap-1.5 px-2.5 text-left text-[0.75rem] text-ink-muted transition-colors hover:bg-surface-hover hover:text-ink"
+          className="alvo-toque flex min-h-9 w-full items-center gap-1.5 rounded-b-md px-3 text-left text-[0.75rem] text-ink-muted transition-colors duration-[140ms] hover:bg-surface-hover hover:text-ink"
         >
           <span
             aria-hidden="true"
@@ -206,7 +226,7 @@ export function CartaoClassificacao({
         {detalheAberto && (
           <div
             id={`${id}-detalhe`}
-            className="space-y-2 border-t border-border-base px-2.5 py-2 text-[0.75rem] leading-relaxed text-ink-muted"
+            className="space-y-2 border-t border-border-base px-3 py-2.5 text-[0.75rem] leading-relaxed text-ink-muted"
           >
             <p>{classificacao.motivo}</p>
 
@@ -221,11 +241,11 @@ export function CartaoClassificacao({
 
             {fatorR && fatorR.valor !== null && (
               <dl className="grid gap-1 border-t border-border-base pt-2">
-                <Linha
+                <DadoDerivado
                   termo="Folha de 12 meses"
                   valor={moeda(fatorR.folha12m)}
                 />
-                <Linha
+                <DadoDerivado
                   termo="Receita de 12 meses"
                   valor={`${moeda(fatorR.rbt12)}${
                     fatorR.rbt12Projetada ? " (projetada)" : ""
@@ -269,8 +289,8 @@ function ManualDisponivel({
   aoDesistir,
 }: {
   aoAplicar: (anexo: Anexo) => void;
-  /** Ausente quando a seção é permanente (classificação pendente). */
-  aoDesistir?: () => void;
+  /** Recolhe a seção sem aplicar nada. */
+  aoDesistir: () => void;
 }) {
   const id = useId();
   const [rascunho, setRascunho] = useState<Anexo | "">("");
@@ -297,7 +317,7 @@ function ManualDisponivel({
             id={id}
             value={rascunho}
             onChange={(e) => setRascunho(e.target.value as Anexo)}
-            className="alvo-toque mt-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 py-1 text-[0.8125rem] text-ink"
+            className="alvo-toque mt-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 py-1 text-[0.8125rem] text-ink transition-colors duration-[140ms] focus:border-accent"
           >
             <option value="">Selecione um anexo</option>
             {ANEXOS_MANUAIS.map((a) => (
@@ -327,16 +347,20 @@ function ManualDisponivel({
           Aplicar anexo manualmente
         </Button>
 
-        {aoDesistir && (
-          <Button
-            type="button"
-            variante="sutil"
-            tamanho="md"
-            onClick={aoDesistir}
-          >
-            Manter classificação automática
-          </Button>
-        )}
+        {/*
+          "Manter classificação automática" só era verdade quando já
+          havia uma; com o enquadramento pendente, não há. O rótulo
+          nomeia o que o clique faz de fato, e nomeia o objeto — nunca
+          um "Cancelar" solto.
+        */}
+        <Button
+          type="button"
+          variante="sutil"
+          tamanho="md"
+          onClick={aoDesistir}
+        >
+          Fechar definição manual
+        </Button>
       </div>
 
       {rascunho === "" && (
@@ -392,7 +416,7 @@ function ManualAtivo({
             id={id}
             value={classificacao.anexo ?? ""}
             onChange={(e) => onAnexoManual(e.target.value as Anexo)}
-            className="alvo-toque mt-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 py-1 text-[0.8125rem] text-ink"
+            className="alvo-toque mt-1 min-h-9 rounded-md border border-border-strong bg-surface px-2 py-1 text-[0.8125rem] text-ink transition-colors duration-[140ms] focus:border-accent"
           >
             {ANEXOS_MANUAIS.map((a) => (
               <option key={a} value={a}>
@@ -420,18 +444,10 @@ function ManualAtivo({
           value={classificacao.motivoManual ?? ""}
           onChange={(e) => onMotivoManual(e.target.value)}
           placeholder="Ex.: folha do cliente muda no próximo trimestre"
-          className="mt-1 min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-[0.8125rem] text-ink placeholder:text-ink-subtle"
+          className="mt-1 min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-[0.8125rem] text-ink transition-colors duration-[140ms] placeholder:text-ink-subtle focus:border-accent"
         />
       </label>
     </div>
   );
 }
 
-function Linha({ termo, valor }: { termo: string; valor: string }) {
-  return (
-    <div className="flex items-baseline gap-1.5">
-      <dt className="shrink-0 text-ink-subtle">{termo}:</dt>
-      <dd className="tnum min-w-0 text-ink">{valor}</dd>
-    </div>
-  );
-}
