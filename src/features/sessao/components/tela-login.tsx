@@ -145,11 +145,12 @@ export function TelaLogin() {
             </span>
           </span>
           {/*
-            O controle de tema ganhou contorno. Sozinho num canto vazio
-            o glifo não se lia como botão — parecia estado, ou pior,
-            indicador de carregamento.
+            O seletor de tema traz o próprio contorno e mostra as duas
+            opções. Antes era um glifo solto num canto vazio, que não se
+            lia como controle — parecia estado, ou pior, indicador de
+            carregamento.
           */}
-          <AlternarTema className="border border-border-base bg-surface" />
+          <AlternarTema />
         </div>
 
         <div className="my-auto w-full max-w-[23rem] self-center py-8">

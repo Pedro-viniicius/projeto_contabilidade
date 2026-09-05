@@ -64,10 +64,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#eceff0" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1110" },
-  ],
+  /*
+    Cor única, e não um par por `prefers-color-scheme`: o produto abre
+    claro em qualquer máquina desde a v2.6, e uma barra escura sobre uma
+    interface clara seria uma promessa desmentida na primeira pintura.
+  */
+  themeColor: "#eceff0",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -22,8 +22,10 @@
   sobreposto, menu, véu. Conteúdo normal nunca levita.
 
   As duas paletas são declaradas por extenso e depois *atribuídas* aos
-  tokens ativos. Isso permite três estados de tema — sistema (padrão),
-  claro forçado e escuro forçado — sem repetir valores de cor.
+  tokens ativos, sem repetir valores de cor. O CLARO é o padrão do
+  produto: sem escolha gravada, é ele que pinta. O escuro entra apenas
+  com `data-tema="escuro"` no <html> — nunca por preferência do sistema
+  operacional.
 */
 :root {
   /* ================= PALETA CLARA ================= */
@@ -189,47 +191,18 @@
 }
 
 /*
-  Escuro por preferência do sistema — a menos que o contador tenha
-  escolhido explicitamente o tema claro na barra superior.
-*/
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema="claro"]) {
-    --background: var(--e-background);
-    --surface: var(--e-surface);
-    --surface-subtle: var(--e-surface-subtle);
-    --surface-muted: var(--e-surface-muted);
-    --surface-hover: var(--e-surface-hover);
-    --ink: var(--e-ink);
-    --ink-muted: var(--e-ink-muted);
-    --ink-subtle: var(--e-ink-subtle);
-    --border: var(--e-border);
-    --border-strong: var(--e-border-strong);
-    --accent: var(--e-accent);
-    --accent-hover: var(--e-accent-hover);
-    --accent-active: var(--e-accent-active);
-    --accent-soft: var(--e-accent-soft);
-    --accent-ink: var(--e-accent-ink);
-    --accent-borda: var(--e-accent-borda);
-    --positivo: var(--e-positivo);
-    --positivo-soft: var(--e-positivo-soft);
-    --negativo: var(--e-negativo);
-    --negativo-soft: var(--e-negativo-soft);
-    --negativo-borda: var(--e-negativo-borda);
-    --atencao: var(--e-atencao);
-    --atencao-soft: var(--e-atencao-soft);
-    --atencao-borda: var(--e-atencao-borda);
-    --neutro-soft: var(--e-neutro-soft);
-    --veu: var(--e-veu);
-    --sobre-acento: var(--e-sobre-acento);
-    --sombra-sutil: var(--e-sombra-sutil);
-    --sombra-flutuante: var(--e-sombra-flutuante);
-    --sombra-elevada: var(--e-sombra-elevada);
-    --focus: var(--e-accent);
-    color-scheme: dark;
-  }
-}
+  ESCURO É ESCOLHA, NÃO PADRÃO.
 
-/* Escolha explícita do escuro vence a preferência do sistema. */
+  Até a v2.6 havia aqui em cima um bloco `@media (prefers-color-scheme:
+  dark)` que pintava a aplicação inteira de escuro para quem tivesse o
+  sistema operacional em escuro, sem que nada tivesse sido escolhido no
+  produto. O Clareza é feito para leitura longa de números em
+  escritório: o claro é o ambiente de trabalho, e é ele que abre por
+  padrão em qualquer máquina.
+
+  O escuro continua inteiro e a um clique — só deixou de acontecer
+  sozinho.
+*/
 :root[data-tema="escuro"] {
   --background: var(--e-background);
   --surface: var(--e-surface);

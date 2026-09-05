@@ -186,23 +186,28 @@ export function BarraSuperior({
         {/* ---------- EXTREMA DIREITA · usuário ---------- */}
         <span
           aria-hidden="true"
-          className="mx-1 hidden h-5 w-px shrink-0 bg-border-base sm:block"
+          className="mx-1 hidden h-5 w-px shrink-0 bg-border-base min-[768px]:block"
         />
         {/*
-          Em telas muito estreitas os dois controles de PREFERÊNCIA saem
-          da barra — medido em navegador, eram eles que empurravam o
-          cabeçalho para fora da tela a 360 e 390px. A escolha é
-          deliberada: o que fica são as cinco respostas que o contador
-          precisa ("qual análise", "o que conferir", "onde estão as
-          anteriores", "como começo outra", "onde está minha conta"), e
-          o que sai tem equivalente fora do produto — o próprio
-          navegador oferece "Instalar aplicativo", e o tema segue a
-          preferência do sistema para quem nunca clicou aqui.
+          Os dois controles de PREFERÊNCIA só entram na barra a partir
+          de 768px. Abaixo disso a largura pertence às cinco respostas
+          que o contador precisa ("qual análise", "o que conferir",
+          "onde estão as anteriores", "como começo outra", "onde está
+          minha conta"), e o que sai daqui não deixa ninguém sem saída:
+          o próprio navegador oferece "Instalar aplicativo", e o tema
+          CLARO é o padrão do produto desde a v2.6 — sem escolha
+          gravada, qualquer aparelho abre claro.
+
+          O limiar é medido, não estimado. Com o seletor de tema de
+          64px e o botão de instalação de 32px, o conteúdo fixo da
+          barra pede 725px assim que o rótulo "Revisar cálculo" aparece
+          por extenso (a partir de 640px). Mantê-los abaixo de 768
+          recortava o menu de conta na borda direita.
         */}
-        <span className="hidden min-[480px]:inline-flex">
+        <span className="hidden min-[768px]:inline-flex">
           <BotaoInstalar />
         </span>
-        <span className="hidden min-[400px]:inline-flex">
+        <span className="hidden min-[768px]:inline-flex">
           <AlternarTema />
         </span>
         <MenuUsuario sessao={sessao} />

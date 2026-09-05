@@ -146,9 +146,10 @@ src/
 │   ├── offline/                # Fallback do service worker
 │   ├── manifest.ts             # Web App Manifest
 │   ├── robots.ts · sitemap.ts
-│   └── globals.css             # ⭐ SISTEMA VISUAL: duas paletas, três
-│                               # estados de tema, cinco degraus de
-│                               # superfície, escala do número financeiro
+│   └── globals.css             # ⭐ SISTEMA VISUAL: duas paletas (claro
+│                               # é o padrão, escuro é escolha), cinco
+│                               # degraus de superfície, escala do
+│                               # número financeiro
 │
 ├── components/
 │   ├── ui/                     # Painel, PainelLateral, CampoMoeda, Badge,

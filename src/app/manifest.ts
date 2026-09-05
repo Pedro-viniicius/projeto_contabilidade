@@ -13,8 +13,9 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     /* Sem travar orientação: a área de trabalho é desktop-first. */
-    background_color: "#f6f7f8",
-    theme_color: "#0e7c66",
+    /* Mesmos valores da paleta clara, que é o padrão do produto. */
+    background_color: "#eceff0",
+    theme_color: "#07765f",
     categories: ["finance", "business", "productivity"],
     icons: [
       {
