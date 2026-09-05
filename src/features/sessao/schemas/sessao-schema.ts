@@ -2,33 +2,35 @@
  * Validação do acesso demonstrativo.
  *
  * ATENÇÃO: isto NÃO é autenticação. Não há servidor, banco, token nem
- * verificação de credencial. O schema existe por dois motivos legítimos:
- * dar mensagens de erro decentes no formulário e revalidar o que vem do
- * localStorage (regra 6 do projeto) antes de confiar no dado.
+ * verificação de credencial. O schema existe por dois motivos
+ * legítimos: dar mensagens de erro decentes no formulário e revalidar
+ * o que vem do localStorage (regra 6 do projeto) antes de confiar no
+ * dado.
  *
- * A senha é validada apenas como "não vazia" e nunca sai deste módulo:
- * não é comparada, não é derivada e não é persistida em lugar nenhum.
+ * POR QUE NÃO HÁ SENHA AQUI (mudou na v2.5): até a v2.4 o formulário
+ * pedia senha, validava que não estava vazia e a descartava. Nada era
+ * comparado, gravado ou transmitido — a senha era cenário. Pedir uma
+ * credencial que não credencia cobra trabalho do contador em troca de
+ * nada e, pior, sugere uma proteção que o sistema não tem. O e-mail
+ * ficou porque é usado de verdade: dele sai o nome exibido no menu de
+ * conta (`nomeExibido`).
  */
 
 import { z } from "zod";
 
-export const credenciaisSchema = z.object({
+export const acessoDemoSchema = z.object({
   email: z
-    .string({ error: "Informe o e-mail de acesso." })
+    .string({ error: "Informe seu e-mail." })
     .trim()
-    .min(1, { message: "Informe o e-mail de acesso." })
+    .min(1, { message: "Informe seu e-mail." })
     .max(160, { message: "E-mail muito longo." })
     .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), {
-      message: "Informe um e-mail em formato válido, como nome@escritorio.com.br.",
+      message: "Informe um e-mail válido.",
     }),
-  senha: z
-    .string({ error: "Informe a senha." })
-    .min(1, { message: "Informe a senha." })
-    .max(200, { message: "Senha muito longa." }),
   lembrar: z.boolean().optional(),
 });
 
-export type Credenciais = z.infer<typeof credenciaisSchema>;
+export type AcessoDemo = z.infer<typeof acessoDemoSchema>;
 
 /** Sessão demonstrativa gravada no aparelho. Sem senha, por definição. */
 export const sessaoDemoSchema = z.object({

@@ -4,7 +4,7 @@ import { TelaLogin } from "@/features/sessao/components/tela-login";
 export const metadata: Metadata = {
   title: "Acesso",
   description:
-    "Acesse a área de trabalho do Clareza. Ambiente demonstrativo: não há autenticação em servidor nesta versão.",
+    "Entre na área de trabalho do Clareza e compare cenários Pessoa Física e CNPJ. Ambiente de demonstração: as análises ficam salvas apenas neste navegador.",
   alternates: { canonical: "/login" },
 };
 

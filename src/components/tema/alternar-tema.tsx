@@ -16,7 +16,7 @@ import {
  * clarear ou escurecer a tela, não configurar um sistema. "Sistema"
  * continua sendo o padrão de quem nunca clicou.
  */
-export function AlternarTema() {
+export function AlternarTema({ className }: { className?: string } = {}) {
   const efetivo = useSyncExternalStore(
     inscreverTema,
     temaEfetivo,
@@ -33,6 +33,7 @@ export function AlternarTema() {
       }
       onClick={() => aplicarTema(proximo)}
       title={proximo === "escuro" ? "Usar tema escuro" : "Usar tema claro"}
+      className={className}
     >
       <span aria-hidden="true" className="text-[0.875rem] leading-none">
         {efetivo === "escuro" ? "☀" : "☾"}
