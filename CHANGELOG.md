@@ -5,6 +5,94 @@ Versionamento semântico.
 
 ---
 
+## [2.4.1] — 2026-09-05
+
+Release de linguagem. Só o cabeçalho mudou; nenhuma regra tributária,
+nenhum cálculo e nenhum comportamento de dado foram alterados.
+
+O cabeçalho descrevia o SISTEMA. Passou a descrever a TAREFA.
+
+### Alterado
+
+- **"Modelo em validação 13/18" virou "⚠ Revisar cálculo · 13
+  pendências".** A fração era um placar interno: o contador tinha de
+  inferir o que ela media, se aquilo era um problema, se era clicável e
+  o que abriria depois do clique. Os números são os mesmos e continuam
+  derivados de `resumoValidacao()` — o que mudou é que o número passou a
+  dimensionar um trabalho ("quantas coisas faltam") em vez de relatar um
+  estado ("quantas o sistema já processou"). Com tudo revisado, o
+  controle vira "✓ Cálculo revisado" e o contador some.
+- **Uma porta só para a revisão.** "Premissas" e "Auditoria" eram dois
+  botões — em telas largas o estado do modelo, abaixo de 900px um botão
+  "Auditoria" — para a mesma tarefa e o mesmo painel. Ficou um: "Revisar
+  cálculo". O painel que ele abre também mudou de título, para que o
+  rótulo e o destino contem a mesma história; lá dentro a terminologia
+  técnica continua inteira.
+- **"Análise: {referência}"** no lugar da referência solta. O rótulo
+  livre da análise e o nome da conta podiam ser a mesma palavra, um de
+  cada lado da barra, significando coisas diferentes. Sem referência,
+  lê-se "Análise: sem referência"; nome longo é truncado com o valor
+  inteiro no `title`.
+- **Etiqueta de estado da análise**, ao lado da referência: "Salva"
+  (neutro) ou "Desatualizada" (âmbar) — e nada numa análise nunca
+  calculada, onde o formulário vazio já diz o que há para dizer. É
+  ESTADO: sem contorno, sem hover, sem cursor de clique.
+- **"Histórico" perdeu o glifo `≡`**, que se lê como menu de navegação e
+  prometia uma gaveta de links. O rótulo já é curto o bastante para
+  carregar-se sozinho.
+- **Âmbar, e nunca vermelho, para pendência de revisão.** É trabalho a
+  fazer, não falha. Vermelho segue reservado a cálculo que falhou e
+  entrada inválida.
+- **Estado aberto visível**, e não só anunciado: o botão que abriu o
+  painel mantém um anel de acento enquanto ele está na tela.
+
+### Adicionado
+
+- **`revisao-calculo.ts`** — módulo puro com os textos do cabeçalho e a
+  etiqueta de estado, com 13 testes. Inclui um que impede qualquer texto
+  daqui de prometer validação contábil ou legal: o domínio significa
+  "conferida contra a fonte citada na premissa", e prometer mais que
+  isso é exatamente o que o produto existe para evitar.
+
+- **Controles de preferência saem em telas muito estreitas.** Medido em
+  navegador, o botão de instalação e a alternância de tema eram o que
+  empurrava o cabeçalho para fora da tela a 360 e 390px. Saem abaixo de
+  480px e 400px respectivamente: são os dois únicos controles da barra
+  com equivalente fora do produto — o navegador oferece "Instalar
+  aplicativo", e o tema segue a preferência do sistema para quem nunca
+  clicou. O que fica são as cinco respostas do contador.
+
+### Verificado em navegador
+
+Chrome headless via CDP, sem dependência nova no projeto:
+
+- **sem rolagem horizontal** em 360, 390, 768, 960, 1024, 1280, 1366,
+  1440 e 1920px; cabeçalho em 48px e sem estouro interno em todas;
+- **rótulo em três degraus**: "Revisar cálculo · 13 pendências" (≥1180px),
+  "Revisar cálculo 13" (≥640px), "⚠ 13" (abaixo disso), com o nome
+  acessível sempre completo;
+- **referência longa** truncada com reticências e valor inteiro no
+  `title`; sem referência lê-se "Análise: sem referência";
+- **etiqueta** "Salva" presente na análise gravada e ausente na análise
+  nova, como esperado;
+- **teclado**: `Tab` percorre Revisar → Histórico → Nova análise →
+  instalar → tema → conta → formulário; `Enter` e `Espaço` abrem os
+  painéis, o foco entra no diálogo, `Escape` fecha e devolve o foco ao
+  botão de origem; `aria-expanded` acompanha em todas as transições;
+- **tema claro e escuro**: o tom âmbar da pendência tem contraste ≈5,2:1
+  no claro (AA para texto normal) e usa os tokens da paleta escura sem
+  ajuste manual.
+
+### Preservado
+
+- `?painel=auditoria` continua funcionando e abre "Revisar cálculo".
+  Endereço antigo que deixa de funcionar é trabalho perdido de quem
+  salvou o atalho.
+- Menu de conta, alternância de tema, botão de instalação, histórico,
+  "+ Nova análise" e todo o comportamento de sessão: intocados.
+
+---
+
 ## [2.4.0] — 2026-09-05
 
 Release de UX para uso repetido. Nenhuma regra tributária mudou:
