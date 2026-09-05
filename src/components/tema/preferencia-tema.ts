@@ -19,7 +19,24 @@
 
 export type Tema = "claro" | "escuro";
 
-export const CHAVE_TEMA = "clareza:tema";
+/**
+ * Chave da preferência — versionada de propósito.
+ *
+ * A v2.7 mudou o PADRÃO do produto para o claro. Continuar lendo a
+ * chave antiga teria deixado de fora justamente quem já usa o Clareza:
+ * o valor "escuro" gravado ali foi produzido pelo modelo anterior, em
+ * que o escuro também acontecia sozinho por preferência do sistema
+ * operacional — não dá para saber se foi decisão do contador ou
+ * herança do computador dele.
+ *
+ * Trocar a chave descarta essas preferências UMA VEZ: todo mundo cai no
+ * novo padrão, e a escolha feita a partir daqui é respeitada para
+ * sempre. Quem realmente quer o escuro clica uma vez.
+ */
+export const CHAVE_TEMA = "clareza:tema:2";
+
+/** Chave do modelo antigo, apagada na primeira carga após a atualização. */
+const CHAVE_TEMA_LEGADA = "clareza:tema";
 
 /** Padrão do produto quando não há escolha gravada. */
 export const TEMA_PADRAO: Tema = "claro";
@@ -27,11 +44,14 @@ export const TEMA_PADRAO: Tema = "claro";
 /**
  * Script executado antes da primeira pintura, ainda no topo do body.
  *
- * Só precisa agir quando há escolha gravada: sem `data-tema`, o CSS já
- * pinta claro. Ele grava o atributo mesmo para "claro" para que o
- * documento diga sempre, explicitamente, qual tema está no ar.
+ * Faz duas coisas, nesta ordem: apaga a preferência do modelo antigo e
+ * aplica a nova, se houver. Sem `data-tema`, o CSS já pinta claro — o
+ * atributo é gravado mesmo para "claro" para que o documento diga
+ * sempre, explicitamente, qual tema está no ar.
  */
-export const SCRIPT_TEMA = `(function(){try{var t=localStorage.getItem(${JSON.stringify(
+export const SCRIPT_TEMA = `(function(){try{localStorage.removeItem(${JSON.stringify(
+  CHAVE_TEMA_LEGADA,
+)});var t=localStorage.getItem(${JSON.stringify(
   CHAVE_TEMA,
 )});if(t==="claro"||t==="escuro"){document.documentElement.dataset.tema=t;}}catch(e){}})();`;
 

@@ -5,6 +5,31 @@ Versionamento semântico.
 
 ---
 
+## [2.7.1] — 2026-09-05
+
+Correção da v2.7.0: o padrão claro não alcançava quem já usava o
+produto.
+
+### Corrigido
+
+- **Preferência de tema anterior à v2.7 é descartada uma vez.** Trocar
+  o padrão para o claro não bastou: em qualquer navegador que já tinha
+  `clareza:tema` gravado, a escolha antiga continuava vencendo e a
+  área de trabalho seguia abrindo escura — exatamente para as pessoas
+  que já usam o Clareza. E esse valor não era confiável como decisão:
+  foi produzido pelo modelo anterior, em que o escuro também acontecia
+  sozinho por preferência do sistema operacional, então não havia como
+  distinguir escolha do contador de herança do computador dele.
+
+  A chave passou a ser versionada (`clareza:tema:2`) e a antiga é
+  apagada na primeira carga após a atualização. Todo mundo cai no novo
+  padrão uma vez; a escolha feita a partir daqui é respeitada para
+  sempre, e quem prefere o escuro clica uma vez.
+
+- **Cache do service worker** para `clareza-v2-7-1`.
+
+---
+
 ## [2.7.0] — 2026-09-05
 
 O produto passou a ter um tema PADRÃO, e o caminho de volta para ele
