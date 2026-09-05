@@ -1,25 +1,35 @@
 /**
- * Preferência de tema — três estados reais.
+ * Preferência de tema — dois estados, e o claro é o padrão do produto.
  *
- * "sistema" não é um valor guardado: é a ausência de escolha. Quando o
- * contador não decidiu nada, o CSS segue `prefers-color-scheme` e o
- * atributo `data-tema` fica ausente do `<html>`.
+ * Até a v2.6 havia um terceiro estado, "sistema": sem escolha do
+ * contador, o CSS seguia `prefers-color-scheme` e a área de trabalho
+ * abria escura em qualquer máquina configurada em escuro. Isso fazia o
+ * produto mudar de aparência conforme o sistema operacional de quem
+ * abrisse — e o Clareza é desenhado para leitura longa de números em
+ * escritório, onde o claro é o ambiente de trabalho.
  *
- * O tema é estado externo ao React (atributo no documento + preferência
- * do sistema operacional), então é exposto como store observável, para
- * ser consumido com `useSyncExternalStore` em vez de efeito + setState.
+ * Agora o claro é o padrão declarado. O escuro existe e continua
+ * inteiro, mas é uma ESCOLHA, gravada neste navegador. Ausência de
+ * preferência significa claro, não "depende".
+ *
+ * O tema é estado externo ao React (atributo no documento), então é
+ * exposto como store observável, para ser consumido com
+ * `useSyncExternalStore` em vez de efeito + setState.
  */
 
-export type Tema = "sistema" | "claro" | "escuro";
+export type Tema = "claro" | "escuro";
 
 export const CHAVE_TEMA = "clareza:tema";
 
-const CONSULTA_ESCURO = "(prefers-color-scheme: dark)";
+/** Padrão do produto quando não há escolha gravada. */
+export const TEMA_PADRAO: Tema = "claro";
 
 /**
  * Script executado antes da primeira pintura, ainda no topo do body.
- * Sem ele o tema escolhido só entraria depois da hidratação, e a tela
- * piscaria clara. Fica em string porque precisa rodar síncrono.
+ *
+ * Só precisa agir quando há escolha gravada: sem `data-tema`, o CSS já
+ * pinta claro. Ele grava o atributo mesmo para "claro" para que o
+ * documento diga sempre, explicitamente, qual tema está no ar.
  */
 export const SCRIPT_TEMA = `(function(){try{var t=localStorage.getItem(${JSON.stringify(
   CHAVE_TEMA,
@@ -27,40 +37,41 @@ export const SCRIPT_TEMA = `(function(){try{var t=localStorage.getItem(${JSON.st
 
 const ouvintes = new Set<() => void>();
 
-/** Assina mudanças: escolha explícita nossa e preferência do sistema. */
+/**
+ * Assina mudanças do tema.
+ *
+ * Só a escolha do contador muda o tema — a preferência do sistema
+ * operacional deixou de ser consultada, e por isso não há mais
+ * `matchMedia` para observar aqui.
+ */
 export function inscreverTema(callback: () => void): () => void {
   ouvintes.add(callback);
-  const consulta = window.matchMedia(CONSULTA_ESCURO);
-  consulta.addEventListener("change", callback);
   return () => {
     ouvintes.delete(callback);
-    consulta.removeEventListener("change", callback);
   };
 }
 
 /** Tema efetivamente pintado agora. String primitiva: snapshot estável. */
-export function temaEfetivo(): "claro" | "escuro" {
+export function temaEfetivo(): Tema {
   const escolhido = document.documentElement.dataset.tema;
-  if (escolhido === "claro" || escolhido === "escuro") return escolhido;
-  return window.matchMedia(CONSULTA_ESCURO).matches ? "escuro" : "claro";
+  return escolhido === "escuro" ? "escuro" : TEMA_PADRAO;
 }
 
-/** No servidor não há como saber a preferência: assumimos o claro. */
-export function temaEfetivoNoServidor(): "claro" {
-  return "claro";
+/**
+ * No servidor não há escolha a consultar — e a resposta é a mesma que
+ * no cliente sem preferência gravada, o que evita divergência de
+ * hidratação no caso normal.
+ */
+export function temaEfetivoNoServidor(): Tema {
+  return TEMA_PADRAO;
 }
 
-/** Aplica no documento e persiste. "sistema" remove os dois registros. */
+/** Aplica no documento e persiste a escolha neste navegador. */
 export function aplicarTema(tema: Tema): void {
   if (typeof document === "undefined") return;
   try {
-    if (tema === "sistema") {
-      delete document.documentElement.dataset.tema;
-      localStorage.removeItem(CHAVE_TEMA);
-    } else {
-      document.documentElement.dataset.tema = tema;
-      localStorage.setItem(CHAVE_TEMA, tema);
-    }
+    document.documentElement.dataset.tema = tema;
+    localStorage.setItem(CHAVE_TEMA, tema);
   } catch {
     /* Modo privado: o tema vale só para esta sessão. */
   }

@@ -5,6 +5,48 @@ Versionamento semântico.
 
 ---
 
+## [2.7.0] — 2026-09-05
+
+O produto passou a ter um tema PADRÃO, e o caminho de volta para ele
+deixou de estar escondido. Nenhuma regra de cálculo foi tocada.
+
+### Alterado
+
+- **O claro é o padrão em qualquer máquina.** Havia um bloco
+  `@media (prefers-color-scheme: dark)` que pintava a aplicação inteira
+  de escuro para quem tivesse o sistema operacional em escuro, sem que
+  nada tivesse sido escolhido dentro do produto — o Clareza mudava de
+  aparência conforme o computador de quem abrisse. O bloco saiu. O
+  escuro continua inteiro e a um clique, mas agora é uma ESCOLHA,
+  gravada neste navegador; ausência de preferência significa claro, não
+  "depende".
+- **O seletor de tema mostra as duas opções.** Era um botão de ícone
+  único: quem estava no escuro via uma lua e precisava passar o mouse
+  para descobrir que o clique levava ao claro. Virou um seletor de dois
+  estados, no mesmo desenho do `Escolha` do formulário — trilho fosco,
+  pastilha branca na opção ativa. Cada opção é um botão com nome
+  acessível e `aria-pressed`; o glifo reforça, não carrega o
+  significado sozinho.
+- **Preferência de tema virou dois estados, não três.** "Sistema"
+  deixou de existir como valor: `temaEfetivo()` não consulta mais
+  `matchMedia`, e `inscreverTema` não observa mais a preferência do
+  sistema operacional.
+- **`themeColor` virou cor única** (`#eceff0`). O par por
+  `prefers-color-scheme` prometeria uma barra de navegador escura sobre
+  uma interface que abre clara.
+- **Cores do manifesto atualizadas** para a paleta da v2.6
+  (`#eceff0` / `#07765f`); estavam nos valores da v2.1.
+- **Instalação e tema só entram na barra a partir de 768px.** Medido em
+  navegador: com o seletor de 64px e o botão de instalação de 32px, o
+  conteúdo fixo da barra pede 725px assim que o rótulo "Revisar
+  cálculo" aparece por extenso, e o menu de conta era recortado na
+  borda direita. Corrige de quebra um recorte que já existia a 640px
+  antes desta versão, sem o seletor novo.
+- **Cache do service worker** para `clareza-v2-7-0`: sem o bump, quem
+  já instalou continuaria com o CSS que seguia o sistema operacional.
+
+---
+
 ## [2.6.0] — 2026-09-05
 
 Release de MATURIDADE VISUAL. Nenhuma regra tributária, nenhuma fórmula
