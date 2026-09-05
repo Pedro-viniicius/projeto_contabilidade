@@ -8,10 +8,10 @@ import { novaAnaliseDescartaTrabalho } from "./acoes-analise";
 /**
  * "Nova análise" — a ação que abre uma análise separada da atual.
  *
- * Componente único, usado nos dois lugares em que a ação aparece, para
- * que rótulo, ícone e consequência sejam necessariamente os mesmos. Até
- * a v2.1.1 eram dois botões escritos "Nova", com aparência de link, sem
- * dizer *nova o quê* nem que fechavam a análise em andamento.
+ * Componente único, hoje usado em um lugar só — a barra superior.
+ * Concentrar a ação primária num ponto fixo e previsível vale mais que
+ * repeti-la: dois botões idênticos na mesma tela obrigam a decidir
+ * qual clicar antes de decidir o que fazer.
  *
  * A distinção que precisa ficar óbvia antes do clique:
  *
@@ -28,7 +28,7 @@ export function BotaoNovaAnalise({
   temValoresPreenchidos,
   onNovaAnalise,
   tamanho = "sm",
-  variante = "secundaria",
+  variante = "primaria",
   className,
 }: {
   jaCalculou: boolean;
@@ -36,7 +36,7 @@ export function BotaoNovaAnalise({
   temValoresPreenchidos: boolean;
   onNovaAnalise: () => void;
   tamanho?: "sm" | "md";
-  variante?: "secundaria" | "sutil";
+  variante?: "primaria" | "secundaria" | "sutil";
   className?: string;
 }) {
   const [pediuConfirmacao, setPediuConfirmacao] = useState(false);

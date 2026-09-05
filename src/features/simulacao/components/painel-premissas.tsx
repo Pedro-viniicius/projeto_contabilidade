@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AreaRolavel } from "@/components/ui/area-rolavel";
-import { TOM_STATUS } from "./composicao-encargos";
+import { TOM_STATUS } from "./tom-status";
 import {
   listarPremissas,
   resumoValidacao,
@@ -13,7 +13,17 @@ import {
   type StatusPremissa,
 } from "../domain/calculation-rules";
 
-type Filtro = "todas" | StatusPremissa;
+/**
+ * "Pendentes" agrupa hipótese temporária e a validar — é o recorte que
+ * o resultado promete ao dizer "ver N premissas pendentes", e ele não
+ * corresponde a um único status.
+ */
+type Filtro = "todas" | "pendentes" | StatusPremissa;
+
+const PENDENTES: readonly StatusPremissa[] = [
+  "hipotese-temporaria",
+  "a-validar",
+];
 
 /**
  * Auditoria das regras de cálculo, dentro do painel lateral.
@@ -22,16 +32,33 @@ type Filtro = "todas" | StatusPremissa;
  * escrito à mão. Quando o contador revisar uma regra no domínio, este
  * painel reflete a mudança sozinho.
  */
-export function PainelPremissas() {
+export function PainelPremissas({
+  filtroInicial = "todas",
+}: {
+  /**
+   * Recorte com que o painel abre.
+   *
+   * Chegar por "ver 13 premissas pendentes" e cair na lista completa
+   * quebraria a promessa do rótulo: o contador teria de refazer o
+   * filtro que acabou de pedir.
+   */
+  filtroInicial?: Filtro;
+} = {}) {
   const premissas = listarPremissas();
   const { total, pendentes, porStatus } = resumoValidacao();
-  const [filtro, setFiltro] = useState<Filtro>("todas");
+  const [filtro, setFiltro] = useState<Filtro>(filtroInicial);
   const [expandida, setExpandida] = useState<string | null>(null);
 
   const contagens = useMemo(() => {
-    const mapa = new Map<Filtro, number>([["todas", premissas.length]]);
+    const mapa = new Map<Filtro, number>([
+      ["todas", premissas.length],
+      ["pendentes", 0],
+    ]);
     for (const p of premissas) {
       mapa.set(p.status, (mapa.get(p.status) ?? 0) + 1);
+      if (PENDENTES.includes(p.status)) {
+        mapa.set("pendentes", (mapa.get("pendentes") ?? 0) + 1);
+      }
     }
     return mapa;
   }, [premissas]);
@@ -39,6 +66,7 @@ export function PainelPremissas() {
   /* Só oferecemos filtros que existem nos dados — nada de aba vazia. */
   const filtros: Filtro[] = [
     "todas",
+    ...(pendentes > 0 ? (["pendentes"] as Filtro[]) : []),
     ...(Object.keys(ROTULO_STATUS) as StatusPremissa[]).filter(
       (s) => (contagens.get(s) ?? 0) > 0,
     ),
@@ -47,7 +75,9 @@ export function PainelPremissas() {
   const visiveis =
     filtro === "todas"
       ? premissas
-      : premissas.filter((p) => p.status === filtro);
+      : filtro === "pendentes"
+        ? premissas.filter((p) => PENDENTES.includes(p.status))
+        : premissas.filter((p) => p.status === filtro);
 
   return (
     <div className="space-y-3">
@@ -100,7 +130,11 @@ export function PainelPremissas() {
                 : "text-ink-muted hover:bg-surface-muted hover:text-ink",
             ].join(" ")}
           >
-            {f === "todas" ? "Todas" : ROTULO_STATUS[f]}
+            {f === "todas"
+              ? "Todas"
+              : f === "pendentes"
+                ? "Pendentes"
+                : ROTULO_STATUS[f]}
             <span className="ml-1.5 tabular-nums text-ink-subtle">
               {contagens.get(f) ?? 0}
             </span>

@@ -164,6 +164,18 @@ export function salvarSimulacao(
   return { registro, persistido: true };
 }
 
+/**
+ * Lê um registro do histórico SEM promovê-lo a análise em edição.
+ *
+ * É o que "Duplicar análise" precisa: copiar os valores para os campos
+ * como uma análise NOVA, sem herdar a identidade do original — o
+ * recálculo tem que criar um registro próprio, não sobrescrever o
+ * registro duplicado.
+ */
+export function lerDoHistorico(id: string): SimulacaoSalva | null {
+  return lerHistorico().registros.find((r) => r.id === id) ?? null;
+}
+
 /** Promove um registro do histórico a análise em edição. */
 export function abrirDoHistorico(id: string): SimulacaoSalva | null {
   const registro = lerHistorico().registros.find((r) => r.id === id);

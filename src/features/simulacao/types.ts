@@ -72,6 +72,25 @@ export interface PassoCalculo {
 }
 
 /**
+ * Natureza do encargo, estável entre os dois cenários.
+ *
+ * Existe para que a composição possa ser comparada LADO A LADO: o
+ * mesmo INSS aparece como "contribuinte individual" na Pessoa Física e
+ * como "sobre o pró-labore" no CNPJ, e casar as duas linhas por rótulo
+ * seria casar por texto de interface. É metadado de apresentação —
+ * nenhum valor calculado depende dele.
+ */
+export type CategoriaEncargo = "inss" | "irpf" | "das" | "honorarios";
+
+/** Nome da categoria na coluna "Encargo" da composição comparada. */
+export const ROTULO_CATEGORIA: Record<CategoriaEncargo, string> = {
+  inss: "INSS",
+  irpf: "Imposto de renda",
+  das: "Simples Nacional (DAS)",
+  honorarios: "Honorários contábeis",
+};
+
+/**
  * Um encargo/tributo estimado dentro de um cenário.
  *
  * Os campos opcionais existem para a auditoria: permitem exibir
@@ -80,6 +99,8 @@ export interface PassoCalculo {
  */
 export interface Encargo {
   readonly rotulo: string;
+  /** Natureza do encargo, para casar a linha com a do outro cenário. */
+  readonly categoria: CategoriaEncargo;
   readonly valorMensal: number;
   readonly explicacao: string;
   /** Base de cálculo sobre a qual a alíquota incidiu. */

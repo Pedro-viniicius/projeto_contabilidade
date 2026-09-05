@@ -149,7 +149,8 @@ src/
 │   └── globals.css             # Duas paletas + três estados de tema
 │
 ├── components/
-│   ├── ui/                     # Painel, PainelLateral, Metrica, Badge, CampoMoeda…
+│   ├── ui/                     # Painel, PainelLateral, CampoMoeda, Badge,
+│   │                           # MensagemStatus, ajuda-campo (useAjuda)…
 │   ├── layout/                 # BarraSuperior
 │   ├── tema/                   # Preferência de tema e alternância
 │   └── pwa/                    # Registro do SW e botão de instalação
@@ -159,12 +160,16 @@ src/
 │   │   ├── domain/             # 🧮 MOTOR DE CÁLCULO (sem React)
 │   │   │   ├── calculation-rules.ts   # ⚠️ TODAS as premissas vivem aqui
 │   │   │   ├── calcular.ts            # Funções puras de cálculo
-│   │   │   ├── explicar.ts            # Explicações determinísticas
+│   │   │   ├── explicar.ts            # Conclusão e "o que explica a diferença"
+│   │   │   ├── comparar-encargos.ts   # Composição PF × CNPJ lado a lado
+│   │   │   ├── diferenca-semantica.ts # Diferença com cenário e direção
+│   │   │   ├── avisos-entrada.ts      # Conferências (não bloqueiam)
 │   │   │   └── *.test.ts
 │   │   ├── schemas/            # Validação Zod + mensagens pt-BR
 │   │   ├── services/           # Persistência local
 │   │   ├── components/         # AreaDeTrabalho (orquestra), formulário,
-│   │   │                       # resultado, composição, histórico, contexto
+│   │   │                       # resultado, composição comparada,
+│   │   │                       # histórico, auditoria
 │   │   └── types.ts            # Contratos de dados
 │   ├── sessao/                 # Acesso demonstrativo — única fronteira a
 │   │                           # trocar quando houver autenticação real
@@ -386,7 +391,11 @@ conferência.
 | Explicações por template | LLM | Determinísticas, testáveis, gratuitas — e não amplificam erro de lógica não validada |
 | Alíquota efetiva única no CNPJ | Tabelas do Simples | Implementá-las mal seria pior que assumir a simplificação abertamente |
 | Ícones gerados por script | Assets binários no repositório | `npm run icons` regenera a partir da marca; zero dependência de imagem |
-| Cálculo sob comando | Recalcular a cada tecla | Números estáveis durante a digitação; o estado "valores alterados" fica explícito |
+| Cálculo sob comando | Recalcular a cada tecla | Números estáveis durante a digitação; o estado "resultados desatualizados" fica explícito |
+| Diferença nomeando o cenário | Coluna com `+` e `−` | "+" é vantagem no líquido e custo nos encargos: o sinal sozinho exige inferência linha a linha |
+| Composição PF × CNPJ na mesma tabela | Abas por cenário | Comparar em abas exige decorar um lado antes de ver o outro |
+| Ajuda por divulgação progressiva | Texto fixo sob cada campo | Ensina na primeira análise e cobra rolagem em todas as seguintes |
+| Container queries na coluna de dados | Media queries de viewport | A pergunta é "cabe nesta coluna?", não "que tamanho tem a janela?" |
 | Formulário e resultado na mesma tela | Wizard | O contador altera um valor e vê o impacto sem navegar |
 | Tabela no lugar de gráfico | Gráfico de composição | Quem lê números precisa de precisão, não de forma |
 | Referência local por simulação | Cadastro de clientes | Resolve a organização da sessão de trabalho sem inventar um CRM |

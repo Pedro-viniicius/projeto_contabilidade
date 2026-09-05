@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { BarraSuperior } from "@/components/layout/barra-superior";
 import { PainelLateral } from "@/components/ui/painel-lateral";
 import { Painel } from "@/components/ui/painel";
-import { Button } from "@/components/ui/button";
 import { registrarEvento } from "@/lib/analytics";
 import { formatarMoeda } from "@/lib/format";
 import { useHidratado, useValorLocal } from "@/lib/armazenamento-reativo";
@@ -22,10 +21,12 @@ import {
   lerSessaoDemo,
 } from "@/features/sessao/services/sessao-demo";
 import { classificacaoDe, simular } from "../domain/calcular";
+import { conferirEntrada } from "../domain/avisos-entrada";
 import {
   mesmaEntrada,
   proLaboreSugerido,
   simulacaoSchema,
+  TAMANHO_MAX_REFERENCIA,
   valoresPadrao,
   type EntradaSimulacaoValidada,
 } from "../schemas/simulacao-schema";
@@ -33,6 +34,7 @@ import {
   abrirDoHistorico,
   CHAVE_ATUAL,
   descartarSimulacaoAtual,
+  lerDoHistorico,
   lerSimulacaoAtual,
   salvarSimulacao,
 } from "../services/simulacao-storage";
@@ -43,15 +45,21 @@ import {
 import { PainelResultado } from "./painel-resultado";
 import { PainelPremissas } from "./painel-premissas";
 import { PainelEscopo } from "./painel-escopo";
-import { ZonaContexto } from "./zona-contexto";
-import { BotaoNovaAnalise } from "./botao-nova-analise";
+import { PainelAuditoria } from "./painel-auditoria";
+import { HistoricoSimulacoes } from "./historico-simulacoes";
 import { atalhoDeveCalcular } from "./atalho-recalculo";
 import type { EntradaSimulacao } from "../types";
 
 /** Referência estável: evita recriar o objeto a cada render. */
 const PADRAO = valoresPadrao();
 
-type Gaveta = null | "premissas" | "escopo" | "feedback" | "contexto";
+type Gaveta =
+  | null
+  | "historico"
+  | "auditoria"
+  | "premissas"
+  | "escopo"
+  | "feedback";
 
 /*
  * `?painel=` abre um painel já na chegada. É o que mantém úteis os
@@ -66,23 +74,36 @@ type Gaveta = null | "premissas" | "escopo" | "feedback" | "contexto";
 const semInscricao = () => () => {};
 const semPainel = (): Gaveta => null;
 
+const PAINEIS_DA_URL: readonly Gaveta[] = [
+  "premissas",
+  "escopo",
+  "feedback",
+  "historico",
+  "auditoria",
+];
+
 function painelDaUrl(): Gaveta {
   const alvo = new URLSearchParams(window.location.search).get("painel");
-  return alvo === "premissas" || alvo === "escopo" || alvo === "feedback"
-    ? alvo
-    : null;
+  return PAINEIS_DA_URL.includes(alvo as Gaveta) ? (alvo as Gaveta) : null;
 }
 
 /**
  * ÁREA DE TRABALHO — a tela única do contador.
  *
- * Todas as operações profissionais acontecem aqui: entrada de dados,
- * cálculo, comparativo, auditoria da composição, premissas, histórico e
- * feedback. Depois do acesso não há mais troca de rota, e é isso que
- * garante que o contexto da análise em andamento nunca se perde.
+ * Duas zonas permanentes, e só duas:
  *
- * O que é permanente fica em colunas; o que é consultivo abre em painel
- * lateral por cima, com a análise visível atrás.
+ *   ESQUERDA  — dados da análise (≈40% da largura)
+ *   DIREITA   — resultado, comparação e auditoria (≈60%)
+ *
+ * Histórico, premissas, escopo e observações abrem em painel lateral
+ * sobreposto, sob demanda, com a análise visível atrás. Até a v2.3 uma
+ * terceira coluna permanente de contexto ficava fixa à direita nas
+ * telas largas: consumia largura o dia inteiro para exibir informação
+ * consultada pontualmente, e essa largura saía justamente de onde o
+ * contador trabalha.
+ *
+ * Depois do acesso não há troca de rota. É isso que garante que o
+ * contexto da análise em andamento nunca se perde.
  */
 export function AreaDeTrabalho() {
   const router = useRouter();
@@ -108,7 +129,8 @@ export function AreaDeTrabalho() {
 
   /*
    * Entrada que produziu o resultado exibido. Separá-la do rascunho é o
-   * que permite mostrar "valores alterados" e recalcular sob comando.
+   * que permite mostrar "resultados desatualizados" e atualizar sob
+   * comando.
    */
   const [calculada, setCalculada] = useState<EntradaSimulacao | null>(null);
 
@@ -120,6 +142,21 @@ export function AreaDeTrabalho() {
   );
   const [gavetaEscolhida, setGaveta] = useState<Gaveta | undefined>(undefined);
   const gaveta = gavetaEscolhida === undefined ? gavetaInicial : gavetaEscolhida;
+
+  /*
+   * Recorte com que o painel de premissas abre. "Ver 13 premissas
+   * pendentes" que desemboca na lista completa quebra a promessa do
+   * próprio rótulo — o contador teria de refazer o filtro que acabou
+   * de pedir.
+   */
+  const [filtroPremissas, setFiltroPremissas] = useState<
+    "todas" | "pendentes"
+  >("todas");
+
+  function abrirPremissas(filtro: "todas" | "pendentes" = "todas") {
+    setFiltroPremissas(filtro);
+    setGaveta("premissas");
+  }
 
   const proLaboreTocado = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -145,6 +182,20 @@ export function AreaDeTrabalho() {
    */
   const classificacao = useMemo(() => classificacaoDe(entrada), [entrada]);
 
+  /*
+   * Conferências do rascunho, também em tempo real: o valor estranho
+   * precisa ser questionado ENQUANTO se digita, não depois que o
+   * resultado já saiu com ele dentro. Não bloqueiam nada — quem
+   * bloqueia é o schema, no clique.
+   */
+  const avisos = useMemo(
+    () =>
+      conferirEntrada(entrada, {
+        sujeitaFatorR: classificacao.sujeitaFatorR,
+      }),
+    [entrada, classificacao.sujeitaFatorR],
+  );
+
   const desatualizado =
     entradaExibida !== null && !mesmaEntrada(entrada, entradaExibida);
 
@@ -167,7 +218,7 @@ export function AreaDeTrabalho() {
   const aviso =
     avisoPersistencia ??
     (leituraAtual?.descartado
-      ? "A análise que estava aberta neste aparelho está ilegível e foi ignorada. O histórico não foi afetado."
+      ? "A análise que estava aberta neste navegador está ilegível e foi ignorada. O histórico não foi afetado."
       : null);
 
   /* Sem sessão local não há área de trabalho: volta para o acesso. */
@@ -192,8 +243,8 @@ export function AreaDeTrabalho() {
     }
 
     setErros({});
-    /* `salva?.id` mantém a identidade: recalcular atualiza a mesma
-       análise em vez de inserir uma nova a cada clique. */
+    /* `salva?.id` mantém a identidade: atualizar os resultados altera a
+       mesma análise em vez de inserir uma nova a cada clique. */
     const gravacao = salvarSimulacao(resultado.data, referencia, salva?.id);
     setAviso(
       gravacao.persistido
@@ -209,7 +260,7 @@ export function AreaDeTrabalho() {
   }, [entrada, referencia, calculada, salva?.id]);
 
   /*
-   * Ctrl/Cmd + Enter calcula de qualquer lugar da ÁREA DE TRABALHO —
+   * Ctrl/Cmd + Enter atualiza de qualquer lugar da ÁREA DE TRABALHO —
    * nunca de dentro de um painel sobreposto.
    */
   useEffect(() => {
@@ -279,6 +330,33 @@ export function AreaDeTrabalho() {
     setGaveta(null);
   }
 
+  /**
+   * Copia uma análise do histórico para uma análise NOVA.
+   *
+   * Descarta a identidade de propósito: sem isso o próximo cálculo
+   * sobrescreveria o registro original, e "duplicar" teria virado
+   * "editar". O original fica intacto no histórico; o que está nos
+   * campos ainda não foi salvo, e é o cálculo que cria o novo registro.
+   */
+  function duplicarRegistro(id: string) {
+    const registro = lerDoHistorico(id);
+    if (!registro) return;
+    descartarSimulacaoAtual();
+    proLaboreTocado.current = true;
+    setRascunho(registro.entrada);
+    setReferenciaRascunho(
+      `${registro.referencia ?? "Análise"} (cópia)`.slice(
+        0,
+        TAMANHO_MAX_REFERENCIA,
+      ),
+    );
+    setCalculada(null);
+    setErros({});
+    setAviso(null);
+    setGaveta(null);
+    registrarEvento("simulation_started");
+  }
+
   function novaAnalise() {
     descartarSimulacaoAtual();
     proLaboreTocado.current = false;
@@ -291,20 +369,6 @@ export function AreaDeTrabalho() {
     registrarEvento("simulation_started");
     formRef.current?.querySelector<HTMLInputElement>("input")?.focus();
   }
-
-  const contexto = (
-    <ZonaContexto
-      idAtual={salva?.id ?? null}
-      jaCalculou={simulacao !== null}
-      desatualizado={desatualizado}
-      temValoresPreenchidos={temValoresPreenchidos}
-      onAbrirRegistro={abrirRegistro}
-      onNovaAnalise={novaAnalise}
-      onAbrirPremissas={() => setGaveta("premissas")}
-      onAbrirEscopo={() => setGaveta("escopo")}
-      onAbrirFeedback={() => setGaveta("feedback")}
-    />
-  );
 
   /* Antes de saber se há sessão, nada de piscar a área de trabalho. */
   if (!hidratado || !sessao) {
@@ -322,46 +386,49 @@ export function AreaDeTrabalho() {
       <BarraSuperior
         sessao={sessao}
         referencia={referencia}
-        contextoAberto={gaveta === "contexto"}
-        premissasAbertas={gaveta === "premissas"}
-        onAbrirPremissas={() => setGaveta("premissas")}
-        onAbrirContexto={() => setGaveta("contexto")}
+        historicoAberto={gaveta === "historico"}
+        auditoriaAberta={gaveta === "auditoria"}
+        jaCalculou={simulacao !== null}
+        desatualizado={desatualizado}
+        temValoresPreenchidos={temValoresPreenchidos}
+        onAbrirHistorico={() => setGaveta("historico")}
+        onAbrirAuditoria={() => setGaveta("auditoria")}
+        onNovaAnalise={novaAnalise}
       />
 
       <main id="conteudo" className="min-h-0 flex-1">
         {/*
-          A coluna de dados alarga a partir de 1280px para caber PF e
-          PJ lado a lado — a simultaneidade que o contador pediu. Em
-          troca, a coluna de contexto volta só em 1600px: entre 1280 e
-          1599 ela continua acessível pelo painel lateral, e o que
-          ganha o espaço é o preenchimento, não a consulta.
+          Duas colunas a partir de 960px, na proporção ≈40/60 que o
+          trabalho pede: a esquerda precisa caber PF e CNPJ lado a lado
+          (o que acontece a partir de 1280px), e a direita precisa caber
+          uma tabela de quatro colunas sem rolagem horizontal.
+          `minmax(0,·)` nas duas faixas impede que uma tabela larga
+          estoure a grade e empurre a página.
         */}
-        <div className="grid min-[960px]:grid-cols-[23rem_minmax(0,1fr)] min-[1280px]:grid-cols-[34rem_minmax(0,1fr)] min-[1440px]:grid-cols-[40rem_minmax(0,1fr)] min-[1600px]:grid-cols-[40rem_minmax(0,1fr)_19.5rem]">
+        <div className="grid min-[960px]:grid-cols-[minmax(0,23rem)_minmax(0,1fr)] min-[1180px]:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] min-[1600px]:grid-cols-[minmax(0,38fr)_minmax(0,62fr)] min-[1800px]:mx-auto min-[1800px]:max-w-[120rem]">
           {/* ZONA 1 — dados, sempre visíveis. */}
           <section
             aria-label="Dados da análise"
-            className="coluna-rolavel flex min-w-0 flex-col border-b border-border-base min-[960px]:border-b-0 min-[960px]:border-r"
+            /*
+              `@container`: os campos de PF e CNPJ passam a dividir-se
+              em duas colunas conforme a largura DESTA coluna, não a da
+              janela. Com media query, um contador em meia tela via os
+              cenários lado a lado numa coluna estreita demais; e a
+              mesma coluna, larga, ficava empilhada só porque a janela
+              era pequena. A pergunta certa é "cabe aqui?".
+            */
+            className="coluna-rolavel @container flex min-w-0 flex-col border-b border-border-base min-[960px]:border-b-0 min-[960px]:border-r"
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border-base bg-background px-4 py-2.5">
-              <h2 className="text-[0.8125rem] font-semibold text-ink">
-                Dados da análise
-              </h2>
-              <BotaoNovaAnalise
-                jaCalculou={simulacao !== null}
-                desatualizado={desatualizado}
-                temValoresPreenchidos={temValoresPreenchidos}
-                onNovaAnalise={novaAnalise}
-              />
-            </div>
-
             <FormularioSimulacao
               entrada={entrada}
               classificacao={classificacao}
               referencia={referencia}
               erros={erros}
+              avisos={avisos}
               jaCalculou={simulacao !== null}
               desatualizado={desatualizado}
               salvo={salva !== null && avisoPersistencia === null}
+              atualizadoEm={salva?.atualizadaEm ?? salva?.criadaEm}
               aviso={aviso}
               formRef={formRef}
               onCampo={atualizar}
@@ -383,7 +450,7 @@ export function AreaDeTrabalho() {
             {/* aria-live: o resultado novo é anunciado sem mover o foco. */}
             <div aria-live="polite" className="sr-only">
               {simulacao && !desatualizado
-                ? `Resultado atualizado. Diferença estimada de ${formatarMoeda(
+                ? `Resultados atualizados. Diferença estimada de ${formatarMoeda(
                     simulacao.comparacao.diferencaMensal,
                   )} por mês.`
                 : ""}
@@ -393,7 +460,7 @@ export function AreaDeTrabalho() {
               <PainelResultado
                 simulacao={simulacao}
                 desatualizado={desatualizado}
-                onAbrirPremissas={() => setGaveta("premissas")}
+                onAbrirPremissas={(filtro) => abrirPremissas(filtro)}
               />
             ) : (
               <Painel className="px-4 py-10">
@@ -401,9 +468,9 @@ export function AreaDeTrabalho() {
                   Nenhum cálculo executado
                 </p>
                 <p className="mt-1 max-w-md text-[0.8125rem] leading-relaxed text-ink-muted">
-                  Comece pela atividade: é ela que define o anexo do Simples e
-                  quais valores precisam ser informados. Depois preencha os
-                  dois cenários e calcule a comparação.
+                  Preencha os dados ao lado e atualize os resultados para
+                  comparar os cenários. Comece pela atividade: é ela que define
+                  o anexo do Simples e quais valores precisam ser informados.
                 </p>
                 <dl
                   id="minimo-necessario"
@@ -424,43 +491,41 @@ export function AreaDeTrabalho() {
                   />
                 </dl>
                 {/*
-                  Botão desabilitado não some da leitura: `aria-disabled`
-                  em vez de `disabled` mantém o controle alcançável pelo
-                  Tab, e `aria-describedby` liga o motivo — a lista logo
-                  acima — ao próprio botão. O clique é barrado na mão.
+                  Sem botão aqui, de propósito. "Calcular análise" já é a
+                  ação primária fixa no rodapé da coluna de dados, e um
+                  segundo botão idêntico visível ao mesmo tempo obrigaria
+                  a decidir em qual clicar antes de decidir o que fazer.
                 */}
-                <Button
-                  className="mt-4"
-                  aria-disabled={entrada.receitaMensal <= 0}
-                  aria-describedby="minimo-necessario"
-                  onClick={() => {
-                    if (entrada.receitaMensal <= 0) return;
-                    calcular();
-                  }}
-                >
-                  Calcular análise
-                </Button>
               </Painel>
             )}
           </section>
-
-          {/* ZONA 3 — contexto. Vira painel lateral abaixo de 1280px. */}
-          <aside
-            aria-label="Contexto profissional"
-            className="coluna-rolavel hidden min-w-0 border-l border-border-base min-[1600px]:block"
-          >
-            {contexto}
-          </aside>
         </div>
       </main>
 
       <PainelLateral
-        aberto={gaveta === "contexto"}
-        titulo="Contexto"
-        descricao="Histórico, premissas e revisão do modelo."
+        aberto={gaveta === "historico"}
+        titulo="Análises recentes"
+        descricao="Salvas neste navegador. Abrir retoma a análise; duplicar copia os valores para uma nova."
         onFechar={() => setGaveta(null)}
       >
-        {contexto}
+        <HistoricoSimulacoes
+          idAtual={salva?.id ?? null}
+          onAbrir={abrirRegistro}
+          onDuplicar={duplicarRegistro}
+        />
+      </PainelLateral>
+
+      <PainelLateral
+        aberto={gaveta === "auditoria"}
+        titulo="Premissas e auditoria"
+        descricao="O que sustenta o número: estágio de validação, regras e escopo."
+        onFechar={() => setGaveta(null)}
+      >
+        <PainelAuditoria
+          onAbrirPremissas={() => abrirPremissas()}
+          onAbrirEscopo={() => setGaveta("escopo")}
+          onAbrirFeedback={() => setGaveta("feedback")}
+        />
       </PainelLateral>
 
       <PainelLateral
@@ -470,7 +535,7 @@ export function AreaDeTrabalho() {
         largura="larga"
         onFechar={() => setGaveta(null)}
       >
-        <PainelPremissas />
+        <PainelPremissas filtroInicial={filtroPremissas} />
       </PainelLateral>
 
       <PainelLateral

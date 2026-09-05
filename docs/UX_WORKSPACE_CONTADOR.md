@@ -1,8 +1,11 @@
-# Área de trabalho do contador — decisões de UX da V2.1
+# Área de trabalho do contador — decisões de UX
 
-Documento de referência da interface da V2.1. Explica por que o produto
-passou a acontecer em **uma tela só**, como as zonas foram divididas e o
-que a tela de acesso é — e o que ela não é.
+Documento de referência da interface. Explica por que o produto acontece
+em **uma tela só**, como as zonas foram divididas e o que a tela de
+acesso é — e o que ela não é.
+
+Atualizado na V2.4, que reduziu as três zonas permanentes a duas e
+reorganizou o resultado em torno da conclusão.
 
 ---
 
@@ -47,68 +50,106 @@ O que ele precisa fazer sem fricção:
 
 ## Layout
 
-Três zonas em `/workspace`, cada uma com rolagem própria a partir de
-960px. Abaixo disso as zonas empilham e a página rola inteira.
+**Duas zonas permanentes** em `/workspace`, cada uma com rolagem própria
+a partir de 960px. Abaixo disso as zonas empilham e a página rola
+inteira.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
-│ Clareza │ Cliente Alfa — cenário 01   Modelo em validação 7/10  ⬇ ☾ AR│
-├───────────────┬──────────────────────────────┬───────────────────────┤
-│ DADOS         │ RESULTADO / COMPARAÇÃO       │ CONTEXTO              │
-│ (21rem)       │ (flexível)                   │ (19,5rem)             │
-│               │                              │                       │
-│ Identificação │ Resumo executivo             │ Modelo de cálculo     │
-│ Cenário       │  maior resultado · mensal ·  │ Análises recentes     │
-│ Receita       │  anual                       │ Auditoria e revisão   │
-│ Custos        │                              │                       │
-│ Pró-labore    │ Comparativo PF × CNPJ        │                       │
-│               │                              │                       │
-│ [Calcular] ⌘↵ │ Composição dos encargos      │                       │
-│ (fixo abaixo) │  ↳ linha abre: base ×        │                       │
-│               │    alíquota = valor +        │                       │
-│               │    premissa + status         │                       │
-│               │ Passo a passo (recolhido)    │                       │
-└───────────────┴──────────────────────────────┴───────────────────────┘
+│ Clareza │ Cliente Alfa — cenário 01 │ ● Modelo em validação 5/18 │    │
+│                                     │ ≡ Histórico │ + Nova análise    │
+├──────────────────────────┬───────────────────────────────────────────┤
+│ DADOS DA ANÁLISE (≈40%)  │ RESULTADO (≈60%)                          │
+│                          │                                           │
+│ A. Contexto da análise   │ 1. Conclusão em uma frase                 │
+│    atividade · CNAE ·    │ 2. Diferença mensal e anual               │
+│    Anexo · Fator R       │ 3. ● Resultado provisório · 5/18          │
+│    [Alterar]             │ 4. Comparativo PF × CNPJ                  │
+│                          │    Indicador │ PF │ CNPJ │ Diferença      │
+│ B. Dados compartilhados  │                                           │
+│    Receita    Custos     │ 5. O que explica a diferença?             │
+│                          │    Encargo │ PF │ CNPJ │ Diferença        │
+│ C. Situação atual        │    ↳ linha abre os DOIS lados: base ×     │
+│                          │      alíquota = valor + premissa + status │
+│ D/E. PF  │  CNPJ         │ 6. Passo a passo por cenário (recolhido)  │
+│                          │                                           │
+│ ⚠ Resultados             │                                           │
+│   desatualizados         │                                           │
+│ [Atualizar resultados]⌘↵ │                                           │
+└──────────────────────────┴───────────────────────────────────────────┘
 ```
 
 ### Zona 1 — Dados
 
-Sempre visível, à esquerda, com rolagem própria. A ação **Calcular /
-Recalcular** fica presa ao rodapé da coluna (`sticky bottom-0`): em telas
-mais baixas o formulário passa da altura útil, e uma ação fora de alcance
-obrigaria a rolar a cada iteração — que é o gesto mais repetido do
-produto.
+Sempre visível, à esquerda, com rolagem própria. Seis blocos, na ordem da
+triagem: contexto, dados compartilhados, situação atual, os dois cenários
+lado a lado e a ação.
 
-O aviso de valores alterados vive aqui, junto do botão que resolve o
-problema, e não apenas no topo do resultado.
+**PF e CNPJ dividem-se por container query, não por media query.** A
+pergunta que decide o layout é "cabe nesta coluna?", e não "que tamanho
+tem a janela?" — o contador que usa o produto em meia tela via os
+cenários espremidos, e a mesma coluna larga ficava empilhada só porque a
+janela era pequena.
+
+A ação **Calcular / Atualizar resultados** fica presa ao rodapé da coluna
+(`sticky bottom-0`), com o aviso de resultados desatualizados imediatamente
+acima dela — a consequência antes do controle que a resolve.
+
+**Ajuda por divulgação progressiva.** O texto explicativo fixo sob cada
+campo ensina na primeira análise e cobra rolagem em todas as seguintes.
+Passou para um botão `?` ao lado do rótulo, alcançável por teclado e por
+toque, ligado ao campo por `aria-describedby` enquanto aberto. O que
+previne erro — validação e conferência — continua sempre visível.
 
 ### Zona 2 — Resultado
 
-Resumo executivo (maior resultado estimado, diferença mensal, impacto
-anual), comparativo em tabela e composição dos encargos.
+A hierarquia responde na ordem em que o contador precisa das respostas:
+
+1. **conclusão** em uma frase, condicionada às premissas;
+2. **tamanho** da diferença, mensal e anual;
+3. **confiança** — estágio de validação colado ao número que ele
+   qualifica, com atalho para as premissas pendentes;
+4. **comparação** em tabela;
+5. **por quê** — frases derivadas do cálculo mais a composição dos
+   encargos com PF e CNPJ na mesma tabela;
+6. **auditoria** — base, alíquota, premissa e passo a passo.
 
 A escala numérica é contida de propósito. Um "número herói" de 48px serve
 a quem vê a tela uma vez; atrapalha quem compara sete indicadores em
-sequência. A hierarquia é feita por peso e rótulo, não por tamanho.
+sequência.
 
-### Zona 3 — Contexto
+**A diferença nunca depende de sinal.** Cada célula nomeia o cenário e a
+direção — "CNPJ: R$ 2.001,97 a mais", "CNPJ: 4,0 p.p. maior" — porque "+"
+é vantagem no resultado líquido e custo nos encargos, e essa inferência
+linha a linha é onde a leitura rápida erra.
 
-Estágio de validação do modelo, análises recentes e os acessos de
-auditoria. A partir de 1280px é coluna fixa; abaixo disso o **mesmo
-conteúdo** abre como painel lateral pelo botão "Contexto" da barra
-superior — sem componente duplicado e sem troca de rota.
+### O que saiu: a terceira coluna
+
+Até a V2.3 uma coluna de contexto de 19,5rem ficava fixa à direita nas
+telas de 1600px ou mais, com estágio de validação, histórico e acessos de
+auditoria. Era largura gasta o dia inteiro com informação consultada
+pontualmente — e ela saía justamente de onde o contador trabalha.
+
+Nada foi removido:
+
+| Antes (coluna fixa) | Agora |
+| --- | --- |
+| Estágio de validação | Barra superior **e** no resultado, colado ao número |
+| Análises recentes | Painel "Histórico", com busca e duplicação |
+| Auditoria e revisão | Painel "Premissas e auditoria" |
+| `+ Nova análise` (duplicado) | Uma única ação primária, na barra superior |
 
 ### Por que a barra lateral saiu
 
 A V2 tinha navegação lateral persistente de 224px. Com tudo em uma tela,
 ela apontaria para lugar nenhum e consumiria espaço horizontal que agora
 pertence ao comparativo. Foi substituída por uma barra superior de 48px
-com identidade, referência da análise atual, status do modelo, tema e
-conta.
+com identidade, referência da análise atual, estágio de validação,
+histórico, `+ Nova análise`, tema e conta.
 
 ### Painéis laterais em vez de páginas
 
-Premissas, escopo, feedback e (abaixo de 1280px) contexto abrem em painel
+Histórico, premissas, escopo, auditoria e feedback abrem em painel
 sobreposto à direita, com a análise visível atrás. São diálogos modais de
 verdade: rótulo, foco levado para dentro na abertura, foco preso enquanto
 abertos, `Escape` fecha, rolagem do documento travada e foco devolvido ao
@@ -125,13 +166,16 @@ acesso
   ↓
 lançar dados → Calcular (ou Ctrl/Cmd + Enter)
   ↓
+conclusão em uma frase + diferença mensal e anual + estágio de validação
+  ↓
 comparativo PF × CNPJ na mesma tela
   ↓
-abrir a linha de um encargo → base × alíquota = valor + premissa + status
+abrir a linha de um encargo → os DOIS cenários, com base × alíquota =
+valor + premissa + status
   ↓
-alterar receita → "valores alterados" → Recalcular
+alterar receita → "resultados desatualizados" → Atualizar resultados
   ↓
-abrir outra análise no histórico (repõe os campos, não navega)
+abrir ou duplicar outra análise no histórico (repõe os campos, não navega)
   ↓
 registrar observação (painel, com a análise anexada)
   ↓
@@ -151,7 +195,14 @@ voltar à análise — que nunca saiu da tela
 - **Densidade.** Superfícies neutras, separadores de 1px, raios contidos,
   sombra quase ausente. A informação ocupa o espaço; a decoração, não.
 - **Visibilidade contextual.** O que é permanente fica em coluna; o que é
-  consultivo abre por cima, sem apagar o que estava embaixo.
+  consultivo abre por cima, sem apagar o que estava embaixo. Duas colunas,
+  nunca três: consulta não compra largura permanente.
+- **Reconhecimento no lugar de memória.** Nada que precise ser comparado
+  fica atrás de aba. Os dois cenários são preenchidos juntos, comparados
+  juntos e auditados juntos.
+- **Conferência não é bloqueio.** O schema barra o que impede o cálculo;
+  as conferências (`avisos-entrada.ts`) apontam o que é incomum e pedem
+  confirmação, sem declarar errado o que pode estar certo.
 - **Pouca navegação.** Navegar é custo, não funcionalidade. Só existe uma
   transição de tela no produto inteiro: acesso → área de trabalho.
 - **Auditabilidade.** Todo encargo mostra base, alíquota e a premissa que

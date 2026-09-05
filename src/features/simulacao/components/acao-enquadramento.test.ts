@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   acaoDoEnquadramento,
+  enquadramentoResolvido,
   rotuloDetalhe,
   textoAnexosPossiveis,
   textoFatorR,
@@ -107,5 +108,37 @@ describe("textoAnexosPossiveis", () => {
   it("lista os candidatos quando existem", () => {
     expect(textoAnexosPossiveis(semReceita)).toBe("Anexo III ou Anexo V");
     expect(textoAnexosPossiveis(resolvida)).toBe("Anexo III");
+  });
+});
+
+describe("enquadramentoResolvido", () => {
+  it("não encolhe sem anexo definido", () => {
+    /* Encolher aqui esconderia o caminho para sair da pendência. */
+    expect(enquadramentoResolvido(semAtividade)).toBe(false);
+    expect(enquadramentoResolvido(semReceita)).toBe(false);
+  });
+
+  it("encolhe com atividade e anexo resolvidos", () => {
+    expect(enquadramentoResolvido(resolvida)).toBe(true);
+  });
+
+  it("encolhe também com anexo definido à mão, sem atividade", () => {
+    const manual = classificar(ctx({ anexoManual: "III" }));
+    expect(manual.manual).toBe(true);
+    expect(enquadramentoResolvido(manual)).toBe(true);
+  });
+
+  it("NÃO encolhe com o cálculo bloqueado", () => {
+    /* O Anexo IV tem classificação válida e cálculo impossível: o
+       contador precisa continuar vendo que o número do CNPJ não vale. */
+    const semCalculo = classificar(ctx({ anexoManual: "IV" }));
+    expect(semCalculo.bloqueio).toBe("anexo-sem-calculo");
+    expect(enquadramentoResolvido(semCalculo)).toBe(false);
+
+    const acimaDoTeto = classificar(
+      ctx({ atividadeId: "contabilidade", rbt12: 100_000_000 }),
+    );
+    expect(acimaDoTeto.bloqueio).toBe("acima-do-teto");
+    expect(enquadramentoResolvido(acimaDoTeto)).toBe(false);
   });
 });

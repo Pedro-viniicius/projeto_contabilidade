@@ -128,6 +128,7 @@ export function calcularCenarioPessoaFisica(
   const encargos: Encargo[] = [
     {
       rotulo: "INSS (contribuinte individual)",
+      categoria: "inss",
       valorMensal: inss,
       base: salarioContribuicao,
       aliquota: REGRAS.pessoaFisica.inssAliquota.valor,
@@ -140,6 +141,7 @@ export function calcularCenarioPessoaFisica(
     },
     {
       rotulo: "IRPF (carnê-leão)",
+      categoria: "irpf",
       valorMensal: irpf,
       base: baseIrpf,
       aliquota: faixa.aliquota,
@@ -151,6 +153,7 @@ export function calcularCenarioPessoaFisica(
     },
     {
       rotulo: "Honorários contábeis — Autônomo/PF",
+      categoria: "honorarios",
       valorMensal: contabilidade,
       premissa: "Honorários contábeis — Autônomo/PF",
       explicacao:
@@ -257,6 +260,7 @@ export function calcularCenarioCnpj(
   const encargos: Encargo[] = [
     {
       rotulo: tributacao.rotulo,
+      categoria: "das",
       valorMensal: impostoFaturamento,
       base: receita,
       aliquota,
@@ -265,6 +269,7 @@ export function calcularCenarioCnpj(
     },
     {
       rotulo: "Honorários contábeis — Empresa/PJ",
+      categoria: "honorarios",
       valorMensal: contabilidade,
       premissa: "Honorários contábeis — Empresa/PJ",
       explicacao:
@@ -272,6 +277,7 @@ export function calcularCenarioCnpj(
     },
     {
       rotulo: "INSS sobre pró-labore",
+      categoria: "inss",
       valorMensal: inssProLabore,
       base: baseInssProLabore,
       aliquota: REGRAS.cnpj.inssProLaboreAliquota.valor,
@@ -282,6 +288,7 @@ export function calcularCenarioCnpj(
     },
     {
       rotulo: "IRRF sobre pró-labore",
+      categoria: "irpf",
       valorMensal: irrfProLabore,
       base: baseIrrf,
       aliquota: faixa.aliquota,

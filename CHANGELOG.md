@@ -5,6 +5,115 @@ Versionamento semântico.
 
 ---
 
+## [2.4.0] — 2026-09-05
+
+Release de UX para uso repetido. Nenhuma regra tributária mudou:
+`VERSAO_REGRAS` continua em `v1.2-2026-08`, e uma comparação de
+resultados antes/depois em cinco cenários confirmou números idênticos.
+
+O tema da versão é **tirar do contador o trabalho que a interface podia
+fazer por ele**: decorar valores para comparar, inferir se um "+" é
+vantagem ou custo, montar de cabeça a frase que vai repetir ao cliente, e
+rolar por parágrafos de ajuda que ele já leu na primeira análise.
+
+### Adicionado
+
+- **Conclusão em uma frase.** O resultado abre por "Nas premissas atuais,
+  Pessoa Física apresenta maior resultado líquido estimado", com a
+  diferença mensal e anual logo abaixo. Antes abria por "MAIOR RESULTADO
+  ESTIMADO" sobre um nome de cenário — o contador montava a frase de
+  cabeça antes de repeti-la ao cliente. A frase é derivada do cálculo e
+  vem condicionada às premissas: é estimativa sob hipóteses declaradas,
+  nunca indicação de regime.
+- **"O que explica a diferença?"** Frases factuais derivadas do cálculo,
+  citando números que estão na tabela ao lado. Começam pelo que evita
+  procurar a causa no lugar errado: receita e custos são iguais nos dois
+  cenários, logo toda a diferença vem dos encargos.
+- **Composição dos encargos com PF e CNPJ na mesma tabela.** Substitui as
+  abas por cenário. Comparar em abas exigia inspecionar um lado, decorar
+  os valores, trocar de aba e subtrair de cabeça. As linhas são casadas
+  por CATEGORIA do encargo (`comparar-encargos.ts`), não por rótulo: o
+  mesmo INSS aparece como "contribuinte individual" na Pessoa Física e
+  "sobre o pró-labore" no CNPJ, e continua sendo uma linha só. Abrir a
+  linha revela os dois lados ao mesmo tempo.
+- **Conferências de entrada** (`avisos-entrada.ts`). Apontam o que é
+  incomum sem bloquear: custos acima de 70% da receita, RBT12 defasada ou
+  incoerente com a receita mensal, pró-labore zerado, folha menor que o
+  pró-labore anual. Redigidas como pedido de conferência — "Confirme se
+  deseja manter este valor" —, nunca como correção: declarar errado o que
+  pode estar certo ensina a ignorar avisos. Os limiares NÃO são
+  parâmetros tributários e não entram no motor.
+- **Histórico com busca e duplicação.** Busca por referência, atividade
+  ou CNAE, sem acento e sem caixa. "Duplicar" copia os valores para uma
+  análise NOVA, descartando a identidade — sem isso o próximo cálculo
+  sobrescreveria o registro original, e duplicar teria virado editar.
+- **Ajuda por divulgação progressiva.** Botão `?` ao lado do rótulo,
+  alcançável por teclado e por toque, ligado ao campo por
+  `aria-describedby` enquanto aberto.
+- **`MensagemStatus`**, forma única para erro, conferência, informação e
+  confirmação. Cada nível tinha antes seu próprio símbolo e tom conforme
+  o arquivo em que foi escrito à mão.
+
+### Alterado
+
+- **A terceira coluna permanente saiu.** Até a 2.3 uma coluna de contexto
+  de 19,5rem ficava fixa à direita a partir de 1600px, com estágio de
+  validação, histórico e auditoria. Era largura gasta o dia inteiro com
+  informação consultada pontualmente. Agora são duas zonas (≈40/60);
+  histórico e auditoria abrem em painel lateral. Nada foi removido: o
+  estágio de validação aparece na barra superior **e** no resultado,
+  colado ao número que ele qualifica.
+- **`+ Nova análise` tem um lugar só.** Aparecia duas vezes na mesma
+  tela, com o mesmo peso visual. Passou a ser a ação primária da barra
+  superior, em posição fixa e previsível.
+- **A coluna de diferença não depende mais de sinal.** Cada célula nomeia
+  o cenário e a direção — "CNPJ: R$ 2.001,97 a mais", "CNPJ: 4,0 p.p.
+  maior". "+" é vantagem no resultado líquido e custo nos encargos, e
+  essa inferência linha a linha é onde a leitura rápida erra.
+- **PF × CNPJ dividem-se por container query.** A pergunta que decide o
+  layout passou a ser "cabe nesta coluna?" em vez de "que tamanho tem a
+  janela?" — em meia tela os cenários ficavam espremidos, e a mesma
+  coluna larga empilhava só porque a janela era pequena.
+- **Contexto da análise encolhe depois de resolvido.** Atividade, CNAE,
+  anexo e Fator R em uma linha, com "Alterar". O bloco de escolha só
+  permanece aberto enquanto há o que decidir. A escolha manual de anexo
+  nunca encolhe: fica visível com o caminho de volta ao automático.
+- **Receita e custos viraram "Dados compartilhados"**, num bloco próprio
+  com "aplicados aos dois cenários". Era o que fazia a comparação parecer
+  dois formulários independentes.
+- **"Enquadramento atual do cliente" virou "Situação atual do cliente"**,
+  com uma linha de apoio única dizendo que os dois cenários são
+  calculados de qualquer forma. O rótulo anterior colidia com o
+  "enquadramento" do Simples e sugeria que a escolha decidia o que seria
+  calculado.
+- **"Recalcular análise" virou "Atualizar resultados"**, e "valores
+  alterados" virou "resultados desatualizados". O rótulo passou a nomear
+  o que muda na tela, não o que a máquina faz.
+- **"Salvo neste navegador"** no lugar de "salvo no histórico deste
+  aparelho", com a ausência de sincronização declarada. Acompanha a hora
+  do último cálculo.
+- **Sugestões explicam a origem.** "Sugestão: R$ 14.000,00 — 28% da
+  receita, que é o patamar do Fator R" no lugar de "Aplicar R$
+  14.000,00". Um número mágico num campo tributário é exatamente o que o
+  contador precisa poder justificar ao cliente. Nenhuma sugestão
+  sobrescreve valor: aplicar segue sendo um ato explícito.
+- **"Ver N premissas pendentes"** abre o painel já filtrado no recorte
+  prometido, em vez de na lista completa.
+- **`TOM_STATUS` passou a ter fonte única** (`tom-status.ts`). O mesmo
+  mapa existia em dois componentes, e bastava editar um para o mesmo
+  status dizer coisas diferentes em painéis diferentes.
+
+### Regras de negócio
+
+Nenhuma alíquota, teto, faixa ou fórmula foi alterada. A única mudança no
+domínio de cálculo é o campo `categoria` acrescentado a cada `Encargo` —
+metadado de apresentação que permite casar as linhas dos dois cenários
+sem depender do texto do rótulo. A verificação de regressão comparou
+cinco cenários (com e sem atividade, com Fator R, com anexo único e com
+anexo manual) antes e depois: os números são idênticos.
+
+---
+
 ## [2.3.0] — 2026-08-24
 
 Release de domínio. A segunda rodada com o contador pediu três coisas, e
