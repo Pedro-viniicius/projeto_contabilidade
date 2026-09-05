@@ -123,7 +123,7 @@ export function SeletorAtividade({
         <p className="text-[0.8125rem] font-medium text-ink">
           Atividade analisada
         </p>
-        <div className="mt-1 flex items-start justify-between gap-2 rounded-md border border-border-strong bg-surface px-2.5 py-2">
+        <div className="superficie-sistema mt-1 flex items-start justify-between gap-2.5 px-3 py-2.5">
           <div className="min-w-0">
             <p className="text-[0.875rem] font-medium text-ink">
               {atividade.descricao}
@@ -181,7 +181,7 @@ export function SeletorAtividade({
             window.setTimeout(() => setAberto(false), 120);
           }}
           onKeyDown={aoTeclar}
-          className="min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-[0.875rem] text-ink placeholder:text-ink-subtle"
+          className="min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-[0.875rem] text-ink transition-colors duration-[140ms] placeholder:text-ink-subtle focus:border-accent"
         />
 
         {aberto && (
@@ -190,7 +190,9 @@ export function SeletorAtividade({
             id={idLista}
             role="listbox"
             aria-label="Atividades encontradas"
-            className="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border-strong bg-surface py-1 shadow-lg"
+            /* Conteúdo TRANSITÓRIO: elevação de verdade, para que a
+               lista pareça estar sobre o formulário e não dentro dele. */
+            className="shadow-flutuante absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-md border border-border-strong bg-surface py-1"
           >
             {resultados.map((r, indice) => (
               <li
@@ -205,8 +207,10 @@ export function SeletorAtividade({
                   escolher(r);
                 }}
                 onMouseEnter={() => setAtivo(indice)}
-                className={`cursor-pointer px-2.5 py-1.5 ${
-                  indice === indiceAtivo ? "bg-surface-hover" : ""
+                className={`cursor-pointer px-2.5 py-2 ${
+                  indice === indiceAtivo
+                    ? "bg-accent-soft"
+                    : "hover:bg-surface-hover"
                 }`}
               >
                 <span className="block text-[0.8125rem] text-ink">

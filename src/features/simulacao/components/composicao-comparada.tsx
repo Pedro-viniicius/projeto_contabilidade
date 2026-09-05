@@ -79,7 +79,7 @@ export function ComposicaoComparada({
             />
           ))}
 
-          <tr className="bg-surface-muted">
+          <tr data-total="">
             <th scope="row" className="font-medium text-ink">
               Total de encargos
               <span className="mt-0.5 block text-[0.6875rem] font-normal text-ink-subtle">
@@ -123,7 +123,7 @@ function LinhaComparada({
 
   return (
     <>
-      <tr className="hover:bg-surface-hover">
+      <tr className="transition-colors hover:bg-surface-hover">
         <th scope="row" className="font-normal">
           <button
             type="button"

@@ -108,15 +108,20 @@ export function PainelLateral({
         aria-describedby={descricao ? idDescricao : undefined}
         tabIndex={-1}
         className={[
-          "relative flex h-dvh w-full flex-col border-l border-border-base bg-background shadow-[-8px_0_24px_rgba(0,0,0,0.10)]",
+          /*
+            Elevação de verdade — o único lugar do produto que a usa.
+            Painel sobreposto é conteúdo TRANSITÓRIO: precisa parecer
+            estar por cima da análise, e não ao lado dela.
+          */
+          "relative flex h-dvh w-full flex-col border-l border-border-base bg-background shadow-elevada",
           largura === "larga" ? "sm:max-w-[52rem]" : "sm:max-w-[34rem]",
         ].join(" ")}
       >
-        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-border-base px-4 py-3">
+        <header className="flex shrink-0 items-start justify-between gap-3 border-b border-border-base bg-surface px-4 py-3">
           <div className="min-w-0">
             <h2
               id={idTitulo}
-              className="text-sm font-semibold tracking-tight text-ink"
+              className="titulo-bloco"
             >
               {titulo}
             </h2>

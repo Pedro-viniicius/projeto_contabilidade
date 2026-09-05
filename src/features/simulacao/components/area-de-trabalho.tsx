@@ -11,7 +11,6 @@ import {
 import { useRouter } from "next/navigation";
 import { BarraSuperior } from "@/components/layout/barra-superior";
 import { PainelLateral } from "@/components/ui/painel-lateral";
-import { Painel } from "@/components/ui/painel";
 import { registrarEvento } from "@/lib/analytics";
 import { formatarMoeda } from "@/lib/format";
 import { useHidratado, useValorLocal } from "@/lib/armazenamento-reativo";
@@ -47,6 +46,7 @@ import { PainelPremissas } from "./painel-premissas";
 import { PainelEscopo } from "./painel-escopo";
 import { PainelAuditoria } from "./painel-auditoria";
 import { HistoricoSimulacoes } from "./historico-simulacoes";
+import { EstadoVazioResultado } from "./estado-vazio-resultado";
 import { atalhoDeveCalcular } from "./atalho-recalculo";
 import type { EntradaSimulacao } from "../types";
 
@@ -424,7 +424,15 @@ export function AreaDeTrabalho() {
               mesma coluna, larga, ficava empilhada só porque a janela
               era pequena. A pergunta certa é "cabe aqui?".
             */
-            className="coluna-rolavel @container flex min-w-0 flex-col border-b border-border-base min-[960px]:border-b-0 min-[960px]:border-r"
+            /*
+              A coluna de dados é a SUPERFÍCIE DE TRABALHO: branca,
+              sobre o fundo cinza da aplicação. A zona de decisão à
+              direita fica sobre o fundo, e é lá que os painéis de
+              resultado pousam. As duas zonas pertencem ao mesmo
+              produto e ainda assim se distinguem à primeira vista,
+              sem precisar de título nem de moldura.
+            */
+            className="coluna-rolavel @container flex min-w-0 flex-col border-b border-border-base bg-surface min-[960px]:border-b-0 min-[960px]:border-r"
           >
             <FormularioSimulacao
               entrada={entrada}
@@ -452,7 +460,7 @@ export function AreaDeTrabalho() {
           {/* ZONA 2 — resultado e auditoria. */}
           <section
             aria-label="Resultado e comparativo"
-            className="coluna-rolavel min-w-0 px-4 py-3.5"
+            className="coluna-rolavel min-w-0 px-4 py-4 min-[1180px]:px-5"
           >
             {/* aria-live: o resultado novo é anunciado sem mover o foco. */}
             <div aria-live="polite" className="sr-only">
@@ -470,40 +478,10 @@ export function AreaDeTrabalho() {
                 onAbrirPremissas={(filtro) => abrirPremissas(filtro)}
               />
             ) : (
-              <Painel className="px-4 py-10">
-                <p className="text-[0.875rem] font-medium text-ink">
-                  Nenhum cálculo executado
-                </p>
-                <p className="mt-1 max-w-md text-[0.8125rem] leading-relaxed text-ink-muted">
-                  Preencha os dados ao lado e atualize os resultados para
-                  comparar os cenários. Comece pela atividade: é ela que define
-                  o anexo do Simples e quais valores precisam ser informados.
-                </p>
-                <dl
-                  id="minimo-necessario"
-                  className="mt-4 max-w-md space-y-1.5 border-t border-border-base pt-3"
-                >
-                  <p className="rotulo-secao">Mínimo necessário</p>
-                  <Requisito
-                    rotulo="Receita bruta mensal"
-                    ok={entrada.receitaMensal > 0}
-                  />
-                  <Requisito
-                    rotulo="Custos do negócio (pode ser zero)"
-                    ok={entrada.custosMensais >= 0}
-                  />
-                  <Requisito
-                    rotulo="Atividade identificada (define o anexo)"
-                    ok={classificacao.anexo !== null}
-                  />
-                </dl>
-                {/*
-                  Sem botão aqui, de propósito. "Calcular análise" já é a
-                  ação primária fixa no rodapé da coluna de dados, e um
-                  segundo botão idêntico visível ao mesmo tempo obrigaria
-                  a decidir em qual clicar antes de decidir o que fazer.
-                */}
-              </Painel>
+              <EstadoVazioResultado
+                entrada={entrada}
+                classificacao={classificacao}
+              />
             )}
           </section>
         </div>
@@ -562,22 +540,6 @@ export function AreaDeTrabalho() {
       >
         <FormularioFeedback />
       </PainelLateral>
-    </div>
-  );
-}
-
-/** Requisito do estado vazio: marcador + texto, nunca só cor. */
-function Requisito({ rotulo, ok }: { rotulo: string; ok: boolean }) {
-  return (
-    <div className="flex items-baseline gap-2 text-[0.8125rem] text-ink-muted">
-      <span
-        aria-hidden="true"
-        className={ok ? "text-positivo" : "text-ink-subtle"}
-      >
-        {ok ? "✓" : "○"}
-      </span>
-      <span>{rotulo}</span>
-      <span className="sr-only">{ok ? "preenchido" : "pendente"}</span>
     </div>
   );
 }

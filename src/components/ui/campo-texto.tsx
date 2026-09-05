@@ -47,7 +47,7 @@ export function CampoTexto({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
         aria-describedby={idAjuda}
-        className="mt-1 min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-[0.875rem] text-ink placeholder:text-ink-subtle"
+        className="mt-1 min-h-9 w-full rounded-md border border-border-strong bg-surface px-2.5 py-1.5 text-[0.875rem] text-ink transition-colors duration-[140ms] placeholder:text-ink-subtle focus:border-accent"
       />
       {painel}
     </div>

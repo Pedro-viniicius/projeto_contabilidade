@@ -5,6 +5,110 @@ Versionamento semântico.
 
 ---
 
+## [2.6.0] — 2026-09-05
+
+Release de MATURIDADE VISUAL. Nenhuma regra tributária, nenhuma fórmula
+e nenhum comportamento de dado foram alterados — os 374 testes do
+domínio passam sem edição. O que mudou foi a forma.
+
+O diagnóstico: a interface estava CHAPADA. Fundo da aplicação, área de
+trabalho, seção funcional, campo editável e valor calculado ocupavam
+praticamente o mesmo plano visual, e o contador precisava LER a tela
+para saber o que era o quê. Um produto que se vende a escritório
+precisa que essa distinção seja reconhecida antes da leitura.
+
+### Adicionado
+
+- **Cinco degraus de superfície**, cada um com papel declarado:
+  `background` (fundo da aplicação), `surface` (trabalho e painel),
+  `surface-subtle` (agrupamento interno), `surface-muted` (informação
+  DERIVADA — cabeçalho de tabela, total, classificação do sistema) e
+  `surface-hover`. A coluna de dados passou a ser branca sobre o fundo
+  cinza; a zona de decisão ficou sobre o fundo, e é nela que os painéis
+  de resultado pousam. As duas zonas se distinguem à primeira vista sem
+  precisar de título nem de moldura.
+- **Escala do número financeiro** (`num-primario`, `num-cenario`,
+  `num-secundario`, `num-apoio`), em `globals.css`. Todo valor
+  monetário do produto sai de um destes quatro degraus — nenhum
+  componente inventa um tamanho por conta própria. A diferença mensal
+  virou o maior número da tela, que é o que responde à pergunta da
+  análise.
+- **`ComparacaoCenarios`** — o desenho ASSINATURA do Clareza para
+  qualquer par de alternativas financeiras: os dois cenários com o
+  MESMO peso, a direção em texto ("a mais para Pessoa Física") e a
+  faixa de acento apenas reforçando o lado de maior resultado. Nenhum
+  cenário tem cor fixa: qual deles é o melhor muda a cada análise, e um
+  esquema fixo anteciparia um veredito que o cálculo ainda não deu.
+- **`EstadoVazioResultado`** — responde "o que aparece aqui", "o que
+  falta" e "quanto falta", com a lista derivada da entrada real. Antes
+  era um retângulo vazio da largura inteira da zona de decisão.
+- **`ValorFinanceiro` e `DadoDerivado`** — os dois formatos que separam
+  o que o Clareza CALCULOU do que o contador DIGITA.
+- **`.superficie-sistema`** — a forma da informação derivada:
+  deliberadamente sem fundo branco, sem borda forte e sem altura de
+  controle, para que nunca se pareça com um campo editável.
+- **Barra de ação do formulário** com estado à esquerda e comando à
+  direita, no lugar do botão verde de largura inteira no rodapé.
+- **Rodapé da coluna de acesso** com a versão das regras vigente,
+  derivada de `VERSAO_REGRAS`.
+
+### Alterado
+
+- **`--ink-subtle` subiu para 4,8:1** sobre superfície clara (era
+  3,5:1). Era o token dos rótulos de seção, dos textos de apoio e dos
+  cabeçalhos de tabela — ou seja, boa parte do texto pequeno do produto
+  reprovava em AA. Com a correção, a tela de acesso deixou de precisar
+  reescrever `.rotulo-secao` à mão.
+- **Paleta refeita em torno de um grafite levemente esverdeado**, da
+  mesma família do acento — texto e marca passam a parecer do mesmo
+  sistema sem tingir nada. Acento `#07765f`, que carrega texto branco a
+  5,6:1 e portanto dispensa exceção em botão de 13–14px.
+- **Login com as camadas invertidas**: apresentação sobre o fundo da
+  aplicação, acesso sobre a superfície branca — a mesma relação que a
+  área de trabalho usa do outro lado da porta. Antes a coluna de acesso
+  parecia uma barra técnica cinza colada na borda da tela. As três
+  etapas ganharam numeração tabular `01/02/03` com filete conector, que
+  passa a ser parte da identidade.
+- **Definição manual de anexo virou divulgação progressiva**, também
+  quando o enquadramento está pendente. O formulário — rótulo,
+  `<select>`, dois botões e uma linha de ajuda — ficava permanentemente
+  aberto, gastando ~120px com o CAMINHO ALTERNATIVO exatamente no
+  momento em que a tela precisa mostrar o caminho principal sem
+  competição. A alternativa continua a um clique e ganha peso de botão
+  secundário quando há pendência.
+- **"Manter classificação automática" virou "Fechar definição
+  manual"**: com o enquadramento pendente não existia classificação
+  automática para manter.
+- **Barra superior de 48 para 52px**, sobre superfície branca, com
+  divisores e agrupamento revistos.
+- **Etiquetas com borda em todos os tons.** Uma etiqueta neutra sobre
+  `surface-muted` — o que acontece no bloco de enquadramento e nos
+  totais — sumia dentro do próprio fundo.
+- **Tabelas** com linha mais confortável, linha de fechamento marcada
+  por `data-total` (mesma forma em todo o produto) e realce de linha no
+  ponteiro.
+- **Elevação passou a ser token e ficou restrita ao que FLUTUA** —
+  painel lateral, menu de conta, lista do combobox, aviso de nova
+  análise. Conteúdo normal recebe no máximo a sombra de 1px que faz o
+  painel pousar sobre o fundo.
+- **Telas de erro, 404 e offline** centradas na janela e com largura
+  contida.
+- **Cache do service worker** para `clareza-v2-6-0`: sem o bump, quem
+  já instalou continuaria vendo a interface antiga.
+
+### Corrigido
+
+- **Coluna de status da tabela de premissas ficava cortada.** O "valor"
+  de uma premissa tanto pode ser `R$ 4.800.000,00` quanto uma frase
+  ("receita acumulada ÷ meses de atividade × 12"), e o `white-space:
+  nowrap` da coluna numérica esticava a tabela inteira, empurrando as
+  etiquetas de validação para fora do painel. A coluna numérica ganhou
+  a variante `.quebra` e o status passou a caber sempre em uma linha.
+- **Ação do formulário ancorada à direita quando a barra quebra em
+  duas linhas**, em coluna estreita e no celular.
+
+---
+
 ## [2.4.1] — 2026-09-05
 
 Release de linguagem. Só o cabeçalho mudou; nenhuma regra tributária,

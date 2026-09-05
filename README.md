@@ -146,10 +146,13 @@ src/
 │   ├── offline/                # Fallback do service worker
 │   ├── manifest.ts             # Web App Manifest
 │   ├── robots.ts · sitemap.ts
-│   └── globals.css             # Duas paletas + três estados de tema
+│   └── globals.css             # ⭐ SISTEMA VISUAL: duas paletas, três
+│                               # estados de tema, cinco degraus de
+│                               # superfície, escala do número financeiro
 │
 ├── components/
 │   ├── ui/                     # Painel, PainelLateral, CampoMoeda, Badge,
+│   │                           # ValorFinanceiro/DadoDerivado,
 │   │                           # MensagemStatus, ajuda-campo (useAjuda)…
 │   ├── layout/                 # BarraSuperior
 │   ├── tema/                   # Preferência de tema e alternância
@@ -168,8 +171,9 @@ src/
 │   │   ├── schemas/            # Validação Zod + mensagens pt-BR
 │   │   ├── services/           # Persistência local
 │   │   ├── components/         # AreaDeTrabalho (orquestra), formulário,
-│   │   │                       # resultado, composição comparada,
-│   │   │                       # histórico, auditoria
+│   │   │                       # resultado, comparação assinatura
+│   │   │                       # (ComparacaoCenarios), composição
+│   │   │                       # comparada, histórico, auditoria
 │   │   └── types.ts            # Contratos de dados
 │   ├── sessao/                 # Acesso demonstrativo — única fronteira a
 │   │                           # trocar quando houver autenticação real

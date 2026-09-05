@@ -42,7 +42,9 @@ export function Escolha<T extends string>({
         {legenda}
       </legend>
 
-      <div className="mt-1 grid grid-cols-2 gap-1 rounded-md border border-border-strong bg-surface-muted p-1">
+      {/* Trilho fosco + pastilha branca: a opção ativa parece estar
+          POR CIMA das demais, e não apenas pintada de outra cor. */}
+      <div className="mt-1 grid grid-cols-2 gap-1 rounded-md border border-border-base bg-surface-muted p-1">
         {opcoes.map((opcao) => {
           const ativa = opcao.valor === valor;
           return (
@@ -52,8 +54,8 @@ export function Escolha<T extends string>({
                 "cursor-pointer rounded-sm px-2 py-1.5 text-center text-[0.8125rem] font-medium transition-colors",
                 "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent",
                 ativa
-                  ? "bg-surface text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
-                  : "text-ink-muted hover:text-ink",
+                  ? "bg-surface text-ink shadow-sutil ring-1 ring-[var(--border)]"
+                  : "text-ink-muted hover:bg-surface-hover hover:text-ink",
               ].join(" ")}
             >
               <input

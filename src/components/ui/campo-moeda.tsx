@@ -84,18 +84,30 @@ export function CampoMoeda({
         {botao}
       </div>
 
+      {/*
+        CAMPO EDITÁVEL — a forma que diz "digite aqui".
+
+        Fundo branco, borda firme e prefixo em compartimento próprio,
+        separado por um filete. É o oposto visual da superfície fosca
+        que o produto usa para dado derivado: as duas naturezas
+        precisam ser distinguidas sem leitura.
+      */}
       <div
         className={[
-          "mt-1 flex items-center gap-1.5 rounded-md border bg-surface px-2.5",
+          "mt-1 flex items-stretch overflow-hidden rounded-md border bg-surface",
+          "transition-colors duration-[140ms]",
           "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent",
           erro
             ? "border-negativo"
             : temAvisos
               ? "border-atencao"
-              : "border-border-strong",
+              : "border-border-strong focus-within:border-accent",
         ].join(" ")}
       >
-        <span aria-hidden="true" className="text-[0.8125rem] text-ink-subtle">
+        <span
+          aria-hidden="true"
+          className="flex shrink-0 items-center border-r border-border-base bg-surface-subtle px-2 text-[0.75rem] font-medium text-ink-subtle"
+        >
           R$
         </span>
         <input
@@ -118,7 +130,7 @@ export function CampoMoeda({
               .join(" ") || undefined
           }
           aria-invalid={erro ? true : undefined}
-          className="campo-composto tnum min-h-9 w-full bg-transparent py-1.5 text-right text-[0.9375rem] font-medium text-ink placeholder:font-normal placeholder:text-ink-subtle"
+          className="campo-composto tnum min-h-9 w-full bg-transparent px-2.5 py-1.5 text-right text-[0.9375rem] font-medium text-ink placeholder:font-normal placeholder:text-ink-subtle"
         />
       </div>
 

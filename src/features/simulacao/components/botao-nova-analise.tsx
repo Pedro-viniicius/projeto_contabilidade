@@ -108,7 +108,7 @@ export function BotaoNovaAnalise({
           role="alertdialog"
           aria-modal="false"
           aria-label="Confirmar nova análise"
-          className="absolute right-0 top-[calc(100%+0.375rem)] z-50 w-72 rounded-md border border-border-base bg-surface p-3 shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
+          className="shadow-flutuante absolute right-0 top-[calc(100%+0.375rem)] z-50 w-72 rounded-md border border-border-base bg-surface p-3"
         >
           <p className="text-[0.75rem] leading-snug text-ink-muted">
             {jaCalculou

@@ -114,7 +114,12 @@ export function TabelaComparativa({ comparacao }: { comparacao: Comparacao }) {
           {linhas.map((linha) => (
             <tr
               key={linha.indicador}
-              className={linha.destaque ? "bg-surface-muted" : undefined}
+              /* `data-total` carrega o estilo de fechamento definido em
+                 `globals.css` — a mesma forma em toda tabela do produto. */
+              data-total={linha.destaque ? "" : undefined}
+              className={
+                linha.destaque ? undefined : "transition-colors hover:bg-surface-hover"
+              }
             >
               <th
                 scope="row"
