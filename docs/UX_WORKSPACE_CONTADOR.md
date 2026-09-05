@@ -56,8 +56,8 @@ inteira.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
-│ Clareza │ Cliente Alfa — cenário 01 │ ● Modelo em validação 5/18 │    │
-│                                     │ ≡ Histórico │ + Nova análise    │
+│ Clareza │ Análise: Cliente Alfa [Salva]                              │
+│      ⚠ Revisar cálculo · 13   Histórico   + Nova análise   ☾  [PQ] ▾  │
 ├──────────────────────────┬───────────────────────────────────────────┤
 │ DADOS DA ANÁLISE (≈40%)  │ RESULTADO (≈60%)                          │
 │                          │                                           │
@@ -136,16 +136,56 @@ Nada foi removido:
 | --- | --- |
 | Estágio de validação | Barra superior **e** no resultado, colado ao número |
 | Análises recentes | Painel "Histórico", com busca e duplicação |
-| Auditoria e revisão | Painel "Premissas e auditoria" |
+| Auditoria e revisão | Painel "Revisar cálculo" |
 | `+ Nova análise` (duplicado) | Uma única ação primária, na barra superior |
+
+### O cabeçalho fala de tarefas, não de subsistemas
+
+Três grupos: **contexto** (qual análise está aberta), **ações do
+trabalho** (revisar, consultar, começar outra) e **usuário** (tema e
+conta).
+
+O princípio é a correspondência com o mundo real. Cada controle nomeia
+algo que o contador já faz, e não uma parte do produto:
+
+| Antes | Agora | Por quê |
+| --- | --- | --- |
+| `● Modelo em validação 5/18` | `⚠ Revisar cálculo · 13 pendências` | A fração era um placar interno. Obrigava a inferir o que media, se era problema, se era clicável e o que abriria. O número continua derivado das premissas reais — o que mudou é que agora ele dimensiona um trabalho |
+| `Auditoria` (botão separado abaixo de 900px) | — | Duas portas para a mesma tarefa é uma escolha a mais para tomar |
+| `≡ Histórico` | `Histórico` | O glifo `≡` lê-se como menu de navegação. O rótulo já é curto o bastante para dispensá-lo |
+| `Pedro` (à esquerda) | `Análise: Pedro` | O rótulo livre da análise e o nome da conta podiam ser a mesma palavra, um de cada lado da barra, significando coisas diferentes |
+
+O cabeçalho representa a TAREFA do contador; o painel que ele abre
+representa a estrutura do sistema. É lá dentro que "premissas",
+"escopo" e "estágio de validação" continuam com os nomes técnicos.
+
+**Âmbar, nunca vermelho.** Pendência de revisão é trabalho a fazer, não
+falha. O vermelho fica reservado a cálculo que falhou e entrada
+inválida — gastá-lo aqui tiraria o peso de onde ele importa.
+
+**Estado não se parece com ação.** `Análise: …` e a etiqueta
+`Desatualizada` / `Salva` não têm contorno, hover nem cursor de clique.
+O contador não deve precisar testar um elemento para descobrir se ele
+faz alguma coisa.
+
+O rótulo encolhe em três degraus conforme a largura — "Revisar cálculo ·
+13 pendências", "Revisar cálculo 13", "⚠ 13" —, e o nome acessível
+**não** encolhe junto: um controle cujo nome muda com o tamanho da
+janela é um controle que muda de significado sem avisar.
+
+Abaixo de 480px e 400px saem, respectivamente, o botão de instalação e a
+alternância de tema. São os dois únicos controles da barra que têm
+equivalente fora do produto, e eram o que empurrava o cabeçalho para
+fora da tela no celular. Abaixo de ~340px o cabeçalho ainda estoura —
+largura fora do alvo deste produto, registrada como limitação conhecida.
 
 ### Por que a barra lateral saiu
 
 A V2 tinha navegação lateral persistente de 224px. Com tudo em uma tela,
 ela apontaria para lugar nenhum e consumiria espaço horizontal que agora
 pertence ao comparativo. Foi substituída por uma barra superior de 48px
-com identidade, referência da análise atual, estágio de validação,
-histórico, `+ Nova análise`, tema e conta.
+com identidade, referência da análise atual, `Revisar cálculo`,
+`Histórico`, `+ Nova análise`, tema e conta.
 
 ### Painéis laterais em vez de páginas
 

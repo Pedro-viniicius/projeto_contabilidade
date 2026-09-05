@@ -56,7 +56,7 @@ const PADRAO = valoresPadrao();
 type Gaveta =
   | null
   | "historico"
-  | "auditoria"
+  | "revisao"
   | "premissas"
   | "escopo"
   | "feedback";
@@ -74,17 +74,24 @@ type Gaveta =
 const semInscricao = () => () => {};
 const semPainel = (): Gaveta => null;
 
-const PAINEIS_DA_URL: readonly Gaveta[] = [
-  "premissas",
-  "escopo",
-  "feedback",
-  "historico",
-  "auditoria",
-];
+/*
+ * `auditoria` continua aceito: era o valor publicado em `?painel=` até
+ * a v2.4 e pode estar em atalho do PWA instalado ou em link salvo.
+ * Endereço antigo que deixa de funcionar é trabalho perdido de quem
+ * salvou o atalho.
+ */
+const PAINEIS_DA_URL: Readonly<Record<string, Gaveta>> = {
+  premissas: "premissas",
+  escopo: "escopo",
+  feedback: "feedback",
+  historico: "historico",
+  revisao: "revisao",
+  auditoria: "revisao",
+};
 
 function painelDaUrl(): Gaveta {
   const alvo = new URLSearchParams(window.location.search).get("painel");
-  return PAINEIS_DA_URL.includes(alvo as Gaveta) ? (alvo as Gaveta) : null;
+  return alvo === null ? null : (PAINEIS_DA_URL[alvo] ?? null);
 }
 
 /**
@@ -387,12 +394,12 @@ export function AreaDeTrabalho() {
         sessao={sessao}
         referencia={referencia}
         historicoAberto={gaveta === "historico"}
-        auditoriaAberta={gaveta === "auditoria"}
+        revisaoAberta={gaveta === "revisao"}
         jaCalculou={simulacao !== null}
         desatualizado={desatualizado}
         temValoresPreenchidos={temValoresPreenchidos}
         onAbrirHistorico={() => setGaveta("historico")}
-        onAbrirAuditoria={() => setGaveta("auditoria")}
+        onAbrirRevisao={() => setGaveta("revisao")}
         onNovaAnalise={novaAnalise}
       />
 
@@ -516,9 +523,9 @@ export function AreaDeTrabalho() {
       </PainelLateral>
 
       <PainelLateral
-        aberto={gaveta === "auditoria"}
-        titulo="Premissas e auditoria"
-        descricao="O que sustenta o número: estágio de validação, regras e escopo."
+        aberto={gaveta === "revisao"}
+        titulo="Revisar cálculo"
+        descricao="O que sustenta o número: estágio de validação, premissas e escopo."
         onFechar={() => setGaveta(null)}
       >
         <PainelAuditoria
