@@ -104,7 +104,7 @@ export type TabelasSimples = Readonly<Record<Anexo, readonly FaixaSimples[]>>;
  * premissas, incremente esta string — ela é gravada junto de cada
  * simulação salva, para sabermos com qual modelo o número foi gerado.
  */
-export const VERSAO_REGRAS = "v1.2-2026-08";
+export const VERSAO_REGRAS = "v1.3-2026-09";
 
 export const REGRAS = {
   /** Meses considerados na projeção anual. */
@@ -133,8 +133,8 @@ export const REGRAS = {
       descricao:
         "Proporção entre a folha dos últimos 12 meses e a receita bruta dos últimos 12 meses que leva uma atividade do Anexo V para o Anexo III.",
       porQueExiste:
-        "LC 123/2006, art. 18: atingidos 28%, as atividades sujeitas ao Fator R são tributadas pelo Anexo III; abaixo disso, pelo Anexo V. O limite é de igualdade inclusiva — exatamente 28% já vale Anexo III. Confirmado na revisão contábil de agosto/2026.",
-      status: "validada-tecnicamente",
+        "LC 123/2006, art. 18: atingidos 28%, as atividades sujeitas ao Fator R são tributadas pelo Anexo III; abaixo disso, pelo Anexo V. O limite é de igualdade inclusiva — exatamente 28% já vale Anexo III. Confirmado na revisão contábil de agosto/2026. ⚠️ A validação de setembro/2026 respondeu \"Não\" à pergunta se 28% é o limite correto, sem justificar. O valor NÃO foi alterado: ele está no texto da LC 123/2006 e uma resposta de múltipla escolha não substitui base legal. Pode ter havido leitura diferente da pergunta — reaberto para confirmação.",
+      status: "a-validar",
       ondeUsada: "Resolução do anexo aplicável no cenário CNPJ",
     }),
 
@@ -144,7 +144,7 @@ export const REGRAS = {
       descricao:
         "O que a lei manda somar no numerador do Fator R.",
       porQueExiste:
-        "LC 123/2006, art. 18: a folha inclui a remuneração paga a pessoas físicas nos 12 meses anteriores, mais a contribuição patronal e o FGTS efetivamente recolhidos, INCLUÍDAS as retiradas de pró-labore. O simulador pede o total já somado, em um campo só: quebrá-lo em parcelas exigiria pedir dados de folha que o contador ainda não tem na triagem.",
+        "LC 123/2006, art. 18, § 24: a folha inclui a remuneração paga a pessoas físicas nos 12 meses anteriores, mais a contribuição patronal e o FGTS efetivamente recolhidos, INCLUÍDAS as retiradas de pró-labore. O simulador pede o total já somado, em um campo só — e a validação de setembro/2026 confirmou que um valor único basta. ⚠️ A mesma validação afirmou que \"FGTS não pode ser considerado, deve ser considerado pró-labore bruto\". A composição NÃO foi alterada: o § 24 cita o FGTS de forma expressa, e retirá-lo mudaria o anexo de parte dos clientes. Divergência reaberta para confirmação com a base legal em mãos.",
       status: "a-validar",
       ondeUsada: "Cálculo do Fator R",
     }),
@@ -154,7 +154,7 @@ export const REGRAS = {
       descricao:
         "Anexos em que este simulador aceita calcular o cenário CNPJ.",
       porQueExiste:
-        "III e V cobrem o prestador de serviço, que é o público da ferramenta, e nos dois a contribuição patronal está dentro do DAS — hipótese que o motor assume. O Anexo IV recolhe a CPP FORA da guia única e o cálculo ficaria errado por construção, então ele é classificado mas não calculado. I e II (comércio e indústria) estão fora do escopo do produto.",
+        "III e V cobrem o prestador de serviço, que é o público da ferramenta, e nos dois a contribuição patronal está dentro do DAS — hipótese que o motor assume. O Anexo IV recolhe a CPP FORA da guia única e o cálculo ficaria errado por construção, então ele é classificado mas não calculado. I e II (comércio e indústria) estão fora do escopo do produto. ⚠️ A validação de setembro/2026 respondeu \"Não\" à pergunta se a contribuição patronal pode ser considerada dentro do DAS nos Anexos III e V, e pediu para implementar o Anexo IV \"agora\", mas respondeu \"Depende\" sobre calcular a CPP em separado. Nada foi alterado: aceitar o \"Não\" mudaria TODO cenário CNPJ do produto, e a exceção da CPP fora da guia é justamente o que define o Anexo IV na LC 123/2006. A pergunta pode ter sido mal formulada por nós. Reaberto.",
       status: "a-validar",
       ondeUsada: "Cenário CNPJ",
     }),
@@ -260,11 +260,11 @@ export const REGRAS = {
       ondeUsada: "Cenário Pessoa Física",
     }),
     custoContabilidadeMensal: premissa({
-      valor: 0,
+      valor: 150,
       descricao:
-        "Honorários contábeis mensais do autônomo. Começa em zero, de propósito.",
+        "Honorários contábeis mensais do autônomo, como valor de partida editável.",
       porQueExiste:
-        "A revisão de agosto/2026 pediu explicitamente que o custo contábil da PF fosse editável em separado do da empresa, porque costuma ser bem menor — e proibiu amarrar um ao outro. Como não recebemos um valor de referência para a PF, o padrão é zero: um número inventado aqui inclinaria a comparação para o lado errado sem que ninguém percebesse. O contador informa o valor real do cliente.",
+        "A revisão de agosto/2026 pediu que o custo contábil da PF fosse editável em separado do da empresa, porque costuma ser bem menor — e proibiu amarrar um ao outro. Na época o padrão era ZERO, porque não tínhamos referência e um número inventado inclinaria a comparação em silêncio. A validação de setembro/2026 fechou essa lacuna: perguntado qual valor usaria como referência inicial, o contador respondeu R$ 150,00. Zero, agora, seria a distorção — a PF entrava na comparação sem nenhum custo contábil enquanto a empresa entrava com R$ 300,00, favorecendo a Pessoa Física por construção. O contador continua informando o valor real do cliente.",
       status: "a-validar",
       ondeUsada: "Cenário Pessoa Física",
     }),
@@ -280,7 +280,7 @@ export const REGRAS = {
       descricao:
         "Tabela progressiva mensal do IRPF aplicada sobre a base do carnê-leão.",
       porQueExiste:
-        "⚠️ SABIDAMENTE DESATUALIZADA. A revisão contábil de agosto/2026 confirmou que estas faixas precisam ser substituídas e que a nova regra inclui a isenção até R$ 5.000,00 — mas as faixas exatas ainda não foram informadas. Não preenchemos por conta própria: a isenção não é uma faixa a mais, envolve um redutor na transição, e chutar o desenho distorceria justamente a faixa de renda mais comum. Bloqueio nº 1 do modelo. O MVP também não aplica desconto simplificado, dependentes, despesas médicas, educação nem ajuste anual.",
+        "⚠️ SABIDAMENTE DESATUALIZADA — e o bloqueio nº 1 do modelo. A validação de setembro/2026 trouxe a fonte oficial (Lei 15.270/2025, tabelas da Receita Federal para 2026) e, com ela, uma DIVERGÊNCIA que impede transcrever a regra: o contador marcou que a isenção até R$ 5.000,00 é uma \"faixa com imposto zero\", mas a própria fonte que ele indicou descreve um REDUTOR aplicado depois do cálculo — até R$ 312,89 para zerar o imposto até R$ 5.000,00, e, entre R$ 5.000,01 e R$ 7.350,00, R$ 978,62 − (0,133145 × rendimento), decrescendo até zero. A pergunta que pedia a fórmula ficou em branco. Implementar como faixa distorceria exatamente a faixa de renda mais comum entre os clientes. Falta também confirmar se o redutor alcança o CARNÊ-LEÃO do autônomo e o IRRF sobre pró-labore: a fonte consultada trata de rendimento assalariado, e o contador afirmou que vale para os dois — afirmação que precisa de base legal antes de virar código. O MVP também não aplica desconto simplificado, dependentes, despesas médicas, educação nem ajuste anual.",
       status: "hipotese-temporaria",
       ondeUsada: "Cenário Pessoa Física e pró-labore do cenário CNPJ",
     }),
@@ -301,7 +301,7 @@ export const REGRAS = {
       descricao:
         "Honorários contábeis mensais da EMPRESA, incluindo obrigações acessórias.",
       porQueExiste:
-        "Manter uma empresa tem custo fixo que a Pessoa Física não tem. É um valor de partida editável, INDEPENDENTE do honorário da PF: a revisão de agosto/2026 vetou usar um número só para os dois cenários, porque a diferença entre eles é justamente parte do que se está comparando. Se os R$ 300 são referência razoável — e quanto varia por região e porte — segue em aberto.",
+        "Manter uma empresa tem custo fixo que a Pessoa Física não tem. É um valor de partida editável, INDEPENDENTE do honorário da PF: a revisão de agosto/2026 vetou usar um número só para os dois cenários, porque a diferença entre eles é justamente parte do que se está comparando. A validação de setembro/2026 confirmou os R$ 300,00 como referência razoável. Quanto varia por região e porte segue em aberto.",
       status: "a-validar",
       ondeUsada: "Cenário CNPJ",
     }),
@@ -310,8 +310,8 @@ export const REGRAS = {
       descricao:
         "INSS retido do sócio sobre o pró-labore (contribuinte individual com desconto da empresa).",
       porQueExiste:
-        "Assumimos que a contribuição patronal (CPP) já está contida na alíquota efetiva sobre o faturamento. O MVP não trata empresas fora dessa hipótese.",
-      status: "a-validar",
+        "Confirmado na validação de setembro/2026 como correto para os cenários simulados. Assumimos que a contribuição patronal (CPP) já está contida no DAS — hipótese que a mesma validação colocou em dúvida para os Anexos III e V (ver `anexosComCalculo`). O MVP não trata empresas fora dessa hipótese.",
+      status: "validada-tecnicamente",
       ondeUsada: "Cenário CNPJ",
     }),
     proLaborePercentualSugerido: premissa({
@@ -319,9 +319,9 @@ export const REGRAS = {
       descricao:
         "Percentual do faturamento sugerido como pró-labore padrão na simulação.",
       porQueExiste:
-        "A revisão contábil de agosto/2026 confirmou que 28% é exatamente o patamar do Fator R: atingido pela folha, a empresa migra do Anexo V para o Anexo III. Isso valida a origem do número, mas não o valida como sugestão de pró-labore — a pergunta sobre qual valor sugerir por padrão segue sem resposta. O simulador continua NÃO calculando Fator R nem troca de anexo.",
-      status: "hipotese-temporaria",
-      ondeUsada: "Valor padrão do formulário no cenário CNPJ",
+        "A revisão de agosto/2026 confirmou que 28% é exatamente o patamar do Fator R: atingido pela folha, a empresa migra do Anexo V para o Anexo III. A validação de setembro/2026 fechou o resto da pergunta — os 28% servem como CAMINHO a simular, não como pró-labore de partida: \"de início não devemos jogar os 28% no pró-labore, isso deve ser um caminho a parte\". Desde a v2.8 o campo não é mais preenchido sozinho; o número aparece como sugestão, com a origem escrita e um botão para aplicar.",
+      status: "a-validar",
+      ondeUsada: "Sugestão de preenchimento no cenário CNPJ, aplicada sob comando",
     }),
     lucroDistribuidoIsento: premissa({
       valor: true,
