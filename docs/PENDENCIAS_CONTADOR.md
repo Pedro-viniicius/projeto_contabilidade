@@ -13,6 +13,45 @@ primeiro, e são os únicos que travam o produto.
 
 ---
 
+## 📋 O que a validação de setembro/2026 respondeu
+
+Formulário "Validação Contábil — Clareza 2026", respondido em
+07/09/2026 pelo contador. Análise completa em
+[`VALIDACAO_CONTABIL_2026.md`](VALIDACAO_CONTABIL_2026.md).
+
+**Respondido e já aplicado no produto (v2.8.0):**
+
+| Item | Resposta | O que mudou |
+| --- | --- | --- |
+| 11 · Pró-labore sugerido | "de início não devemos jogar os 28% no pró-labore, isso deve ser um caminho a parte" | O campo deixou de ser preenchido sozinho; os 28% viraram sugestão com botão "Aplicar" |
+| 14 · Honorários da PF | R$ 150,00 | Premissa saiu de 0 para 150; `VERSAO_REGRAS` → `v1.3-2026-09` |
+| 20 · Resultado principal | "Quanto economiza por ano" | A economia anual virou o maior número da tela; o mensal desceu um degrau |
+| 2 · Folha do Fator R em campo único | "Um único valor é suficiente" | Confirma o desenho atual — nada a fazer |
+| 9 · INSS de 11% sobre pró-labore | "Sim" | Premissa promovida a `validada-tecnicamente` |
+| 13 · R$ 300 de honorários da empresa | "Sim" | Confirma o padrão atual — nada a fazer |
+
+**Respondido, mas ainda não acionável:**
+
+| Item | Resposta | O que falta |
+| --- | --- | --- |
+| 15 · Custos dedutíveis | "Não" — nem tudo é dedutível | A pergunta sobre QUAIS despesas ficam de fora ficou em branco. Por ora o campo declara a simplificação na ajuda |
+| 18 · ISS do autônomo | "O contador informa a alíquota manualmente" | Preferência clara, mas é campo novo + mudança de cálculo tributário. Backlog |
+| 4 · Anexo IV | "Implementar agora" + CPP separada "Depende" | **De que depende?** Sem a condição não há especificação |
+
+**⚠️ Respondido CONTRA a fonte legal — nada foi alterado:**
+
+| Item | Resposta | Conflito |
+| --- | --- | --- |
+| Bloqueio 1 · Isenção de R$ 5.000 | "Faixa com imposto zero" | A Lei 15.270/2025, na página da Receita que o próprio contador indicou, descreve um REDUTOR pós-cálculo: R$ 978,62 − (0,133145 × rendimento) entre R$ 5.000,01 e R$ 7.350,00. A pergunta que pedia a fórmula ficou em branco |
+| Bloqueio 2 · Limite do Fator R | "Não" (sem justificativa) | LC 123/2006, art. 18 fixa 28% |
+| Bloqueio 2 · Composição da folha | "FGTS não pode ser considerado" | LC 123/2006, art. 18, § 24 cita o FGTS recolhido nominalmente |
+| 5 · CPP nos Anexos III e V | "Não" | A CPP fora da guia única é o que define o Anexo IV na própria LC 123/2006 |
+
+As quatro viraram as primeiras perguntas da próxima rodada. Ver
+[`VALIDACAO_CONTABIL_2026.md`](VALIDACAO_CONTABIL_2026.md) §10.
+
+---
+
 ## 🔴 Os dois bloqueios
 
 Sem estes dois itens, o simulador continua produzindo números que sabemos
@@ -202,6 +241,12 @@ Registrado para não perguntarmos de novo.
 | Apuração conferida contra a planilha | ✅ Valores em cache reproduzidos com igualdade exata |
 | Proporcionalização da RBT12 | ✅ Implementada, vinda da planilha |
 | Teto do ISS em 5 pontos | ✅ Implementado — redistribui, não desconta |
+| Folha do Fator R em campo único | ✅ Confirmado em setembro/2026 |
+| INSS de 11% sobre o pró-labore | ✅ Confirmado em setembro/2026 |
+| R$ 300 de honorários da empresa | ✅ Confirmado como referência razoável |
+| Honorários da PF | ✅ R$ 150,00, informado em setembro/2026 |
+| Pró-labore não é preenchido sozinho | ✅ Implementado — os 28% viraram sugestão |
+| Destaque do resultado é a economia ANUAL | ✅ Implementado em setembro/2026 |
 
 ---
 

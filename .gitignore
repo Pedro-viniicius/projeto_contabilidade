@@ -42,3 +42,7 @@ next-env.d.ts
 
 # O exemplo de variáveis não contém segredo e deve ser versionado.
 !.env.example
+
+# Respostas de pesquisa: trazem nome e dados do respondente. A análise
+# anonimizada vive em docs/VALIDACAO_CONTABIL_2026.md; o bruto não entra.
+/*.csv
