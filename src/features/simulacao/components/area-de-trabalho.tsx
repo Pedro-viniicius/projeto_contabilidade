@@ -23,7 +23,6 @@ import { classificacaoDe, simular } from "../domain/calcular";
 import { conferirEntrada } from "../domain/avisos-entrada";
 import {
   mesmaEntrada,
-  proLaboreSugerido,
   simulacaoSchema,
   TAMANHO_MAX_REFERENCIA,
   valoresPadrao,
@@ -165,7 +164,6 @@ export function AreaDeTrabalho() {
     setGaveta("premissas");
   }
 
-  const proLaboreTocado = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
 
   const entrada = rascunho ?? salva?.entrada ?? PADRAO;
@@ -291,16 +289,28 @@ export function AreaDeTrabalho() {
     return () => window.removeEventListener("keydown", aoTeclar);
   }, [calcular, gaveta]);
 
+  /*
+   * O PRÓ-LABORE NÃO É MAIS PREENCHIDO SOZINHO.
+   *
+   * Até a v2.7 digitar a receita escrevia 28% dela no campo de
+   * pró-labore. A validação contábil de setembro/2026 vetou isso em uma
+   * frase: "de início não devemos jogar os 28% no pró-labore, isso deve
+   * ser um caminho a parte".
+   *
+   * O motivo é de domínio, não de gosto. Os 28% são o patamar do
+   * FATOR R — a folha que leva a empresa do Anexo V para o III. Usá-los
+   * como valor inicial de pró-labore transforma uma ESTRATÉGIA de
+   * enquadramento em um dado do cliente, e o contador passa a comparar
+   * um cenário que ninguém decidiu adotar.
+   *
+   * A sugestão continua existindo, com a origem escrita e um botão
+   * "Aplicar" — reconhecimento em vez de imposição.
+   */
   function atualizar<K extends keyof EntradaSimulacaoValidada>(
     campo: K,
     valor: EntradaSimulacaoValidada[K],
   ) {
-    const proximo = { ...entrada, [campo]: valor };
-    /* Só sugerimos pró-labore em análise nova e ainda não editada. */
-    if (campo === "receitaMensal" && !proLaboreTocado.current && !salva) {
-      proximo.proLabore = proLaboreSugerido(valor as number);
-    }
-    setRascunho(proximo);
+    setRascunho({ ...entrada, [campo]: valor });
     setErros((atual) => ({ ...atual, [campo]: undefined }));
   }
 
@@ -328,7 +338,6 @@ export function AreaDeTrabalho() {
   function abrirRegistro(id: string) {
     const registro = abrirDoHistorico(id);
     if (!registro) return;
-    proLaboreTocado.current = true;
     setRascunho(registro.entrada);
     setReferenciaRascunho(registro.referencia ?? "");
     setCalculada(registro.entrada);
@@ -349,7 +358,6 @@ export function AreaDeTrabalho() {
     const registro = lerDoHistorico(id);
     if (!registro) return;
     descartarSimulacaoAtual();
-    proLaboreTocado.current = true;
     setRascunho(registro.entrada);
     setReferenciaRascunho(
       `${registro.referencia ?? "Análise"} (cópia)`.slice(
@@ -366,7 +374,6 @@ export function AreaDeTrabalho() {
 
   function novaAnalise() {
     descartarSimulacaoAtual();
-    proLaboreTocado.current = false;
     setRascunho(PADRAO);
     setReferenciaRascunho("");
     setCalculada(null);
@@ -448,10 +455,6 @@ export function AreaDeTrabalho() {
               formRef={formRef}
               onCampo={atualizar}
               onCampos={atualizarVarios}
-              onProLabore={(v) => {
-                proLaboreTocado.current = true;
-                atualizar("proLabore", v);
-              }}
               onReferencia={setReferenciaRascunho}
               onCalcular={calcular}
             />
@@ -465,7 +468,9 @@ export function AreaDeTrabalho() {
             {/* aria-live: o resultado novo é anunciado sem mover o foco. */}
             <div aria-live="polite" className="sr-only">
               {simulacao && !desatualizado
-                ? `Resultados atualizados. Diferença estimada de ${formatarMoeda(
+                ? `Resultados atualizados. Economia estimada de ${formatarMoeda(
+                    simulacao.comparacao.diferencaAnual,
+                  )} por ano, ${formatarMoeda(
                     simulacao.comparacao.diferencaMensal,
                   )} por mês.`
                 : ""}

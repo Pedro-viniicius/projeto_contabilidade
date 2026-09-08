@@ -76,7 +76,6 @@ export function FormularioSimulacao({
   formRef,
   onCampo,
   onCampos,
-  onProLabore,
   onReferencia,
   onCalcular,
 }: {
@@ -101,8 +100,6 @@ export function FormularioSimulacao({
   ) => void;
   /** Altera vários campos numa única atualização de estado. */
   onCampos: (patch: Partial<EntradaSimulacaoValidada>) => void;
-  /** Separado de `onCampo`: marca que a sugestão automática não vale mais. */
-  onProLabore: (valor: number) => void;
   onReferencia: (valor: string) => void;
   onCalcular: () => void;
 }) {
@@ -194,7 +191,7 @@ export function FormularioSimulacao({
               onChange={(v) => onCampo("custosMensais", v)}
               erro={erros.custosMensais}
               avisos={doCampo("custosMensais")}
-              ajuda="Custos operacionais dedutíveis do mês. Não inclui despesas pessoais nem os honorários contábeis, que têm campo próprio em cada cenário."
+              ajuda="Custos operacionais do mês. Não inclui despesas pessoais nem os honorários contábeis, que têm campo próprio em cada cenário. Atenção: o modelo trata como dedutível TUDO o que for informado aqui — ele não separa o que o livro-caixa aceita. A validação contábil de setembro/2026 apontou que essa simplificação não vale para toda despesa; confira antes de apresentar."
             />
           </div>
         </Secao>
@@ -250,7 +247,7 @@ export function FormularioSimulacao({
               <CampoMoeda
                 rotulo="Pró-labore mensal"
                 valor={entrada.proLabore}
-                onChange={onProLabore}
+                onChange={(v) => onCampo("proLabore", v)}
                 erro={erros.proLabore}
                 avisos={doCampo("proLabore")}
                 sugestao={
@@ -259,9 +256,12 @@ export function FormularioSimulacao({
                         valor: proLaboreSugerido(entrada.receitaMensal),
                         origem: `${pct(
                           REGRAS.cnpj.proLaborePercentualSugerido.valor,
-                        )} da receita, que é o patamar do Fator R`,
+                        )} da receita — é o patamar do Fator R, e serve para simular a migração do Anexo V para o III, não como pró-labore de partida`,
                         onAplicar: () =>
-                          onProLabore(proLaboreSugerido(entrada.receitaMensal)),
+                          onCampo(
+                            "proLabore",
+                            proLaboreSugerido(entrada.receitaMensal),
+                          ),
                       }
                     : undefined
                 }

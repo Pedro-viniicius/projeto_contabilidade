@@ -5,6 +5,92 @@ Versionamento semântico.
 
 ---
 
+## [2.8.0] — 2026-09-07
+
+Primeira iteração guiada pela **validação contábil de setembro/2026**
+(um respondente, o contador que revisa o modelo). A análise completa,
+anonimizada, está em
+[`docs/VALIDACAO_CONTABIL_2026.md`](docs/VALIDACAO_CONTABIL_2026.md);
+as decisões, em
+[`docs/DECISOES_PRODUTO.md`](docs/DECISOES_PRODUTO.md).
+
+**Nenhuma fórmula tributária foi alterada.** Quatro respostas
+contrariavam a legislação ou a fonte oficial indicada pelo próprio
+respondente e foram registradas como divergência, não aplicadas.
+
+### Alterado
+
+- **O pró-labore deixou de ser preenchido sozinho.** Digitar a receita
+  escrevia 28% dela no campo. A validação vetou em uma frase: *"de
+  início não devemos jogar os 28% no pró-labore, isso deve ser um
+  caminho a parte"*. O motivo é de domínio: os 28% são o patamar do
+  FATOR R, e usá-los como valor inicial transforma uma ESTRATÉGIA de
+  enquadramento em um dado do cliente — o contador passava a comparar
+  um cenário que ninguém decidiu adotar. A sugestão continua visível,
+  com a origem escrita e um botão "Aplicar".
+- **A economia ANUAL virou o resultado principal.** Perguntado qual
+  resultado é mais útil para apresentar ao cliente, o contador
+  respondeu "quanto economiza por ano"; a tela destacava a diferença
+  mensal. O mensal desceu um degrau na escala tipográfica e o anúncio
+  para leitor de tela também passou a liderar pelo ano.
+- **Honorários contábeis da Pessoa Física partem de R$ 150,00** (eram
+  R$ 0,00). O zero tinha sido escolha consciente de agosto/2026 — sem
+  referência profissional, inventar um número inclinaria a comparação
+  em silêncio. A validação forneceu a referência, e o zero passou a ser
+  a distorção: a PF entrava na comparação sem custo contábil nenhum
+  enquanto a empresa entrava com R$ 300,00. `VERSAO_REGRAS` para
+  `v1.3-2026-09`.
+- **O campo "Custos do negócio" declara a simplificação.** A ajuda
+  dizia "custos operacionais dedutíveis", sugerindo um filtro que não
+  existe. Agora diz que o modelo trata como dedutível tudo o que for
+  informado, e que a validação apontou que isso não vale para toda
+  despesa. Quais despesas ficam de fora não foi informado.
+- **`inssProLaboreAliquota` promovida a `validada-tecnicamente`**; os
+  11% foram confirmados.
+- **`fatorRLimite` rebaixada para `a-validar`.** Uma premissa
+  contestada não pode continuar anunciada como validada, mesmo que o
+  valor tenha sido mantido.
+
+### Documentado — e deliberadamente NÃO implementado
+
+Quatro respostas contrariam a fonte legal. Nenhuma alterou o motor; as
+quatro estão registradas dentro das premissas correspondentes, onde o
+contador as lê no painel *Premissas do modelo*:
+
+- **isenção do IRPF até R$ 5.000** marcada como "faixa com imposto
+  zero" — a Lei 15.270/2025, na página da Receita Federal que o próprio
+  respondente indicou, descreve um REDUTOR pós-cálculo:
+  R$ 978,62 − (0,133145 × rendimento) entre R$ 5.000,01 e R$ 7.350,00.
+  A pergunta que pedia a fórmula ficou em branco. Falta ainda confirmar
+  se o redutor alcança o carnê-leão do autônomo e o IRRF sobre
+  pró-labore, que são exatamente os dois lugares onde o Clareza usa a
+  tabela;
+- **limite de 28% do Fator R** respondido como incorreto, sem
+  justificativa, contra o art. 18 da LC 123/2006;
+- **FGTS fora da folha do Fator R**, contra o art. 18, § 24, que o cita
+  nominalmente;
+- **CPP fora do DAS nos Anexos III e V** — aceitar mudaria todo o
+  cenário CNPJ, e a CPP fora da guia única é justamente o que define o
+  Anexo IV.
+
+### Segurança de dados
+
+- **O CSV de respostas não entra no Git** (`.gitignore`): traz o nome do
+  respondente. A análise versionada é anonimizada — "Respondente 01 —
+  contador".
+
+### Adicionado
+
+- `docs/VALIDACAO_CONTABIL_2026.md` — amostra, limitações, matriz de
+  evidências, priorização, pendências tributárias e as 10 perguntas da
+  próxima rodada.
+- `docs/DECISOES_PRODUTO.md` — registro de decisões com evidência,
+  alternativas consideradas e motivo.
+- Teste de regressão: o pró-labore precisa continuar em zero por padrão.
+- Cache do service worker para `clareza-v2-8-0`.
+
+---
+
 ## [2.7.1] — 2026-09-05
 
 Correção da v2.7.0: o padrão claro não alcançava quem já usava o

@@ -96,10 +96,41 @@ describe("valoresPadrao", () => {
     );
   });
 
-  it("não assume custo contábil para o autônomo", () => {
-    /* Nenhuma referência profissional foi recebida para a PF: um valor
-       inventado aqui inclinaria a comparação em silêncio. */
-    expect(valoresPadrao().honorariosContabeisPf).toBe(0);
+  /*
+   * O custo contábil da PF era ZERO até a v2.7, porque nenhuma
+   * referência profissional tinha sido recebida — e inventar um número
+   * ali inclinaria a comparação em silêncio.
+   *
+   * A validação de setembro/2026 respondeu (R$ 150,00), então o teste
+   * deixou de guardar "é zero" e passou a guardar o que continua sendo
+   * verdade: os dois honorários vêm de premissas SEPARADAS, nenhum
+   * deles é zero — uma PF sem custo contábil nenhum favoreceria a
+   * Pessoa Física por construção — e um não pode ser derivado do outro.
+   */
+  it("não deixa nenhum dos cenários entrar sem custo contábil", () => {
+    expect(valoresPadrao().honorariosContabeisPf).toBeGreaterThan(0);
+    expect(valoresPadrao().honorariosContabeisPj).toBeGreaterThan(0);
+  });
+
+  it("mantém os honorários de PF e PJ independentes entre si", () => {
+    /* A revisão de agosto/2026 vetou amarrar um ao outro: a diferença
+       entre eles é parte do que a comparação mede. */
+    expect(valoresPadrao().honorariosContabeisPf).not.toBe(
+      valoresPadrao().honorariosContabeisPj,
+    );
+  });
+
+  /*
+   * REGRESSÃO DA v2.8. Até a v2.7, digitar a receita escrevia 28% dela
+   * no campo de pró-labore. A validação de setembro/2026 vetou:
+   * os 28% são o patamar do FATOR R, e usá-los como valor de partida
+   * transforma uma estratégia de enquadramento em dado do cliente.
+   *
+   * O padrão precisa continuar em zero. Se alguém voltar a semear o
+   * campo, é aqui que aparece.
+   */
+  it("começa sem pró-labore — os 28% são sugestão, nunca padrão", () => {
+    expect(valoresPadrao().proLabore).toBe(0);
   });
 
   it("começa sem atividade — classificação pendente, nunca chutada", () => {

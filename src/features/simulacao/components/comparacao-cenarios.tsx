@@ -127,11 +127,21 @@ function Lado({
 }
 
 /**
- * A DIFERENÇA, entre os dois lados.
+ * A DIFERENÇA, entre os dois lados — com o ANO em primeiro lugar.
+ *
+ * Até a v2.7 o número maior da tela era a diferença MENSAL. Perguntado
+ * na validação de setembro/2026 qual resultado é mais útil para
+ * apresentar ao cliente, o contador respondeu "quanto economiza por
+ * ano". Faz sentido operacional: a decisão de abrir CNPJ é anual, e o
+ * número mensal é pequeno demais para justificar o custo e o trabalho
+ * de manter a empresa.
+ *
+ * O mensal não sumiu — desceu um degrau na escala. Ele continua sendo
+ * o que o cliente sente no caixa do mês.
  *
  * Exportada em separado porque quem a posiciona é o painel de
- * resultado: ela precisa ficar no topo, junto da conclusão em uma
- * frase, e não no meio da tabela.
+ * resultado: ela fica no topo, junto da conclusão em uma frase, e não
+ * no meio da tabela.
  */
 export function DiferencaEntreCenarios({
   vencedor,
@@ -153,18 +163,18 @@ export function DiferencaEntreCenarios({
   return (
     <dl className="flex flex-wrap items-end gap-x-8 gap-y-2">
       <div>
-        <dt className="rotulo-secao">Diferença por mês</dt>
-        <dd className="num-primario mt-1">{formatarMoeda(mensal)}</dd>
+        <dt className="rotulo-secao">Economia estimada no ano</dt>
+        <dd className="num-primario mt-1">{formatarMoeda(anual)}</dd>
         <dd className="mt-0.5 text-[0.75rem] leading-snug text-ink-muted">
-          a mais para {NOME_CURTO[vencedor]}
+          a mais para {NOME_CURTO[vencedor]}, em 12 meses
         </dd>
       </div>
 
       <div>
-        <dt className="rotulo-secao">Diferença por ano</dt>
-        <dd className="num-secundario mt-1">{formatarMoeda(anual)}</dd>
+        <dt className="rotulo-secao">Por mês</dt>
+        <dd className="num-secundario mt-1">{formatarMoeda(mensal)}</dd>
         <dd className="mt-0.5 text-[0.75rem] leading-snug text-ink-muted">
-          projeção de 12 meses
+          diferença no resultado líquido
         </dd>
       </div>
     </dl>
